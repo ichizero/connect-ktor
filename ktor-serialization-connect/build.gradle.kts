@@ -1,6 +1,10 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    `java-library`
+//    alias(libs.plugins.maven.publish)
+}
+
+kotlin {
+    compilerOptions.allWarningsAsErrors.set(true)
 }
 
 dependencies {
@@ -29,3 +33,15 @@ sourceSets {
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
+
+// mavenPublishing {
+//    configure(KotlinJvm())
+// }
+//
+// extensions.getByType<PublishingExtension>().apply {
+//    publications
+//        .filterIsInstance<MavenPublication>()
+//        .forEach { publication ->
+//            publication.artifactId = "ktor-serialization-connect"
+//        }
+// }

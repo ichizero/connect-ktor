@@ -6,7 +6,7 @@ indent_style = space
 indent_size = 4
 max_line_length = 120
 
-[*.json]
+[*.{json,yaml,yml}]
 indent_size = 2
 
 [*.{kt,kts}]
@@ -14,3 +14,4 @@ ktlint_standard_class-signature = disabled
 ktlint_standard_function-signature = disabled
 ktlint_standard_multiline-expression-wrapping = disabled
 ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_string-template-indent = disabled

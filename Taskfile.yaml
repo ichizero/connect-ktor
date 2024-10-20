@@ -1,0 +1,25 @@
+version: "3"
+tasks:
+  generate:
+    aliases:
+      - gen
+    cmds:
+      - buf generate --template ktor-serialization-connect/src/test/resources/buf.gen.yaml -o ktor-serialization-connect buf.build/connectrpc/eliza
+  lint:
+    cmds:
+      - ./gradlew spotlessKotlinCheck
+  test:
+    deps:
+      - generate
+    cmds:
+      - ./gradlew test
+  build:
+    deps:
+      - generate
+    cmds:
+      - ./gradlew build
+  diff-check:
+    deps:
+      - generate
+    cmds:
+      - git diff --exit-code --ignore-matching-lines="//"
