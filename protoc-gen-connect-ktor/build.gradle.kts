@@ -2,11 +2,12 @@ plugins {
     application
     java
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlinx.serialization)
 //    alias(libs.plugins.maven.publish)
 }
 
 application {
-    mainClass.set("io.ichizero.protocgen.connect.ktor.Main")
+    mainClass.set("io.github.ichizero.protocgen.connect.ktor.Main")
 }
 
 kotlin {
@@ -21,16 +22,27 @@ tasks {
         from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }) {
             exclude("META-INF/**/*")
         }
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
 }
 
 dependencies {
+    implementation(libs.bundles.ktor)
+    implementation(libs.kotlinpoet)
     implementation(libs.protoc.gen.connect.kotlin)
     implementation(libs.protobuf.java)
-    implementation(libs.kotlinpoet)
-    implementation(libs.bundles.ktor)
 
+    testImplementation(project(":ktor-serialization-connect"))
     testImplementation(libs.bundles.test)
+    testImplementation(libs.bundles.connect)
+    testImplementation(libs.bundles.protobuf)
+    testImplementation(libs.kotlinx.serialization)
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 sourceSets {
@@ -39,6 +51,10 @@ sourceSets {
             srcDir(layout.buildDirectory.dir("generated/sources/bufgen"))
         }
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 // mavenPublishing {
