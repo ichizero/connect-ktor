@@ -2,12 +2,20 @@ version: "3"
 tasks:
   generate:
     aliases:
-      - gen
+      - generate
+    deps:
+      - build-protoc-gen-connect-ktor
     cmds:
       - buf generate --template ktor-serialization-connect/src/test/resources/buf.gen.yaml -o ktor-serialization-connect buf.build/connectrpc/eliza
+      - buf generate --template protoc-gen-connect-ktor/src/test/resources/buf.gen.yaml -o protoc-gen-connect-ktor buf.build/connectrpc/eliza
   lint:
     cmds:
       - ./gradlew spotlessKotlinCheck
+  build-protoc-gen-connect-ktor:
+    aliases:
+      - build-pgck
+    cmds:
+      - ./gradlew :protoc-gen-connect-ktor:installDist -x test
   test:
     deps:
       - generate

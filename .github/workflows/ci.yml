@@ -45,6 +45,9 @@ jobs:
 
       - name: Run tests
         run: task test
+
+      - name: Check diff of generated files
+        run: task diff-check
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5

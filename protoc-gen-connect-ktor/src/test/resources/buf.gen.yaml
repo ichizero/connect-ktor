@@ -1,0 +1,16 @@
+version: v2
+clean: true
+managed:
+  enabled: true
+  override:
+    - file_option: java_package_prefix
+      value: com
+plugins:
+  - remote: buf.build/protocolbuffers/java:v27.2
+    out: build/generated/sources/bufgen
+  - remote: buf.build/protocolbuffers/kotlin:v27.2
+    out: build/generated/sources/bufgen
+  - remote: buf.build/connectrpc/kotlin:v0.7.0
+    out: build/generated/sources/bufgen
+  - local: ./protoc-gen-connect-ktor/build/install/protoc-gen-connect-ktor/bin/protoc-gen-connect-ktor
+    out: build/generated/sources/bufgen

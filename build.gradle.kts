@@ -25,6 +25,7 @@ allprojects {
                 ),
             )
             target("**/*.kt")
+            targetExclude("**/connect/ktor/internal/*.kt")
         }
         kotlinGradle {
             ktlint().editorConfigOverride(
