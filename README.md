@@ -1,5 +1,6 @@
 # Connect-Ktor
 
+[![Maven Central Version](https://img.shields.io/maven-central/v/io.github.ichizero/connect-ktor)](https://central.sonatype.com/artifact/io.github.ichizero/connect-ktor)
 ![CI](https://github.com/ichizero/connect-ktor/actions/workflows/ci.yml/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -104,3 +105,15 @@ fun main() {
     }.start(wait = false)
 }
 ```
+
+## License
+
+Offered under the [Apache 2 license](https://github.com/ichizero/connect-ktor/blob/main/LICENSE).
+
+## Acknowledgements
+
+I'm very grateful for the [Connect Protocol](https://github.com/connectrpc/connect-go),
+[Connect-Kotlin](https://github.com/connectrpc/connect-kotlin) and its authors.
+Their pioneering work and contributions to the open-source community made the development of Connect-Ktor possible.
+
+I encourage you to try Connect-Ktor and experience a new level of communication with your Ktor server!
