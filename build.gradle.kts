@@ -3,20 +3,35 @@ import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
     alias(libs.plugins.spotless)
-    alias(libs.plugins.maven.publish)
 }
 apply(plugin = "com.vanniktech.maven.publish.base")
 
 group = "io.github.ichizero"
 
+buildscript {
+    dependencies {
+        classpath(libs.maven.plugin)
+        classpath(libs.kotlin.plugin)
+        classpath(libs.spotless)
+    }
+    repositories {
+        mavenCentral()
+    }
+}
+
+val snapshotVersion = "0.0.1"
+val releaseVersion = project.findProperty("releaseVersion") as String? ?: snapshotVersion
+
 allprojects {
+    version = releaseVersion
+
     repositories {
         mavenCentral()
     }
 
     apply(plugin = "com.diffplug.spotless")
     spotless {
-        // ratchetFrom("origin/main")
+        ratchetFrom("origin/main")
         isEnforceCheck = false
         kotlin {
             ktlint().editorConfigOverride(
@@ -37,10 +52,20 @@ allprojects {
         }
     }
 
+    tasks.withType<Jar>().configureEach {
+        if (name == "jar") {
+            manifest {
+                attributes("Implementation-Version" to releaseVersion)
+            }
+        }
+    }
+
     plugins.withId("com.vanniktech.maven.publish.base") {
         configure<MavenPublishBaseExtension> {
             publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
             signAllPublications()
+
+            coordinates("io.github.ichizero", name, version.toString())
 
             pom {
                 name.set("connect-ktor") // Rewrite on each project.

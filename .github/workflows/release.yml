@@ -1,9 +1,8 @@
 name: release
 on:
-#  push:
-#    tags:
-#      - v*
-  workflow_dispatch: {}
+  push:
+    tags:
+      - v*
 permissions:
   contents: write
 jobs:
@@ -23,8 +22,15 @@ jobs:
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v3
 
+      - name: Get version from tag
+        run: |
+          tag=${GITHUB_REF#refs/*/}
+          echo "RELEASE_VERSION=${tag:1}" >> $GITHUB_ENV
+
       - name: Build project
         run: task build
+        env:
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
       - name: Publish to Central Repository
         run: ./gradlew publishToMavenCentral --no-configuration-cache
         env:
@@ -32,6 +38,7 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
   plugin:
     runs-on: ubuntu-latest
     steps:
@@ -48,9 +55,25 @@ jobs:
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v3
 
+      - name: Get version from tag
+        run: |
+          tag=${GITHUB_REF#refs/*/}
+          echo "RELEASE_VERSION=${tag:1}" >> $GITHUB_ENV
+
+      - name: Build project
+        run: |
+          task build-protoc-plugin
+        env:
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+      - name: Calculate sha256
+        run: |
+          mv ./protoc-gen-connect-ktor/build/libs/protoc-gen-connect-ktor-${{ env.RELEASE_VERSION }}.jar .
+          sha256sum protoc-gen-connect-ktor-${{ env.RELEASE_VERSION }}.jar >> sha256.txt
       - name: Publish GitHub artifacts
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           append_body: true
           files: |
+            protoc-gen-connect-ktor-${{ env.RELEASE_VERSION }}.jar
+            sha256.txt

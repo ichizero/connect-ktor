@@ -1,9 +1,11 @@
+import com.vanniktech.maven.publish.KotlinJvm
+
 plugins {
     application
     java
-    alias(libs.plugins.kotlin.jvm)
+    kotlin("jvm")
     alias(libs.plugins.kotlinx.serialization)
-//    alias(libs.plugins.maven.publish)
+    id("com.vanniktech.maven.publish.base")
 }
 
 application {
@@ -53,20 +55,14 @@ sourceSets {
     }
 }
 
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
+mavenPublishing {
+    configure(KotlinJvm())
 }
 
-// mavenPublishing {
-//    configure(
-//        KotlinJvm(),
-//    )
-// }
-//
-// extensions.getByType<PublishingExtension>().apply {
-//    publications
-//        .filterIsInstance<MavenPublication>()
-//        .forEach { publication ->
-//            publication.artifactId = "protoc-gen-connect-ktor"
-//        }
-// }
+extensions.getByType<PublishingExtension>().apply {
+    publications
+        .filterIsInstance<MavenPublication>()
+        .forEach { publication ->
+            publication.artifactId = "protoc-gen-connect-ktor"
+        }
+}

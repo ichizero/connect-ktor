@@ -1,6 +1,8 @@
+import com.vanniktech.maven.publish.KotlinJvm
+
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-//    alias(libs.plugins.maven.publish)
+    kotlin("jvm")
+    id("com.vanniktech.maven.publish.base")
 }
 
 kotlin {
@@ -30,18 +32,14 @@ sourceSets {
     }
 }
 
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
+mavenPublishing {
+    configure(KotlinJvm())
 }
 
-// mavenPublishing {
-//    configure(KotlinJvm())
-// }
-//
-// extensions.getByType<PublishingExtension>().apply {
-//    publications
-//        .filterIsInstance<MavenPublication>()
-//        .forEach { publication ->
-//            publication.artifactId = "ktor-serialization-connect"
-//        }
-// }
+extensions.getByType<PublishingExtension>().apply {
+    publications
+        .filterIsInstance<MavenPublication>()
+        .forEach { publication ->
+            publication.artifactId = "ktor-serialization-connect"
+        }
+}

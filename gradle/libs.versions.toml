@@ -18,10 +18,11 @@ kotest = "5.9.1"
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-maven-publish = { id = "com.vanniktech.maven.publish.base", version.ref = "maven-publish" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 
 [libraries]
+kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+
 connect-kotlin = { module = "com.connectrpc:connect-kotlin", version.ref = "connect" }
 connect-kotlin-google-java-ext = { module = "com.connectrpc:connect-kotlin-google-java-ext", version.ref = "connect" }
 connect-kotlin-okhttp = { module = "com.connectrpc:connect-kotlin-okhttp", version.ref = "connect" }
@@ -47,6 +48,9 @@ kotest-framework-datatest = { module = "io.kotest:kotest-framework-datatest", ve
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.ref = "kotest" }
 kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+
+maven-plugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version.ref = "maven-publish" }
+spotless = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 
 [bundles]
 connect = [
