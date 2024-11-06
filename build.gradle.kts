@@ -27,6 +27,7 @@ allprojects {
 
     repositories {
         mavenCentral()
+        gradlePluginPortal()
     }
 
     apply(plugin = "com.diffplug.spotless")
@@ -50,6 +51,10 @@ allprojects {
             )
             target("**/*.kts")
         }
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
     }
 
     tasks.withType<Jar>().configureEach {

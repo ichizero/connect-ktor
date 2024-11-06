@@ -67,8 +67,9 @@ jobs:
           ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
       - name: Calculate sha256
         run: |
-          mv ./protoc-gen-connect-ktor/build/libs/protoc-gen-connect-ktor-${{ env.RELEASE_VERSION }}.jar .
-          sha256sum protoc-gen-connect-ktor-${{ env.RELEASE_VERSION }}.jar >> sha256.txt
+          mv ./protoc-gen-connect-ktor/build/bin/protoc-gen-connect-ktor ./
+          mv ./protoc-gen-connect-ktor/build/bin/protoc-gen-connect-ktor.bat ./
+          sha256sum protoc-gen-connect-ktor >> sha256.txt
       - name: Publish GitHub artifacts
         uses: softprops/action-gh-release@v2
         with:
@@ -76,5 +77,6 @@ jobs:
           generate_release_notes: true
           append_body: true
           files: |
-            protoc-gen-connect-ktor-${{ env.RELEASE_VERSION }}.jar
+            protoc-gen-connect-ktor
+            protoc-gen-connect-ktor.bat
             sha256.txt
