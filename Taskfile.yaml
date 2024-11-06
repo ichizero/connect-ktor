@@ -15,7 +15,7 @@ tasks:
     aliases:
       - build-pp
     cmds:
-      - ./gradlew :protoc-gen-connect-ktor:installDist -x test
+      - ./gradlew :protoc-gen-connect-ktor:shadowJarExecutable -x test
   test:
     deps:
       - generate

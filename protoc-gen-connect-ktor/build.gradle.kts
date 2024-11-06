@@ -5,6 +5,7 @@ plugins {
     java
     kotlin("jvm")
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.shadow)
     id("com.vanniktech.maven.publish.base")
 }
 
@@ -53,6 +54,48 @@ sourceSets {
             srcDir(layout.buildDirectory.dir("generated/sources/bufgen"))
         }
     }
+}
+
+val shadowJarExecutable by tasks.registering(DefaultTask::class) {
+    group = "Distribution"
+    dependsOn(tasks.shadowJar)
+
+    val shadowJarFile = tasks.shadowJar.orNull
+        ?.outputs
+        ?.files
+        ?.singleFile
+        ?: throw GradleException("ShadowJar task does not emit any output files")
+
+    val outputDirectoryPath = layout.buildDirectory.dir("bin").get()
+    val selfExecutableOutputPath = "$outputDirectoryPath/protoc-gen-connect-ktor"
+    val windowsBatchFileOutputPath = "$outputDirectoryPath/protoc-gen-connect-ktor.bat"
+    outputs.files(
+        selfExecutableOutputPath,
+        windowsBatchFileOutputPath,
+    )
+
+    doLast {
+        File(selfExecutableOutputPath).apply {
+            logger.lifecycle("Creating the self-executable file: $selfExecutableOutputPath")
+            writeText(
+                """
+                #!/bin/sh
+                exec java -Xmx512m -jar "$0" "$@"
+                """.trimIndent(),
+            )
+            appendBytes(shadowJarFile.readBytes())
+            setExecutable(true, false)
+        }
+        File(windowsBatchFileOutputPath).apply {
+            writeText(
+                """
+                @echo off
+                java -Xmx512m -jar "%~dp0%protoc-gen-connect-ktor" %*
+                """.trimIndent(),
+            )
+        }
+    }
+    logger.lifecycle("Finished creating output files ktlint-cli")
 }
 
 mavenPublishing {
