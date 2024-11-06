@@ -33,7 +33,13 @@ dependencies {
 
 #### 1. Setup protoc-gen-connect-ktor
 
-Download plugin executable file named protoc-gen-connect-ktor from
+On Linux or macOS, install the plugin with [Homebrew](https://brew.sh/).
+
+```bash
+brew install ichizero/tap/protoc-gen-connect-ktor
+```
+
+Alternatively, you can download the plugin executable file from
 [releases](https://github.com/ichizero/connect-ktor/releases)
 and place it in your PATH.
 
@@ -62,7 +68,6 @@ buf generate
 ```
 
 Generated handler interface is like below:
-
 
 ```kotlin
 public interface ElizaServiceHandler {
