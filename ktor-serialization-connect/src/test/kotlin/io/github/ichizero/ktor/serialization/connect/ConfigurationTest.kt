@@ -6,6 +6,7 @@ import com.connectrpc.eliza.v1.SayRequest
 import com.connectrpc.eliza.v1.sayRequest
 import com.connectrpc.eliza.v1.sayResponse
 import com.connectrpc.extensions.GoogleJavaJSONStrategy
+import com.connectrpc.extensions.GoogleJavaProtobufStrategy
 import com.connectrpc.fold
 import com.connectrpc.impl.ProtocolClient
 import com.connectrpc.okhttp.ConnectOkHttpClient
@@ -28,7 +29,7 @@ import io.ktor.server.testing.*
 import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 
-class ConfigurationTest : FunSpec({
+class ConfigurationConnectJsonTest : FunSpec({
     fun Application.startServer() {
         routing {
             install(ContentNegotiation) {
@@ -78,7 +79,7 @@ class ConfigurationTest : FunSpec({
 
                 client
                     .post("/connectrpc.eliza.v1.ElizaService/Say") {
-                        header("Content-Type", "application/connect+json")
+                        header("Content-Type", "application/json")
                         setBody(tt.requestBody)
                     }.let { res ->
                         res.status shouldBe tt.wantStatusCode
@@ -103,6 +104,47 @@ class ConfigurationTest : FunSpec({
             config = ProtocolClientConfig(
                 host = "http://localhost:8099",
                 serializationStrategy = GoogleJavaJSONStrategy(),
+                ioCoroutineContext = Dispatchers.IO,
+            ),
+        )
+
+        ElizaServiceClient(client).say(sayRequest { sentence = "Hi! Ktor Server" }).fold(
+            onSuccess = { it shouldBe sayResponse { sentence = "Hi! Ktor Server" } },
+            onFailure = { it shouldBe null },
+        )
+
+        server.stop()
+    }
+})
+
+class ConfigurationConnectProtoTest : FunSpec({
+    fun Application.startServer() {
+        routing {
+            install(ContentNegotiation) {
+                connectProto()
+            }
+            post("/connectrpc.eliza.v1.ElizaService/Say") {
+                val req = call.receive<SayRequest>()
+                call.respond(sayResponse { sentence = req.sentence })
+            }
+        }
+    }
+
+    test("e2e test with connect client") {
+        val server = embeddedServer(CIO, port = 8098) {
+            startServer()
+        }
+        server.start(wait = false)
+        afterTest { server.stop() }
+
+        val okHttpClient = OkHttpClient().newBuilder().build()
+        afterTest { okHttpClient.dispatcher.executorService.shutdown() }
+
+        val client = ProtocolClient(
+            httpClient = ConnectOkHttpClient(okHttpClient),
+            config = ProtocolClientConfig(
+                host = "http://localhost:8098",
+                serializationStrategy = GoogleJavaProtobufStrategy(),
                 ioCoroutineContext = Dispatchers.IO,
             ),
         )
