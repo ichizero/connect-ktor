@@ -1,6 +1,6 @@
 package io.github.ichizero.ktor.serialization.connect
 
-import com.connectrpc.extensions.GoogleJavaJSONStrategy
+import com.connectrpc.extensions.GoogleJavaProtobufStrategy
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.serialization.*
@@ -14,10 +14,10 @@ import okio.source
 import kotlin.reflect.KClass
 
 /**
- * A JSON content converter for Connect Protocol.
+ * A binary content converter for Connect Protocol.
  */
-class ConnectJsonConverter : ContentConverter {
-    private val serializationStrategy = GoogleJavaJSONStrategy()
+class ConnectProtoConverter : ContentConverter {
+    private val serializationStrategy = GoogleJavaProtobufStrategy()
 
     override suspend fun serialize(
         contentType: ContentType,
@@ -30,11 +30,11 @@ class ConnectJsonConverter : ContentConverter {
         if (value == null) return TextContent("null", ct)
 
         @Suppress("UNCHECKED_CAST")
-        return TextContent(
-            text = serializationStrategy
+        return ByteArrayContent(
+            bytes = serializationStrategy
                 .codec(typeInfo.type as KClass<Any>)
                 .serialize(value)
-                .readString(charset),
+                .readByteArray(),
             contentType = ct,
         )
     }
