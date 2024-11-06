@@ -35,7 +35,7 @@ dependencies {
     implementation(libs.protoc.gen.connect.kotlin)
     implementation(libs.protobuf.java)
 
-    testImplementation(project(":ktor-serialization-connect"))
+    testImplementation(project(":library"))
     testImplementation(libs.bundles.test)
     testImplementation(libs.bundles.connect)
     testImplementation(libs.bundles.protobuf)
