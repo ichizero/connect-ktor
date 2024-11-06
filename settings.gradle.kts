@@ -11,5 +11,5 @@ plugins {
 }
 
 rootProject.name = "connect-ktor"
-include(":ktor-serialization-connect")
+include(":library")
 include(":protoc-gen-connect-ktor")

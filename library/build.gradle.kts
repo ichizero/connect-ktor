@@ -40,6 +40,6 @@ extensions.getByType<PublishingExtension>().apply {
     publications
         .filterIsInstance<MavenPublication>()
         .forEach { publication ->
-            publication.artifactId = "ktor-serialization-connect"
+            publication.artifactId = "connect-ktor"
         }
 }

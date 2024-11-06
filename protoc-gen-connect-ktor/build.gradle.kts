@@ -35,7 +35,7 @@ dependencies {
     implementation(libs.protoc.gen.connect.kotlin)
     implementation(libs.protobuf.java)
 
-    testImplementation(project(":ktor-serialization-connect"))
+    testImplementation(project(":library"))
     testImplementation(libs.bundles.test)
     testImplementation(libs.bundles.connect)
     testImplementation(libs.bundles.protobuf)
@@ -76,7 +76,6 @@ val shadowJarExecutable by tasks.registering(DefaultTask::class) {
 
     doLast {
         File(selfExecutableOutputPath).apply {
-            logger.lifecycle("Creating the self-executable file: $selfExecutableOutputPath")
             writeText(
                 """
                 #!/bin/sh
@@ -95,7 +94,6 @@ val shadowJarExecutable by tasks.registering(DefaultTask::class) {
             )
         }
     }
-    logger.lifecycle("Finished creating output files ktlint-cli")
 }
 
 mavenPublishing {

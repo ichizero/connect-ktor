@@ -2,11 +2,11 @@ version: "3"
 tasks:
   generate:
     aliases:
-      - generate
+      - gen
     deps:
       - build-protoc-plugin
     cmds:
-      - buf generate --template ktor-serialization-connect/src/test/resources/buf.gen.yaml -o ktor-serialization-connect buf.build/connectrpc/eliza
+      - buf generate --template library/src/test/resources/buf.gen.yaml -o library buf.build/connectrpc/eliza
       - buf generate --template protoc-gen-connect-ktor/src/test/resources/buf.gen.yaml -o protoc-gen-connect-ktor buf.build/connectrpc/eliza
   lint:
     cmds:

@@ -11,7 +11,7 @@ It aims to gradually introduce the Connect Protocol into existing Ktor REST serv
 
 ## Features
 
-- ktor-serialization-connect
+- connect-ktor
   - Serialize/Deserialize Protocol Buffers JSON messages with Connect-Kotlin.
 - protoc-gen-connect-ktor
   - Generate Ktor route handler interfaces from Protocol Buffers service definitions.
@@ -21,11 +21,11 @@ It aims to gradually introduce the Connect Protocol into existing Ktor REST serv
 
 ### Add dependencies
 
-Add conenct-ktor to your build.gradle.kts.
+Add the conenct-ktor library to your build.gradle.kts.
 
 ```kotlin
 dependencies {
-    implementation("io.github.ichizero:connect-ktor:0.0.1")
+    implementation("io.github.ichizero:connect-ktor:0.0.2")
 }
 ```
 
@@ -33,7 +33,9 @@ dependencies {
 
 #### 1. Setup protoc-gen-connect-ktor
 
-Download plugin jar file from [releases](https://github.com/ichizero/connect-ktor/releases) and place it in your PATH.
+Download plugin executable file named protoc-gen-connect-ktor from
+[releases](https://github.com/ichizero/connect-ktor/releases)
+and place it in your PATH.
 
 #### 2. Add plugins to your buf.gen.yaml
 
@@ -44,9 +46,13 @@ managed:
   enabled: true
 plugins:
   - remote: buf.build/protocolbuffers/java
+    out: path/to/code
   - remote: buf.build/protocolbuffers/kotlin
+    out: path/to/code
   - remote: buf.build/connectrpc/kotlin
+    out: path/to/code
   - local: protoc-gen-connect-ktor
+    out: path/to/code
 ```
 
 #### 3. Generate the Ktor route handler interfaces
