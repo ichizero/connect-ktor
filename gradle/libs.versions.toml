@@ -7,7 +7,7 @@ shadow = "8.3.5"
 
 connect = "0.7.1"
 ktor = "3.0.1"
-protobuf = "4.28.3"
+protobuf = "4.29.0"
 
 okio = "3.9.1"
 okhttp = "4.12.0"
