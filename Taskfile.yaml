@@ -1,21 +1,27 @@
 version: "3"
+includes:
+  plugin:
+    taskfile: ./protoc-gen-connect-ktor/Taskfile.yaml
+    dir: ./protoc-gen-connect-ktor
 tasks:
   generate:
     aliases:
       - gen
     deps:
-      - build-protoc-plugin
+      - plugin:build
     cmds:
-      - buf generate --template library/src/test/resources/buf.gen.yaml -o library buf.build/connectrpc/eliza
-      - buf generate --template protoc-gen-connect-ktor/src/test/resources/buf.gen.yaml -o protoc-gen-connect-ktor buf.build/connectrpc/eliza
+      - for: ["library", "protoc-gen-connect-ktor-test"]
+        task: generate-for-test
+        vars:
+          DIR: "{{ .ITEM }}"
+  generate-for-test:
+    internal: true
+    dir: "{{ .DIR }}"
+    cmds:
+      - buf generate --template src/test/resources/buf.gen.yaml buf.build/connectrpc/eliza
   lint:
     cmds:
       - ./gradlew spotlessKotlinCheck
-  build-protoc-plugin:
-    aliases:
-      - build-pp
-    cmds:
-      - ./gradlew :protoc-gen-connect-ktor:shadowJarExecutable -x test
   test:
     deps:
       - generate

@@ -12,4 +12,4 @@ plugins {
 
 rootProject.name = "connect-ktor"
 include(":library")
-include(":protoc-gen-connect-ktor")
+include(":protoc-gen-connect-ktor-test")

@@ -1,0 +1,12 @@
+version: "3"
+tasks:
+  build:
+    cmds:
+      - go build -ldflags="-s -w" -trimpath -o="./out/protoc-gen-connect-ktor" ./cmd/protoc-gen-connect-ktor
+  generate:
+    aliases:
+      - gen
+    deps:
+      - build
+    cmds:
+      - buf generate --template ./buf.gen.yaml -o gen buf.build/connectrpc/eliza

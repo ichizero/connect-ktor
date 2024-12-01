@@ -3,7 +3,7 @@ package io.github.ichizero.protocgen.connect.ktor
 import com.connectrpc.ProtocolClientConfig
 import com.connectrpc.ResponseMessage
 import com.connectrpc.eliza.v1.ElizaServiceClient
-import com.connectrpc.eliza.v1.ElizaServiceHandler
+import com.connectrpc.eliza.v1.ElizaServiceHandlerInterface
 import com.connectrpc.eliza.v1.SayRequest
 import com.connectrpc.eliza.v1.SayResponse
 import com.connectrpc.eliza.v1.elizaService
@@ -25,7 +25,7 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 
-object Handler : ElizaServiceHandler {
+object Handler : ElizaServiceHandlerInterface {
     override suspend fun say(
         request: SayRequest,
         call: ApplicationCall,
