@@ -3,7 +3,7 @@ package io.github.ichizero.ktor.protovalidate
 import com.connectrpc.ResponseMessage
 import com.stricteliza.v1.SayRequest
 import com.stricteliza.v1.SayResponse
-import com.stricteliza.v1.StrictElizaServiceHandler
+import com.stricteliza.v1.StrictElizaServiceHandlerInterface
 import com.stricteliza.v1.sayResponse
 import com.stricteliza.v1.strictElizaService
 import io.github.ichizero.ktor.serialization.connect.connectJson
@@ -28,7 +28,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 
-object Handler : StrictElizaServiceHandler {
+object Handler : StrictElizaServiceHandlerInterface {
     override suspend fun say(
         request: SayRequest,
         call: ApplicationCall,

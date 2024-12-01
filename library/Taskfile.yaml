@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+tasks:
+  mod:
+    cmds:
+      - buf dep update
+  generate:
+    internal: true
+    cmds:
+      - buf generate --template ./buf.gen.yaml
