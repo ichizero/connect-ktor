@@ -2,6 +2,7 @@ import com.vanniktech.maven.publish.KotlinJvm
 
 plugins {
     kotlin("jvm")
+    alias(libs.plugins.kotlinx.serialization)
     id("com.vanniktech.maven.publish.base")
 }
 
@@ -13,6 +14,8 @@ dependencies {
     implementation(libs.bundles.connect)
     implementation(libs.bundles.ktor)
     implementation(libs.okio)
+    implementation(libs.protovalidate)
+    implementation(libs.kotlinx.serialization)
 
     testImplementation(libs.bundles.test)
     testImplementation(libs.bundles.protobuf)
