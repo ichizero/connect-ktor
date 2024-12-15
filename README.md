@@ -13,6 +13,7 @@ It aims to gradually introduce the Connect Protocol into existing Ktor REST serv
 
 - connect-ktor
   - Serialize/Deserialize Protocol Buffers JSON messages with Connect-Kotlin.
+  - Request validation support with [protovalidate](https://github.com/bufbuild/protovalidate).
 - protoc-gen-connect-ktor
   - Generate Ktor route handler interfaces from Protocol Buffers service definitions.
     
@@ -25,7 +26,7 @@ Add the conenct-ktor library to your build.gradle.kts.
 
 ```kotlin
 dependencies {
-    implementation("io.github.ichizero:connect-ktor:0.0.2")
+    implementation("io.github.ichizero:connect-ktor:0.0.3")
 }
 ```
 
@@ -112,6 +113,47 @@ fun main() {
                 connectJson()
             }
             elizaService(ElizaServiceHandlerImpl)
+        }
+    }.start(wait = false)
+}
+```
+
+### Request Validation with protovalidate
+
+The plugin named ProtoRequestValidation is provided to validate the request message with protovalidate.
+If the request message is invalid, the server will respond with a 400 Bad Request status code with details.
+
+```protobuf
+syntax = "proto3";
+
+package stricteliza.v1;
+
+import "buf/validate/validate.proto";
+
+message SayRequest {
+    string sentence = 1 [(buf.validate.field).string.max_len = 100];
+}
+```
+
+```kotlin
+fun main() {
+    embeddedServer(CIO, port = 8080) {
+        install(Resources)
+        install(StatusPages) {
+            exception<ProtoRequestValidationException> { call, cause ->
+                call.respondBytes(
+                    bytes = cause.toErrorJsonBytes(),
+                    status = HttpStatusCode.BadRequest,
+                    contentType = ContentType.Application.Json,
+                )
+            }
+        }
+        routing {
+            install(ContentNegotiation) {
+                connectJson()
+            }
+            install(ProtoRequestValidation)
+            strictElizaService(StrictElizaServiceHandlerImpl)
         }
     }.start(wait = false)
 }
