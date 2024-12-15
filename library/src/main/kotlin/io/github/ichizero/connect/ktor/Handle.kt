@@ -2,6 +2,7 @@ package io.github.ichizero.connect.ktor
 
 import com.connectrpc.ResponseMessage
 import com.connectrpc.fold
+import io.ktor.http.ContentType
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -22,6 +23,12 @@ inline fun <reified Resource : Any, reified Req : Any, reified Res : Any> handle
             }
         }.fold(
             onSuccess = { call.respond(it) },
-            onFailure = { call.respond(it.code.asHTTPStatusCode()) },
+            onFailure = {
+                call.respondBytes(
+                    bytes = it.toErrorJsonBytes(),
+                    contentType = ContentType.Application.Json,
+                    status = it.code.asHTTPStatusCode(),
+                )
+            },
         )
 }
