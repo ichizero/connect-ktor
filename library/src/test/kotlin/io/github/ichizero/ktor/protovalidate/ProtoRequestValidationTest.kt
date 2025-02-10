@@ -1,13 +1,11 @@
 package io.github.ichizero.ktor.protovalidate
 
-import build.buf.validate.Violation
 import com.connectrpc.ResponseMessage
 import com.stricteliza.v1.SayRequest
 import com.stricteliza.v1.SayResponse
 import com.stricteliza.v1.StrictElizaServiceHandler
 import com.stricteliza.v1.sayResponse
 import com.stricteliza.v1.strictElizaService
-import io.github.ichizero.connect.ktor.toErrorJsonBytes
 import io.github.ichizero.ktor.serialization.connect.connectJson
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.core.spec.style.FunSpec
@@ -29,8 +27,6 @@ import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import kotlinx.serialization.json.Json
-import okio.ByteString.Companion.toByteString
 
 object Handler : StrictElizaServiceHandler {
     override suspend fun say(
@@ -50,6 +46,7 @@ class ProtoRequestValidationTest : FunSpec({
         install(Resources)
         install(StatusPages) {
             exception<ProtoRequestValidationException> { call, cause ->
+                println(cause)
                 call.respondBytes(
                     bytes = cause.toErrorJsonBytes(),
                     status = HttpStatusCode.BadRequest,
@@ -71,13 +68,6 @@ class ProtoRequestValidationTest : FunSpec({
     }
 
     context("request validation") {
-        val maxLenViolation = Violation
-            .newBuilder()
-            .setFieldPath("sentence")
-            .setConstraintId("string.max_len")
-            .setMessage("value length must be at most 100 characters")
-            .build()
-
         data class Test(
             val name: String,
             val requestBody: String,
@@ -102,7 +92,7 @@ class ProtoRequestValidationTest : FunSpec({
                         "message": "invalid request",
                         "details": [{
                           "type": "buf.validate.Violation",
-                          "value": "${maxLenViolation.toByteArray().toByteString().base64()}"
+                          "value": "CghzZW50ZW5jZRIOc3RyaW5nLm1heF9sZW4aK3ZhbHVlIGxlbmd0aCBtdXN0IGJlIGF0IG1vc3QgMTAwIGNoYXJhY3RlcnMqEAoOCAESCHNlbnRlbmNlGAkyHQoMCA4SBnN0cmluZxgLCg0IAxIHbWF4X2xlbhgE"
                         }]
                     }
                 """.trimMargin(),

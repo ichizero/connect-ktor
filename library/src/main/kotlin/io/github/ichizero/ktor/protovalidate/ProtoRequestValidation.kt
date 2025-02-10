@@ -48,7 +48,7 @@ class ProtoRequestValidationException internal constructor(
     fun toErrorJsonBytes(message: String = "invalid request"): ByteArray = ConnectException(
         code = Code.INVALID_ARGUMENT,
         message = message,
-    ).withErrorDetails(errorDetailParser, result.violations.toConnectErrorDetails())
+    ).withErrorDetails(errorDetailParser, result.violations.map { it.toProto() }.toConnectErrorDetails())
         .toErrorJsonBytes()
 }
 
