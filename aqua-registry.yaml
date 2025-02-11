@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/registry.json
+packages:
+  - type: github_release
+    repo_owner: ichizero
+    repo_name: connect-ktor
+    description: "Connect-Ktor: Bring Connect Protocol support to your Ktor servers"
+    asset: protoc-gen-connect-ktor
+    format: raw
+    files:
+      - name: protoc-gen-connect-ktor
+        src: protoc-gen-connect-ktor
