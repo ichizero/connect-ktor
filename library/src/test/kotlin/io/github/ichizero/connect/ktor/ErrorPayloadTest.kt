@@ -1,5 +1,7 @@
 package io.github.ichizero.connect.ktor
 
+import build.buf.validate.FieldPath
+import build.buf.validate.FieldPathElement
 import build.buf.validate.Violation
 import com.connectrpc.Code
 import com.connectrpc.ConnectErrorDetail
@@ -17,15 +19,17 @@ class ErrorPayloadTest : FunSpec({
 
     val maxLenViolation = Violation
         .newBuilder()
-        .setFieldPath("sentence")
-        .setConstraintId("string.max_len")
+        .setField(
+            FieldPath.newBuilder().addElements(FieldPathElement.newBuilder().setFieldName("sentence")),
+        ).setConstraintId("string.max_len")
         .setMessage("value length must be at most 100 characters")
         .build()
 
     val minLenViolation = Violation
         .newBuilder()
-        .setFieldPath("sentence")
-        .setConstraintId("string.min_len")
+        .setField(
+            FieldPath.newBuilder().addElements(FieldPathElement.newBuilder().setFieldName("sentence")),
+        ).setConstraintId("string.min_len")
         .setMessage("value length must be at least 1 characters")
         .build()
 
