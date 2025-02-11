@@ -16,6 +16,10 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "./protoc-gen-connect-ktor/go.mod"
+          cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
       - uses: bufbuild/buf-setup-action@v1
         with:
           github_token: ${{ github.token }}
@@ -43,38 +47,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: arduino/setup-task@v2
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-go@v5
         with:
-          distribution: temurin
-          java-version: 21
-          cache: gradle
-      - uses: bufbuild/buf-setup-action@v1
+          go-version-file: "./protoc-gen-connect-ktor/go.mod"
+          cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
+
+      - uses: goreleaser/goreleaser-action@v6
         with:
-          github_token: ${{ github.token }}
-      - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v3
-
-      - name: Get version from tag
-        run: |
-          tag=${GITHUB_REF#refs/*/}
-          echo "RELEASE_VERSION=${tag:1}" >> $GITHUB_ENV
-
-      - name: Build project
-        run: |
-          task build-protoc-plugin
+          args: release --clean
         env:
-          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
-      - name: Calculate sha256
-        run: |
-          sha256sum ./protoc-gen-connect-ktor/build/bin/protoc-gen-connect-ktor >> ./sha256.txt
-      - name: Publish GitHub artifacts
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          generate_release_notes: true
-          append_body: true
-          files: |
-            ./protoc-gen-connect-ktor/build/bin/protoc-gen-connect-ktor
-            ./protoc-gen-connect-ktor/build/bin/protoc-gen-connect-ktor.bat
-            ./sha256.txt
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
