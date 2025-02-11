@@ -26,7 +26,7 @@ Add the conenct-ktor library to your build.gradle.kts.
 
 ```kotlin
 dependencies {
-    implementation("io.github.ichizero:connect-ktor:0.0.3")
+    implementation("io.github.ichizero:connect-ktor:0.0.5")
 }
 ```
 
@@ -71,7 +71,7 @@ buf generate
 Generated handler interface is like below:
 
 ```kotlin
-public interface ElizaServiceHandler {
+public interface ElizaServiceHandlerInterface {
     public suspend fun say(request: SayRequest, call: ApplicationCall): ResponseMessage<SayResponse>
 
     public object Procedures {
@@ -80,7 +80,7 @@ public interface ElizaServiceHandler {
     }
 }
 
-public fun Route.elizaService(handler: ElizaServiceHandler) {
+public fun Route.elizaService(handler: ElizaServiceHandlerInterface) {
     post<ElizaServiceHandler.Procedures.Say, SayRequest>(handle(handler::say))
 }
 ```
@@ -90,7 +90,7 @@ public fun Route.elizaService(handler: ElizaServiceHandler) {
 #### 1. Implement the generated handler interface 
 
 ```kotlin
-object ElizaServiceHandlerImpl : ElizaServiceHandler {
+object ElizaServiceHandler: ElizaServiceHandlerInterface {
     override suspend fun say(
         request: SayRequest,
         call: ApplicationCall,
@@ -112,7 +112,7 @@ fun main() {
             install(ContentNegotiation) {
                 connectJson()
             }
-            elizaService(ElizaServiceHandlerImpl)
+            elizaService(ElizaServiceHandler)
         }
     }.start(wait = false)
 }
@@ -153,7 +153,7 @@ fun main() {
                 connectJson()
             }
             install(ProtoRequestValidation)
-            strictElizaService(StrictElizaServiceHandlerImpl)
+            strictElizaService(StrictElizaServiceHandler)
         }
     }.start(wait = false)
 }

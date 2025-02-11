@@ -2,9 +2,10 @@
 version: 2
 
 builds:
-  - dir: "protoc-gen-connect-ktor"
+  - id: protoc-gen-connect-ktor
+    dir: "./protoc-gen-connect-ktor"
     main: "./cmd/protoc-gen-connect-ktor"
-    binary: "protoc-gen-connect-ktor"
+    binary: protoc-gen-connect-ktor
     env:
       - CGO_ENABLED=0
     flags:
@@ -12,12 +13,16 @@ builds:
     ldflags:
       - -s -w -X main.build={{.Version}}
     goos:
+      - darwin
       - linux
       - windows
-      - darwin
+    goarch:
+      - amd64
+      - arm64
 
 archives:
-  - formats: tar.gz
+  - id: protoc-gen-connect-ktor
+    formats: tar.gz
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_
@@ -43,8 +48,20 @@ gomod:
 
 report_sizes: true
 
+release:
+  draft: true
+
 brews:
-  - repository:
+  - name: protoc-gen-connect-ktor
+    ids:
+      - protoc-gen-connect-ktor
+    repository:
       owner: ichizero
       name: homebrew-tap
       token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    commit_author:
+      name: github-actions[bot]
+      email: 41898282+github-actions[bot]@users.noreply.github.com
+    description: "Protoc plugin to generate Ktor server code"
+    homepage: "https://github.com/ichizero/connect-ktor"
