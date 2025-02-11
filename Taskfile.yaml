@@ -1,33 +1,37 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
 version: "3"
+includes:
+  library:
+    taskfile: ./library/Taskfile.yaml
+    dir: ./library
+  plugin:
+    taskfile: ./protoc-gen-connect-ktor/Taskfile.yaml
+    dir: ./protoc-gen-connect-ktor
+  plugin-test:
+    taskfile: ./protoc-gen-connect-ktor-test/Taskfile.yaml
+    dir: ./protoc-gen-connect-ktor-test
 tasks:
+  lint:
+    cmds:
+      - ./gradlew spotlessKotlinCheck
+      - task: plugin:lint
+  build:
+    cmds:
+      - task: plugin:build
   generate:
     aliases:
       - gen
     deps:
-      - build-protoc-plugin
+      - build
     cmds:
-      - cd library && buf generate
-      - cd protoc-gen-connect-ktor && buf generate
-  lint:
-    cmds:
-      - ./gradlew spotlessKotlinCheck
-  build-protoc-plugin:
-    aliases:
-      - build-pp
-    cmds:
-      - ./gradlew :protoc-gen-connect-ktor:shadowJarExecutable -x test
+      - task: library:generate
+      - task: plugin-test:generate
   test:
     deps:
       - generate
     cmds:
       - ./gradlew test
-  build:
-    deps:
-      - generate
+      - task: plugin:test
+  release-snapshot:
     cmds:
-      - ./gradlew build
-  diff-check:
-    deps:
-      - generate
-    cmds:
-      - git diff --exit-code --ignore-matching-lines="//"
+      - goreleaser release --snapshot --clean

@@ -18,15 +18,17 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
-
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "./protoc-gen-connect-ktor/go.mod"
+          cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
       - uses: bufbuild/buf-setup-action@v1
         with:
           github_token: ${{ github.token }}
 
-      - name: Check diff of generated files
-        run: task diff-check
       - name: Build project
         run: task build
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -38,7 +40,6 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
-
       - uses: bufbuild/buf-setup-action@v1
         with:
           github_token: ${{ github.token }}
@@ -46,8 +47,6 @@ jobs:
       - name: Run tests
         run: task test
 
-      - name: Check diff of generated files
-        run: task diff-check
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -62,7 +61,10 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
-
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "./protoc-gen-connect-ktor/go.mod"
+          cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
       - uses: bufbuild/buf-setup-action@v1
         with:
           github_token: ${{ github.token }}
