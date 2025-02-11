@@ -39,11 +39,6 @@ changelog:
       - "^test:"
 
 gomod:
-  proxy: true
-  env:
-    - GOPROXY=https://proxy.golang.org,direct
-    - GOSUMDB=sum.golang.org
-  mod: mod
   dir: ./protoc-gen-connect-ktor
 
 report_sizes: true
