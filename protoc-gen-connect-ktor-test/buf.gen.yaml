@@ -8,11 +8,11 @@ managed:
     - file_option: java_package_prefix
       value: com
 plugins:
-  - remote: buf.build/protocolbuffers/java:v27.2
+  - remote: buf.build/protocolbuffers/java:v29.2
     out: build/generated/sources/bufgen
-  - remote: buf.build/protocolbuffers/kotlin:v27.2
+  - remote: buf.build/protocolbuffers/kotlin:v29.2
     out: build/generated/sources/bufgen
-  - remote: buf.build/connectrpc/kotlin:v0.7.0
+  - remote: buf.build/connectrpc/kotlin:v0.7.2
     out: build/generated/sources/bufgen
-  - local: ./build/bin/protoc-gen-connect-ktor
+  - local: ../protoc-gen-connect-ktor/out/protoc-gen-connect-ktor
     out: build/generated/sources/bufgen
