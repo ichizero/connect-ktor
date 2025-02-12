@@ -57,14 +57,6 @@ allprojects {
         useJUnitPlatform()
     }
 
-    tasks.withType<Jar>().configureEach {
-        if (name == "jar") {
-            manifest {
-                attributes("Implementation-Version" to releaseVersion)
-            }
-        }
-    }
-
     plugins.withId("com.vanniktech.maven.publish.base") {
         configure<MavenPublishBaseExtension> {
             publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)

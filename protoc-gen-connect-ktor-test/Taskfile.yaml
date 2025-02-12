@@ -1,7 +1,0 @@
-# yaml-language-server: $schema=https://taskfile.dev/schema.json
-version: "3"
-tasks:
-  generate:
-    internal: true
-    cmds:
-      - buf generate --template ./buf.gen.yaml buf.build/connectrpc/eliza
