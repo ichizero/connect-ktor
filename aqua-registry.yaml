@@ -4,8 +4,8 @@ packages:
     repo_owner: ichizero
     repo_name: connect-ktor
     description: "Connect-Ktor: Bring Connect Protocol support to your Ktor servers"
-    asset: protoc-gen-connect-ktor
-    format: raw
+    asset: connect-ktor_{{.OS}}_{{.Arch}}
+    format: tar.gz
     files:
       - name: protoc-gen-connect-ktor
         src: protoc-gen-connect-ktor
