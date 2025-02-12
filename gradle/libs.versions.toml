@@ -3,7 +3,6 @@ kotlin = "2.1.10"
 kotlinx-serialization = "1.8.0"
 maven-publish = "0.30.0"
 spotless = "7.0.2"
-shadow = "8.3.6"
 
 connect = "0.7.2"
 ktor = "3.0.3"
@@ -12,7 +11,6 @@ protovalidate = "0.5.0"
 
 okio = "3.10.2"
 okhttp = "4.12.0"
-kotlinpoet = "2.0.0"
 
 junit-jupiter-engine = "5.11.4"
 kotest = "5.9.1"
@@ -21,7 +19,6 @@ kotest = "5.9.1"
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
-shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 
 [libraries]
 kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -45,7 +42,6 @@ protovalidate = { module = "build.buf:protovalidate", version.ref = "protovalida
 
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
-kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter-engine" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest"}

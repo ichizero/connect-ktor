@@ -31,6 +31,9 @@ func Run(opts *protogen.Options, generator func(*protogen.Plugin) error) error {
 	if err != nil {
 		return err
 	}
+
+	p.SupportedFeatures |= uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
+
 	if err := generator(p); err != nil {
 		p.Error(err)
 	}

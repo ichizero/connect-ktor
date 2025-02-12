@@ -7,9 +7,6 @@ includes:
   plugin:
     taskfile: ./protoc-gen-connect-ktor/Taskfile.yaml
     dir: ./protoc-gen-connect-ktor
-  plugin-test:
-    taskfile: ./protoc-gen-connect-ktor-test/Taskfile.yaml
-    dir: ./protoc-gen-connect-ktor-test
 tasks:
   lint:
     cmds:
@@ -25,7 +22,6 @@ tasks:
       - build
     cmds:
       - task: library:generate
-      - task: plugin-test:generate
   test:
     deps:
       - generate
