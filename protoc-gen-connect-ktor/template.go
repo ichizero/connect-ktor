@@ -57,7 +57,7 @@ interface {{ .Name }}HandlerInterface {
 
 fun Route.{{ .Name | toLowerFirst }}(handler: {{ .Name }}HandlerInterface) {
     {{- range .Methods }}
-    post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}, SayRequest>(handle(handler::{{ .Name | toLowerFirst }}))
+    post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}, {{ .InputTypeName }}>(handle(handler::{{ .Name | toLowerFirst }}))
     {{- end }}
 }
 `
