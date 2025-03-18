@@ -9,3 +9,8 @@ packages:
     files:
       - name: protoc-gen-connect-ktor
         src: protoc-gen-connect-ktor
+    overrides:
+      - goos: windows
+        format: zip
+      - goarch: amd64
+        asset: connect-ktor_{{.OS}}_x86_64
