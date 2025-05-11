@@ -92,7 +92,7 @@ class ProtoRequestValidationTest : FunSpec({
                         "message": "invalid request",
                         "details": [{
                           "type": "buf.validate.Violation",
-                          "value": "CghzZW50ZW5jZRIOc3RyaW5nLm1heF9sZW4aK3ZhbHVlIGxlbmd0aCBtdXN0IGJlIGF0IG1vc3QgMTAwIGNoYXJhY3RlcnMqEAoOCAESCHNlbnRlbmNlGAkyHQoMCA4SBnN0cmluZxgLCg0IAxIHbWF4X2xlbhgE"
+                          "value": "Eg5zdHJpbmcubWF4X2xlbhordmFsdWUgbGVuZ3RoIG11c3QgYmUgYXQgbW9zdCAxMDAgY2hhcmFjdGVycyoQCg4IARIIc2VudGVuY2UYCTIdCgwIDhIGc3RyaW5nGAsKDQgDEgdtYXhfbGVuGAQ="
                         }]
                     }
                 """.trimMargin(),
