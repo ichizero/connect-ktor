@@ -21,7 +21,7 @@ class ErrorPayloadTest : FunSpec({
         .newBuilder()
         .setField(
             FieldPath.newBuilder().addElements(FieldPathElement.newBuilder().setFieldName("sentence")),
-        ).setConstraintId("string.max_len")
+        ).setRuleId("string.max_len")
         .setMessage("value length must be at most 100 characters")
         .build()
 
@@ -29,7 +29,7 @@ class ErrorPayloadTest : FunSpec({
         .newBuilder()
         .setField(
             FieldPath.newBuilder().addElements(FieldPathElement.newBuilder().setFieldName("sentence")),
-        ).setConstraintId("string.min_len")
+        ).setRuleId("string.min_len")
         .setMessage("value length must be at least 1 characters")
         .build()
 
