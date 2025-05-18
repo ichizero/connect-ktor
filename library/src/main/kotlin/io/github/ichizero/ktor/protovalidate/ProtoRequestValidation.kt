@@ -2,6 +2,7 @@ package io.github.ichizero.ktor.protovalidate
 
 import build.buf.protovalidate.ValidationResult
 import build.buf.protovalidate.Validator
+import build.buf.protovalidate.ValidatorFactory
 import build.buf.protovalidate.exceptions.ValidationException
 import com.connectrpc.Code
 import com.connectrpc.ConnectException
@@ -22,7 +23,13 @@ val ProtoRequestValidation: RouteScopedPlugin<ProtoRequestValidationConfig> = cr
     "ProtoRequestValidation",
     ::ProtoRequestValidationConfig,
 ) {
-    val validator = if (pluginConfig.config !== null) Validator(pluginConfig.config) else Validator()
+    val validator = if (pluginConfig.config !==
+        null
+    ) {
+        ValidatorFactory.newBuilder().withConfig(pluginConfig.config).build()
+    } else {
+        ValidatorFactory.newBuilder().build()
+    }
 
     on(RequestBodyTransformed) { content ->
         if (content !is Message) return@on
