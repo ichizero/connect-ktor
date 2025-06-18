@@ -26,7 +26,7 @@ Add the conenct-ktor library to your build.gradle.kts.
 
 ```kotlin
 dependencies {
-    implementation("io.github.ichizero:connect-ktor:0.0.7")
+    implementation("io.github.ichizero:connect-ktor:0.1.2")
 }
 ```
 
