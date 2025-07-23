@@ -12,7 +12,7 @@ protovalidate = "0.12.0"
 okio = "3.15.0"
 okhttp = "4.12.0"
 
-junit-jupiter-engine = "5.13.3"
+junit-jupiter-engine = "5.13.4"
 kotest = "5.9.1"
 
 [plugins]
