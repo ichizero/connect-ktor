@@ -16,7 +16,7 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: "./protoc-gen-connect-ktor/go.mod"
           cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
@@ -50,7 +50,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: arduino/setup-task@v2
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: "./protoc-gen-connect-ktor/go.mod"
           cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
