@@ -28,6 +28,3 @@ tasks:
     cmds:
       - ./gradlew test
       - task: plugin:test
-  release-snapshot:
-    cmds:
-      - goreleaser release --snapshot --clean
