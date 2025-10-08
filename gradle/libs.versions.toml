@@ -10,7 +10,7 @@ protobuf = "4.32.1"
 protovalidate = "1.0.0"
 
 okio = "3.16.0"
-okhttp = "5.1.0"
+okhttp = "5.2.0"
 
 junit-jupiter-engine = "6.0.0"
 kotest = "5.9.1"
