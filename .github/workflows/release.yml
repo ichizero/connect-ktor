@@ -24,7 +24,7 @@ jobs:
         with:
           github_token: ${{ github.token }}
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6 # v3.5.0
+        uses: gradle/actions/wrapper-validation@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
 
       - name: Get version from tag
         run: |
