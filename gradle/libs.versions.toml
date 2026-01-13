@@ -6,7 +6,7 @@ spotless = "8.1.0"
 
 connect = "0.7.4"
 ktor = "3.3.3"
-protobuf = "4.33.3"
+protobuf = "4.33.4"
 protovalidate = "1.1.0"
 
 okio = "3.16.4"
