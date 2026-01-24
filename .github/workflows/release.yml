@@ -16,7 +16,7 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
-      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: "./protoc-gen-connect-ktor/go.mod"
           cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
@@ -50,7 +50,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
-      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: "./protoc-gen-connect-ktor/go.mod"
           cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
