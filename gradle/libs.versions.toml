@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.3.0"
 kotlinx-serialization = "1.9.0"
-maven-publish = "0.35.0"
+maven-publish = "0.36.0"
 spotless = "8.2.0"
 
 connect = "0.7.4"
