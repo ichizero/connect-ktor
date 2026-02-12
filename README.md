@@ -16,7 +16,7 @@ It aims to gradually introduce the Connect Protocol into existing Ktor REST serv
   - Request validation support with [protovalidate](https://github.com/bufbuild/protovalidate).
 - protoc-gen-connect-ktor
   - Generate Ktor route handler interfaces from Protocol Buffers service definitions.
-    
+
 
 ## Usage
 
@@ -26,7 +26,7 @@ Add the conenct-ktor library to your build.gradle.kts.
 
 ```kotlin
 dependencies {
-    implementation("io.github.ichizero:connect-ktor:0.1.8")
+    implementation("io.github.ichizero:connect-ktor:0.1.9")
 }
 ```
 
@@ -87,7 +87,7 @@ public fun Route.elizaService(handler: ElizaServiceHandlerInterface) {
 
 ### Implementation
 
-#### 1. Implement the generated handler interface 
+#### 1. Implement the generated handler interface
 
 ```kotlin
 object ElizaServiceHandler: ElizaServiceHandlerInterface {
