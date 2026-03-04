@@ -5,7 +5,7 @@ maven-publish = "0.36.0"
 spotless = "8.2.1"
 
 connect = "0.7.4"
-ktor = "3.4.0"
+ktor = "3.4.1"
 protobuf = "4.34.0"
 protovalidate = "1.1.0"
 
