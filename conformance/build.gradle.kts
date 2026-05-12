@@ -20,6 +20,7 @@ dependencies {
     implementation(libs.bundles.connect)
     implementation(libs.bundles.ktor)
     implementation(libs.ktor.server.cio)
+    implementation(libs.ktor.server.compression)
     implementation(libs.ktor.server.netty)
     implementation(libs.bundles.protobuf)
     implementation(libs.okio)
