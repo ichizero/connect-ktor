@@ -14,6 +14,7 @@ import com.connectrpc.conformance.v1.UnaryResponseDefinition
 import com.connectrpc.conformance.v1.UnimplementedRequest
 import com.connectrpc.conformance.v1.UnimplementedResponse
 import com.google.protobuf.Message
+import io.github.ichizero.connect.ktor.ConnectGetQueryParamsKey
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.ApplicationRequest
 import okio.ByteString.Companion.toByteString
@@ -62,7 +63,7 @@ class ConformanceServiceImpl : ConformanceServiceHandlerInterface {
         call: ApplicationCall,
         successBuilder: (ConformancePayload) -> Resp,
     ): ResponseMessage<Resp> {
-        val requestInfo = buildRequestInfo(call.request, echoMessage)
+        val requestInfo = buildRequestInfo(call, echoMessage)
 
         val headers = responseDefinition?.responseHeadersList.toMultimap()
         val trailers = responseDefinition?.responseTrailersList.toMultimap()
@@ -110,7 +111,8 @@ class ConformanceServiceImpl : ConformanceServiceHandlerInterface {
     }
 }
 
-private fun buildRequestInfo(request: ApplicationRequest, echoMessage: Message): ConformancePayload.RequestInfo {
+private fun buildRequestInfo(call: ApplicationCall, echoMessage: Message): ConformancePayload.RequestInfo {
+    val request = call.request
     val builder = ConformancePayload.RequestInfo.newBuilder()
     request.headers.entries().forEach { (name, values) ->
         if (name.equals(CONNECT_TIMEOUT_HEADER, ignoreCase = true)) {
@@ -121,6 +123,19 @@ private fun buildRequestInfo(request: ApplicationRequest, echoMessage: Message):
         )
     }
     builder.addRequests(ProtoAny.pack(echoMessage))
+
+    // Populate connect_get_info when the request was received via HTTP GET.
+    val queryParams = call.attributes.getOrNull(ConnectGetQueryParamsKey)
+    if (queryParams != null) {
+        val connectGetInfo = ConformancePayload.ConnectGetInfo.newBuilder()
+        queryParams.forEach { (name, values) ->
+            connectGetInfo.addQueryParams(
+                ConformanceHeader.newBuilder().setName(name).addAllValue(values).build(),
+            )
+        }
+        builder.setConnectGetInfo(connectGetInfo.build())
+    }
+
     return builder.build()
 }
 
