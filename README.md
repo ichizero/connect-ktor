@@ -36,7 +36,8 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 | Codec | `CODEC_PROTO` (`application/proto`) | ✅ |
 |  | `CODEC_JSON` (`application/json`) | ✅ |
 | Compression | `COMPRESSION_IDENTITY` | ✅ |
-|  | `COMPRESSION_GZIP` / `BR` / `ZSTD` / `DEFLATE` / `SNAPPY` | ❌ |
+|  | `COMPRESSION_GZIP` | ✅ |
+|  | `BR` / `ZSTD` / `DEFLATE` / `SNAPPY` | ❌ |
 | Stream type | `STREAM_TYPE_UNARY` | ✅ |
 |  | `STREAM_TYPE_CLIENT_STREAM` | ❌ |
 |  | `STREAM_TYPE_SERVER_STREAM` | ❌ |
@@ -53,7 +54,7 @@ Verified Ktor engines:
 | Engine | HTTP versions | Notes |
 |---|---|---|
 | `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. A handful of test cases that send duplicate request headers fail because CIO collapses repeated header values; tracked in `conformance/known-failing-cio.txt`. |
-| `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. `unexpected-compression` is the only known failure (see roadmap below). |
+| `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. |
 
 Run the suite locally with:
 
@@ -88,11 +89,10 @@ additional work in the library and/or protoc plugin:
 - **Connect GET (idempotent unary)** — the generator emits POST routes
   only; opt-in `option idempotency_level = NO_SIDE_EFFECTS;` handling
   is the prerequisite.
-- **Compression negotiation** — gzip/br/zstd/deflate/snappy require
-  Ktor's `Compression` plugin and Connect-aware
-  `Content-Encoding`/`Accept-Encoding` validation. Today an unsupported
-  encoding is silently accepted, which is the sole known-failing case
-  on Netty.
+- **Additional compression algorithms** — brotli (`br`), zstd, deflate,
+  and snappy require an external `ContentEncoder` registered with Ktor's
+  `Compression` plugin. Once registered, `UnaryCompressionGuard` will
+  automatically accept those encodings for Connect unary RPCs.
 - **`message_receive_limit` enforcement** — the conformance runner
   passes a max body size; the server would need to enforce it before
   parsing the body.
@@ -197,6 +197,36 @@ fun main() {
     }.start(wait = false)
 }
 ```
+
+#### 3. (Optional) Enable request/response compression
+
+Install Ktor's `Compression` plugin alongside `UnaryCompressionGuard` to support
+gzip-encoded request and response bodies. `UnaryCompressionGuard` rejects any
+`Content-Encoding` that is not registered with `Compression`, returning
+`Code.UNIMPLEMENTED` before the body is read.
+
+```kotlin
+fun main() {
+    embeddedServer(CIO, port = 8080) {
+        install(Resources)
+        install(Compression) {
+            gzip()
+            identity()
+        }
+        routing {
+            install(ContentNegotiation) {
+                connectJson()
+            }
+            install(UnaryCompressionGuard)
+            elizaService(ElizaServiceHandler)
+        }
+    }.start(wait = false)
+}
+```
+
+> **Note:** brotli (`br`), zstd, snappy, and deflate are not bundled with Ktor.
+> Provide a custom `ContentEncoder` and register it with the `Compression` plugin;
+> `UnaryCompressionGuard` will then accept those encodings automatically.
 
 ### Request Validation with protovalidate
 
