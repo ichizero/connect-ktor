@@ -4,8 +4,11 @@ import com.connectrpc.ResponseMessage
 import com.stricteliza.v1.SayRequest
 import com.stricteliza.v1.SayResponse
 import com.stricteliza.v1.StrictElizaServiceHandlerInterface
+import com.stricteliza.v1.UploadRequest
+import com.stricteliza.v1.UploadResponse
 import com.stricteliza.v1.sayResponse
 import com.stricteliza.v1.strictElizaService
+import com.stricteliza.v1.uploadResponse
 import io.github.ichizero.ktor.serialization.connect.connectJson
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.core.spec.style.FunSpec
@@ -27,6 +30,7 @@ import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import kotlinx.coroutines.flow.Flow
 
 object Handler : StrictElizaServiceHandlerInterface {
     override suspend fun say(
@@ -36,6 +40,15 @@ object Handler : StrictElizaServiceHandlerInterface {
         sayResponse {
             sentence = request.sentence
         },
+        emptyMap(),
+        emptyMap(),
+    )
+
+    override suspend fun upload(
+        requests: Flow<UploadRequest>,
+        call: ApplicationCall,
+    ): ResponseMessage<UploadResponse> = ResponseMessage.Success(
+        uploadResponse {},
         emptyMap(),
         emptyMap(),
     )
