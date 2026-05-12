@@ -1,7 +1,2 @@
 # Known-failing conformance test cases for the Ktor Netty engine.
 # Entries follow https://github.com/connectrpc/conformance/blob/main/docs/configuring_and_running_tests.md
-#
-# connect-ktor does not yet recognise/reject unsupported request compression
-# encodings, so the server processes the body and responds with 200 OK rather
-# than CODE_UNIMPLEMENTED.
-Connect Unexpected Requests/**/unexpected-compression

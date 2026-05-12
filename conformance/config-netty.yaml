@@ -9,6 +9,7 @@ features:
     - CODEC_JSON
   compressions:
     - COMPRESSION_IDENTITY
+    - COMPRESSION_GZIP
   stream_types:
     - STREAM_TYPE_UNARY
   supports_h2c: true
