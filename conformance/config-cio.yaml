@@ -11,6 +11,8 @@ features:
   stream_types:
     - STREAM_TYPE_UNARY
   supports_h2c: false
+  # CIO does not implement HTTPS upstream
+  # (UnsupportedOperationException: CIO Engine does not currently support HTTPS).
   supports_tls: false
   supports_tls_client_certs: false
   supports_trailers: true

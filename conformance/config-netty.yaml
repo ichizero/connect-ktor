@@ -12,8 +12,8 @@ features:
   stream_types:
     - STREAM_TYPE_UNARY
   supports_h2c: true
-  supports_tls: false
-  supports_tls_client_certs: false
+  supports_tls: true
+  supports_tls_client_certs: true
   supports_trailers: true
   supports_half_duplex_bidi_over_http1: false
   supports_connect_get: false

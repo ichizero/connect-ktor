@@ -41,8 +41,8 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 |  | `STREAM_TYPE_SERVER_STREAM` | ❌ |
 |  | `STREAM_TYPE_HALF_DUPLEX_BIDI_STREAM` | ❌ |
 |  | `STREAM_TYPE_FULL_DUPLEX_BIDI_STREAM` | ❌ |
-| TLS | `supports_tls` | ❌ |
-|  | `supports_tls_client_certs` (mTLS) | ❌ |
+| TLS | `supports_tls` | ✅ (Netty only) |
+|  | `supports_tls_client_certs` (mTLS) | ✅ (Netty only) |
 | Trailers | `supports_trailers` (sent as `Trailer-*` headers on unary responses) | ✅ |
 | Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ❌ |
 | Message receive limit | `supports_message_receive_limit` | ❌ |
@@ -51,8 +51,8 @@ Verified Ktor engines:
 
 | Engine | HTTP versions | Notes |
 |---|---|---|
-| `io.ktor.server.cio.CIO` | HTTP/1.1 | CIO does not speak HTTP/2. A handful of test cases that send duplicate request headers fail because CIO collapses repeated header values; tracked in `conformance/known-failing-cio.txt`. |
-| `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c) | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for Netty, so the same connector serves both HTTP/1.1 and HTTP/2 cleartext. `unexpected-compression` is the only known failure (see roadmap below). |
+| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. A handful of test cases that send duplicate request headers fail because CIO collapses repeated header values; tracked in `conformance/known-failing-cio.txt`. |
+| `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. `unexpected-compression` is the only known failure (see roadmap below). |
 
 Run the suite locally with:
 
@@ -80,9 +80,10 @@ additional work in the library and/or protoc plugin:
 - **HTTP/2 (CIO) and HTTP/3** — the CIO engine has no HTTP/2 server
   support upstream; HTTP/3 needs QUIC plus TLS, which Ktor does not
   ship out of the box.
-- **TLS / mTLS** — the conformance runner already hands the server a
-  self-signed certificate; the bootstrap just needs an `sslConnector`
-  wired into `embeddedServer`.
+- **TLS / mTLS on CIO** — CIO upstream throws
+  `UnsupportedOperationException` for HTTPS. Use Netty if you need
+  TLS termination at the Ktor layer; otherwise terminate TLS in
+  front of CIO.
 - **Connect GET (idempotent unary)** — the generator emits POST routes
   only; opt-in `option idempotency_level = NO_SIDE_EFFECTS;` handling
   is the prerequisite.
