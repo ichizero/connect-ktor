@@ -17,8 +17,10 @@ tasks:
     cmds:
       - mkdir -p {{.BIN_DIR}}
       - GOBIN={{.BIN_DIR}} go install connectrpc.com/conformance/cmd/connectconformance@{{.CONFORMANCE_VERSION}}
+      - printf '%s\n' '{{.CONFORMANCE_VERSION}}' > {{.BIN_DIR}}/connectconformance.version
     status:
       - test -x {{.BIN_DIR}}/connectconformance
+      - test "$(cat {{.BIN_DIR}}/connectconformance.version 2>/dev/null)" = "{{.CONFORMANCE_VERSION}}"
 
   build:
     desc: Build the conformance server-under-test executable.
