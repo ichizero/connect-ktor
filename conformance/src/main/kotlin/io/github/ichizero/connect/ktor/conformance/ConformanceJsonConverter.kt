@@ -13,6 +13,7 @@ import io.ktor.util.reflect.TypeInfo
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.charsets.Charset
 import io.ktor.utils.io.jvm.javaio.toInputStream
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -51,7 +52,10 @@ class ConformanceJsonConverter(registry: TypeRegistry) : ContentConverter {
         try {
             parser.merge(content.toInputStream().reader(charset), builder)
             builder.build()
-        } catch (cause: Throwable) {
+        } catch (cause: CancellationException) {
+            // Let coroutine cancellation propagate so callers can abort the call.
+            throw cause
+        } catch (cause: Exception) {
             throw JsonConvertException(
                 "Failed to deserialize Connect JSON into ${messageClass.name}: ${cause.message}",
                 cause,
