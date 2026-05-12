@@ -6,6 +6,7 @@ import com.connectrpc.conformance.v1.UnaryRequest
 import com.connectrpc.conformance.v1.UnimplementedRequest
 import com.connectrpc.conformance.v1.conformanceService
 import com.google.protobuf.TypeRegistry
+import io.github.ichizero.connect.ktor.ConnectBodyLimit
 import io.github.ichizero.ktor.serialization.connect.connectProto
 import io.ktor.http.ContentType
 import io.ktor.server.application.Application
@@ -25,7 +26,10 @@ internal val conformanceTypeRegistry: TypeRegistry = TypeRegistry.newBuilder()
     .add(UnimplementedRequest.getDescriptor())
     .build()
 
-internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInterface) {
+internal fun Application.conformanceModule(
+    handler: ConformanceServiceHandlerInterface,
+    messageReceiveLimit: Long = 0L,
+) {
     install(Resources)
     install(ContentNegotiation) {
         val jsonConverter = ConformanceJsonConverter(conformanceTypeRegistry)
@@ -47,6 +51,9 @@ internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInt
         }
     }
     routing {
+        if (messageReceiveLimit > 0L) {
+            install(ConnectBodyLimit) { maxBytes = messageReceiveLimit }
+        }
         conformanceService(handler)
     }
 }
