@@ -8,6 +8,7 @@ import com.connectrpc.conformance.v1.UnimplementedRequest
 import com.connectrpc.conformance.v1.conformanceService
 import com.connectrpc.extensions.GoogleJavaProtobufStrategy
 import com.google.protobuf.TypeRegistry
+import io.github.ichizero.connect.ktor.ConnectBodyLimit
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingJsonStrategy
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingStrategies
 import io.github.ichizero.connect.ktor.streaming.installConnectStreamingCodecs
@@ -31,7 +32,10 @@ internal val conformanceTypeRegistry: TypeRegistry = TypeRegistry.newBuilder()
     .add(ClientStreamRequest.getDescriptor())
     .build()
 
-internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInterface) {
+internal fun Application.conformanceModule(
+    handler: ConformanceServiceHandlerInterface,
+    messageReceiveLimit: Long = 0L,
+) {
     install(Resources)
     // Streaming JSON responses contain `google.protobuf.Any` (RequestInfo.requests); the JSON
     // strategy needs the same TypeRegistry as the unary path or encoding fails with
@@ -62,6 +66,9 @@ internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInt
         }
     }
     routing {
+        if (messageReceiveLimit > 0L) {
+            install(ConnectBodyLimit) { maxBytes = messageReceiveLimit }
+        }
         conformanceService(handler)
     }
 }

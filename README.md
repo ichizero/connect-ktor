@@ -296,6 +296,34 @@ fun main() {
 }
 ```
 
+### Request Body Size Limit
+
+The `ConnectBodyLimit` route-scoped plugin enforces a maximum inbound request body size for Connect
+RPCs. When the body exceeds the configured limit the server responds with a
+`resource_exhausted` Connect error (HTTP 429) instead of the default Ktor 413.
+
+Install it on the route subtree that hosts your Connect services:
+
+```kotlin
+fun main() {
+    embeddedServer(CIO, port = 8080) {
+        install(Resources)
+        routing {
+            route("/com.example.v1.MyService") {
+                install(ContentNegotiation) {
+                    connectJson()
+                }
+                install(ConnectBodyLimit) { maxBytes = 4 * 1024 * 1024 }
+                myService(MyServiceHandler)
+            }
+        }
+    }.start(wait = false)
+}
+```
+
+Routes outside the `ConnectBodyLimit` scope are not affected and continue to use the default Ktor
+body-limit behaviour.
+
 ## Local development
 
 This repository ships a [lefthook](https://github.com/evilmartians/lefthook)
