@@ -7,24 +7,25 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.install
+import io.ktor.http.content.OutgoingContent
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import io.ktor.utils.io.ByteReadChannel
 
 class ConnectBodyLimitTest : FunSpec({
-    context("ConnectBodyLimit") {
+    context("connectBodyLimit") {
         test("request within limit is accepted") {
             testApplication {
                 application {
                     routing {
                         route("/test") {
-                            install(ConnectBodyLimit) { maxBytes = 100 }
+                            connectBodyLimit(maxBytes = 100)
                             post {
                                 call.receive<ByteArray>()
                                 call.respondText("ok")
@@ -48,7 +49,7 @@ class ConnectBodyLimitTest : FunSpec({
                 application {
                     routing {
                         route("/test") {
-                            install(ConnectBodyLimit) { maxBytes = 50 }
+                            connectBodyLimit(maxBytes = 50)
                             post {
                                 call.receive<ByteArray>()
                                 call.respondText("ok")
@@ -72,7 +73,7 @@ class ConnectBodyLimitTest : FunSpec({
                 application {
                     routing {
                         route("/test") {
-                            install(ConnectBodyLimit) { maxBytes = 10 }
+                            connectBodyLimit(maxBytes = 10)
                             post {
                                 call.receive<ByteArray>()
                                 call.respondText("should not reach here")
@@ -94,12 +95,46 @@ class ConnectBodyLimitTest : FunSpec({
             }
         }
 
-        test("route outside ConnectBodyLimit scope is not affected") {
+        test("chunked transfer-encoding without Content-Length is also capped") {
+            testApplication {
+                application {
+                    routing {
+                        route("/test") {
+                            connectBodyLimit(maxBytes = 10)
+                            post {
+                                call.receive<ByteArray>()
+                                call.respondText("should not reach here")
+                            }
+                        }
+                    }
+                }
+
+                // Send a 100-byte body via Transfer-Encoding: chunked (no
+                // Content-Length).  RequestBodyLimit's byte counter must
+                // enforce the cap and trigger the Connect error response.
+                val body = "a".repeat(100).toByteArray()
+                client
+                    .post("/test") {
+                        header(HttpHeaders.ContentType, "application/json")
+                        setBody(
+                            object : OutgoingContent.ReadChannelContent() {
+                                override fun readFrom(): ByteReadChannel = ByteReadChannel(body)
+                            },
+                        )
+                    }.let { res ->
+                        res.status shouldBe HttpStatusCode.TooManyRequests
+                        res.bodyAsText() shouldEqualJson
+                            """{"code":"resource_exhausted","message":"request body too large"}"""
+                    }
+            }
+        }
+
+        test("route outside connectBodyLimit scope is not affected") {
             testApplication {
                 application {
                     routing {
                         route("/limited") {
-                            install(ConnectBodyLimit) { maxBytes = 10 }
+                            connectBodyLimit(maxBytes = 10)
                             post {
                                 call.receive<ByteArray>()
                                 call.respondText("limited")

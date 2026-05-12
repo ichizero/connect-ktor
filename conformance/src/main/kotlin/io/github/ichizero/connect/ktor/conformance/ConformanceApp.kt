@@ -6,7 +6,7 @@ import com.connectrpc.conformance.v1.UnaryRequest
 import com.connectrpc.conformance.v1.UnimplementedRequest
 import com.connectrpc.conformance.v1.conformanceService
 import com.google.protobuf.TypeRegistry
-import io.github.ichizero.connect.ktor.ConnectBodyLimit
+import io.github.ichizero.connect.ktor.connectBodyLimit
 import io.github.ichizero.ktor.serialization.connect.connectProto
 import io.ktor.http.ContentType
 import io.ktor.server.application.Application
@@ -51,8 +51,11 @@ internal fun Application.conformanceModule(
         }
     }
     routing {
+        // messageReceiveLimit == 0 means the conformance runner did not request a
+        // cap (see ServerCompatRequest.message_receive_limit, which is uint32 and
+        // uses 0 as the "unset" sentinel).
         if (messageReceiveLimit > 0L) {
-            install(ConnectBodyLimit) { maxBytes = messageReceiveLimit }
+            connectBodyLimit(maxBytes = messageReceiveLimit)
         }
         conformanceService(handler)
     }
