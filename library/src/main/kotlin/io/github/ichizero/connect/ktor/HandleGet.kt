@@ -106,12 +106,27 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     }
 
     val isBase64 = request.queryParameters["base64"] == "1"
+    // Connect spec: arbitrary binary proto payloads cannot survive a UTF-8 round-trip through
+    // percent-decoded query values, so `encoding=proto` REQUIRES `base64=1`. Rejecting up-front
+    // prevents silent payload corruption (would otherwise re-encode invalid bytes as U+FFFD).
+    if (encoding == "proto" && !isBase64) {
+        val error = ConnectException(
+            code = Code.INVALID_ARGUMENT,
+            message = "'encoding=proto' requires 'base64=1' (raw proto bytes are not UTF-8 safe)",
+        )
+        call.respondBytes(
+            bytes = error.toErrorJsonBytes(),
+            contentType = ContentType.Application.Json,
+            status = Code.INVALID_ARGUMENT.asHTTPStatusCode(),
+        )
+        return
+    }
     val messageBytes: ByteArray = try {
         if (isBase64) {
             // URL-safe base64 without padding (base64url).
             Base64.getUrlDecoder().decode(messageParam)
         } else {
-            // Raw query value (already percent-decoded by Ktor's query parsing).
+            // JSON message: already percent-decoded by Ktor's query parsing.
             messageParam.toByteArray(Charsets.UTF_8)
         }
     } catch (e: IllegalArgumentException) {
@@ -176,11 +191,11 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     // Invoke the handler and write the response.
     handlerFunc(req, call)
         .also { response ->
-            response.headers.map { (key, value) ->
-                value.map { call.response.headers.append(key, it) }
+            response.headers.forEach { (key, value) ->
+                value.forEach { call.response.headers.append(key, it) }
             }
-            response.trailers.map { (key, value) ->
-                value.map { call.response.headers.append("Trailer-$key", it) }
+            response.trailers.forEach { (key, value) ->
+                value.forEach { call.response.headers.append("Trailer-$key", it) }
             }
         }.fold(
             onSuccess = { res ->
@@ -195,6 +210,9 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
                 call.respondBytes(bytes = resBytes, contentType = responseContentType)
             },
             onFailure = {
+                // Connect spec: error responses are always JSON regardless of request `encoding`.
+                // See https://connectrpc.com/docs/protocol#error-end-stream — do NOT switch to
+                // `application/proto` here even when the request asked for proto encoding.
                 call.respondBytes(
                     bytes = it.toErrorJsonBytes(),
                     contentType = ContentType.Application.Json,

@@ -148,6 +148,22 @@ class HandleGetTest : FunSpec({
         }
     }
 
+    test("encoding=proto without base64=1 returns 400") {
+        // Proto bytes are not UTF-8 safe; rejecting prevents silent payload corruption.
+        startApp {
+            val req = SayRequest.newBuilder().setSentence("hi").build()
+            val rawProtoAsUtf8 = req.toByteArray().toString(Charsets.UTF_8)
+            val response = client.get(
+                "/connectrpc.eliza.v1.ElizaService/Say" +
+                    "?connect=v1&encoding=proto&message=$rawProtoAsUtf8",
+            )
+
+            response.status shouldBe HttpStatusCode.BadRequest
+            response.bodyAsText() shouldContain "invalid_argument"
+            response.bodyAsText() shouldContain "base64=1"
+        }
+    }
+
     test("unsupported compression returns 501") {
         startApp {
             val req = SayRequest.newBuilder().setSentence("hi").build()
