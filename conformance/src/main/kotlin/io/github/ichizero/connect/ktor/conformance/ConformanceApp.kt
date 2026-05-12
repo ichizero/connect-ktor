@@ -11,10 +11,10 @@ import com.connectrpc.extensions.GoogleJavaProtobufStrategy
 import com.google.protobuf.Message
 import com.google.protobuf.TypeRegistry
 import com.google.protobuf.util.JsonFormat
-import io.github.ichizero.connect.ktor.ConnectBodyLimit
 import io.github.ichizero.connect.ktor.ConnectGetJsonSerializer
 import io.github.ichizero.connect.ktor.ConnectGetStrategies
 import io.github.ichizero.connect.ktor.UnaryCompressionGuard
+import io.github.ichizero.connect.ktor.connectBodyLimit
 import io.github.ichizero.connect.ktor.installConnectGetCodecs
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingJsonStrategy
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingStrategies
@@ -111,8 +111,11 @@ internal fun Application.conformanceModule(
             // Content-Encoding values are accepted, and is surfaced in error responses.
             supportedEncodings = setOf("gzip", "identity")
         }
+        // messageReceiveLimit == 0 means the conformance runner did not request a
+        // cap (see ServerCompatRequest.message_receive_limit, which is uint32 and
+        // uses 0 as the "unset" sentinel).
         if (messageReceiveLimit > 0L) {
-            install(ConnectBodyLimit) { maxBytes = messageReceiveLimit }
+            connectBodyLimit(maxBytes = messageReceiveLimit)
         }
         conformanceService(handler)
     }
