@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
+	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
 )
 
 func Run(plugin *protogen.Plugin) error {
@@ -52,11 +53,13 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 
 		inputTypeName := method.Input.GoIdent.GoName
 		outputTypeName := method.Output.GoIdent.GoName
+		idempotent := method.Desc.Options().(*descriptorpb.MethodOptions).GetIdempotencyLevel() == descriptorpb.MethodOptions_NO_SIDE_EFFECTS
 		methods = append(methods, &methodData{
 			Name:           string(method.Desc.Name()),
 			Comment:        toKDocComment(method.Comments.Leading),
 			InputTypeName:  inputTypeName,
 			OutputTypeName: outputTypeName,
+			Idempotent:     idempotent,
 		})
 	}
 
