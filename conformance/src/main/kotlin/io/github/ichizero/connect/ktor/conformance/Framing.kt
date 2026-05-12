@@ -14,11 +14,19 @@ import java.io.OutputStream
 fun <T : MessageLite> readDelimited(input: InputStream, parser: Parser<T>): T {
     val dis = DataInputStream(input)
     val size = dis.readInt()
-    require(size >= 0) { "negative message size: $size" }
+    // The conformance binary only reads ServerCompatRequest from the trusted
+    // runner's stdout, so this isn't a network-facing bound. It's a sanity
+    // cap to surface framing drift with a clear message instead of a generic
+    // OOM if the stream ever gets out of sync.
+    require(size in 0..MAX_DELIMITED_SIZE) {
+        "delimited message size out of range: $size (expected 0..$MAX_DELIMITED_SIZE)"
+    }
     val buf = ByteArray(size)
     dis.readFully(buf)
     return parser.parseFrom(buf)
 }
+
+private const val MAX_DELIMITED_SIZE: Int = 16 * 1024 * 1024
 
 /**
  * Writes a size-delimited protobuf message to the given stream using the same
