@@ -8,9 +8,16 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import java.io.PrintStream
 import java.util.concurrent.CountDownLatch
+import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-    val engine = Engine.parse(args)
+    val engine = try {
+        Engine.parse(args)
+    } catch (ex: IllegalArgumentException) {
+        System.err.println("[conformance] ${ex.message}")
+        exitProcess(2)
+    }
+    System.err.println("[conformance] using engine=${engine.name.lowercase()}")
 
     // The conformance runner uses stdout to read the ServerCompatResponse.
     // Anything else written to stdout (e.g. Ktor logs) would corrupt the
@@ -21,8 +28,11 @@ fun main(args: Array<String>) {
     val request = readDelimited(System.`in`, ServerCompatRequest.parser())
 
     if (request.useTls) {
-        System.err.println("connect-ktor conformance server does not support TLS")
-        kotlin.system.exitProcess(1)
+        // config.yaml declares supports_tls=false, so the runner should never
+        // send use_tls=true. Bail loudly if it does instead of silently
+        // serving plaintext on a TLS-only test case.
+        System.err.println("[conformance] connect-ktor conformance server does not support TLS")
+        exitProcess(1)
     }
 
     val handler: ConformanceServiceHandlerInterface = ConformanceServiceImpl()
@@ -64,11 +74,31 @@ internal enum class Engine(val factory: ApplicationEngineFactory<*, *>) {
     ;
 
     companion object {
+        /**
+         * Parses the `--engine` flag from CLI args. Accepts both
+         * `--engine cio` and `--engine=cio` forms, and falls back to
+         * [Engine.CIO] when the flag is absent (so the binary stays usable
+         * by hand for local debugging).
+         */
         fun parse(args: Array<String>): Engine {
-            val idx = args.indexOf("--engine")
-            val name = if (idx >= 0 && idx + 1 < args.size) args[idx + 1] else "cio"
+            val name = extractEngineArg(args)?.lowercase() ?: return CIO
             return entries.firstOrNull { it.name.equals(name, ignoreCase = true) }
-                ?: error("unknown engine: $name (expected one of: ${entries.joinToString { it.name.lowercase() }})")
+                ?: throw IllegalArgumentException(
+                    "unknown --engine '$name' (expected one of: ${entries.joinToString { it.name.lowercase() }})",
+                )
+        }
+
+        private fun extractEngineArg(args: Array<String>): String? {
+            for ((idx, raw) in args.withIndex()) {
+                if (raw == "--engine") {
+                    return args.getOrNull(idx + 1)
+                        ?: throw IllegalArgumentException("--engine requires a value")
+                }
+                if (raw.startsWith("--engine=")) {
+                    return raw.removePrefix("--engine=")
+                }
+            }
+            return null
         }
     }
 }

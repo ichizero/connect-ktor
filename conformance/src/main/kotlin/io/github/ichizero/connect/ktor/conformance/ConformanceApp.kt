@@ -17,6 +17,7 @@ import io.ktor.server.request.contentType
 import io.ktor.server.resources.Resources
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 
 internal val conformanceTypeRegistry: TypeRegistry = TypeRegistry.newBuilder()
     .add(UnaryRequest.getDescriptor())
@@ -50,18 +51,10 @@ internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInt
     }
 }
 
-internal fun awaitPort(engine: ApplicationEngine): Int {
-    val deadline = System.currentTimeMillis() + 10_000
-    while (System.currentTimeMillis() < deadline) {
-        val connectors = try {
-            runBlocking { engine.resolvedConnectors() }
-        } catch (_: Throwable) {
-            emptyList()
-        }
-        if (connectors.isNotEmpty()) {
-            return connectors.first().port
-        }
-        Thread.sleep(50)
-    }
-    error("Ktor server did not start within 10s")
+internal fun awaitPort(engine: ApplicationEngine): Int = runBlocking {
+    // resolvedConnectors() suspends until the engine has bound its listeners,
+    // so a single call is sufficient. Wrap in a timeout to surface a clear
+    // error if the engine fails to start (e.g. port permission errors).
+    val connectors = withTimeout(10_000) { engine.resolvedConnectors() }
+    connectors.firstOrNull()?.port ?: error("Ktor server reported no connectors")
 }
