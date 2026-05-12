@@ -1,6 +1,7 @@
 package io.github.ichizero.ktor.serialization.connect
 
 import com.connectrpc.extensions.GoogleJavaJSONStrategy
+import com.google.protobuf.TypeRegistry
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.serialization.*
@@ -16,8 +17,10 @@ import kotlin.reflect.KClass
 /**
  * A JSON content converter for Connect Protocol.
  */
-class ConnectJsonConverter : ContentConverter {
-    private val serializationStrategy = GoogleJavaJSONStrategy()
+class ConnectJsonConverter(
+    typeRegistry: TypeRegistry = TypeRegistry.getEmptyTypeRegistry(),
+) : ContentConverter {
+    private val serializationStrategy = GoogleJavaJSONStrategy(typeRegistry)
 
     override suspend fun serialize(
         contentType: ContentType,
