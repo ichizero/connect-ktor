@@ -24,7 +24,7 @@ dependencies {
     implementation(libs.bundles.protobuf)
     implementation(libs.okio)
 
-    runtimeOnly("org.slf4j:slf4j-simple:2.0.16")
+    runtimeOnly(libs.slf4j.simple)
 }
 
 java {
