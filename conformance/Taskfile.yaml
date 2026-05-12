@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+vars:
+  CONFORMANCE_VERSION: v1.0.4
+  BIN_DIR: '{{.TASKFILE_DIR}}/.tmp/bin'
+  SERVER_BIN: '{{.TASKFILE_DIR}}/build/install/conformance/bin/conformance'
+
+tasks:
+  generate:
+    desc: Generate Kotlin/Java sources for the ConformanceService.
+    cmds:
+      - buf generate --template ./buf.gen.yaml
+
+  install-runner:
+    desc: Install the connectconformance binary into .tmp/bin.
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - GOBIN={{.BIN_DIR}} go install connectrpc.com/conformance/cmd/connectconformance@{{.CONFORMANCE_VERSION}}
+    status:
+      - test -x {{.BIN_DIR}}/connectconformance
+
+  build:
+    desc: Build the conformance server-under-test executable.
+    deps:
+      - generate
+    cmds:
+      - ../gradlew :conformance:installDist
+
+  run:
+    desc: Run server-mode conformance suite against connect-ktor for all engines.
+    deps:
+      - install-runner
+      - build
+    cmds:
+      - for: ["cio", "netty"]
+        task: run:engine
+        vars:
+          ENGINE: '{{.ITEM}}'
+
+  run:engine:
+    desc: Run server-mode conformance suite for a single Ktor engine.
+    internal: true
+    requires:
+      vars: [ENGINE]
+    cmds:
+      - echo "==> Running conformance suite for engine={{.ENGINE}}"
+      - >-
+        {{.BIN_DIR}}/connectconformance
+        --mode server
+        --conf {{.TASKFILE_DIR}}/config.yaml
+        --known-failing @{{.TASKFILE_DIR}}/known-failing-{{.ENGINE}}.txt
+        -v
+        --
+        {{.SERVER_BIN}} --engine {{.ENGINE}}

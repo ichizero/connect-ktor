@@ -7,6 +7,9 @@ includes:
   plugin:
     taskfile: ./protoc-gen-connect-ktor/Taskfile.yaml
     dir: ./protoc-gen-connect-ktor
+  conformance:
+    taskfile: ./conformance/Taskfile.yaml
+    dir: ./conformance
 tasks:
   lint:
     cmds:
@@ -28,3 +31,9 @@ tasks:
     cmds:
       - ./gradlew test
       - task: plugin:test
+  conformance:
+    desc: Run the connectrpc conformance suite against the connect-ktor server.
+    deps:
+      - build
+    cmds:
+      - task: conformance:run

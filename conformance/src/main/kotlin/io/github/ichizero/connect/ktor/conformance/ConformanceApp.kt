@@ -1,0 +1,67 @@
+package io.github.ichizero.connect.ktor.conformance
+
+import com.connectrpc.conformance.v1.ConformanceServiceHandlerInterface
+import com.connectrpc.conformance.v1.IdempotentUnaryRequest
+import com.connectrpc.conformance.v1.UnaryRequest
+import com.connectrpc.conformance.v1.UnimplementedRequest
+import com.connectrpc.conformance.v1.conformanceService
+import com.google.protobuf.TypeRegistry
+import io.github.ichizero.ktor.serialization.connect.connectProto
+import io.ktor.http.ContentType
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.engine.ApplicationEngine
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.contentnegotiation.ContentTypeWithQuality
+import io.ktor.server.request.contentType
+import io.ktor.server.resources.Resources
+import io.ktor.server.routing.routing
+import kotlinx.coroutines.runBlocking
+
+internal val conformanceTypeRegistry: TypeRegistry = TypeRegistry.newBuilder()
+    .add(UnaryRequest.getDescriptor())
+    .add(IdempotentUnaryRequest.getDescriptor())
+    .add(UnimplementedRequest.getDescriptor())
+    .build()
+
+internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInterface) {
+    install(Resources)
+    install(ContentNegotiation) {
+        val jsonConverter = ConformanceJsonConverter(conformanceTypeRegistry)
+        register(ContentType.Application.Json, jsonConverter)
+        register(ContentType("application", "connect+json"), jsonConverter)
+        connectProto()
+
+        // The Connect protocol does not require clients to send an Accept
+        // header — the response Content-Type mirrors the request. Surface
+        // the request Content-Type to ContentNegotiation so that the right
+        // converter is selected for the response body.
+        accept { call, items ->
+            if (items.isNotEmpty()) {
+                items
+            } else {
+                val ct = call.request.contentType()
+                if (ct == ContentType.Any) items else listOf(ContentTypeWithQuality(ct))
+            }
+        }
+    }
+    routing {
+        conformanceService(handler)
+    }
+}
+
+internal fun awaitPort(engine: ApplicationEngine): Int {
+    val deadline = System.currentTimeMillis() + 10_000
+    while (System.currentTimeMillis() < deadline) {
+        val connectors = try {
+            runBlocking { engine.resolvedConnectors() }
+        } catch (_: Throwable) {
+            emptyList()
+        }
+        if (connectors.isNotEmpty()) {
+            return connectors.first().port
+        }
+        Thread.sleep(50)
+    }
+    error("Ktor server did not start within 10s")
+}
