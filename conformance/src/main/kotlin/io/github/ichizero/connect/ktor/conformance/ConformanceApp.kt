@@ -8,7 +8,7 @@ import com.connectrpc.conformance.v1.UnimplementedRequest
 import com.connectrpc.conformance.v1.conformanceService
 import com.connectrpc.extensions.GoogleJavaProtobufStrategy
 import com.google.protobuf.TypeRegistry
-import io.github.ichizero.connect.ktor.ConnectBodyLimit
+import io.github.ichizero.connect.ktor.connectBodyLimit
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingJsonStrategy
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingStrategies
 import io.github.ichizero.connect.ktor.streaming.installConnectStreamingCodecs
@@ -66,8 +66,11 @@ internal fun Application.conformanceModule(
         }
     }
     routing {
+        // messageReceiveLimit == 0 means the conformance runner did not request a
+        // cap (see ServerCompatRequest.message_receive_limit, which is uint32 and
+        // uses 0 as the "unset" sentinel).
         if (messageReceiveLimit > 0L) {
-            install(ConnectBodyLimit) { maxBytes = messageReceiveLimit }
+            connectBodyLimit(maxBytes = messageReceiveLimit)
         }
         conformanceService(handler)
     }
