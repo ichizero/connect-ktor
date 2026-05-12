@@ -46,7 +46,7 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 | TLS | `supports_tls` | ✅ (Netty only) |
 |  | `supports_tls_client_certs` (mTLS) | ✅ (Netty only) |
 | Trailers | `supports_trailers` (sent as `Trailer-*` headers on unary responses) | ✅ |
-| Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ❌ |
+| Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ✅ |
 | Message receive limit | `supports_message_receive_limit` | ❌ |
 
 Verified Ktor engines:
@@ -86,9 +86,11 @@ additional work in the library and/or protoc plugin:
   `UnsupportedOperationException` for HTTPS. Use Netty if you need
   TLS termination at the Ktor layer; otherwise terminate TLS in
   front of CIO.
-- **Connect GET (idempotent unary)** — the generator emits POST routes
-  only; opt-in `option idempotency_level = NO_SIDE_EFFECTS;` handling
-  is the prerequisite.
+- **Connect GET (idempotent unary)** — implemented. Methods annotated
+  with `option idempotency_level = NO_SIDE_EFFECTS;` get a `GET` route
+  in addition to `POST`. Query-parameter decoding (`connect=v1`,
+  `encoding=proto|json`, `message=<base64url>`) is handled by
+  `handleGet<Resource, Req, Res>(handler::method)` in the library.
 - **Compression negotiation** — gzip/br/zstd/deflate/snappy require
   Ktor's `Compression` plugin and Connect-aware
   `Content-Encoding`/`Accept-Encoding` validation. Today an unsupported
