@@ -11,21 +11,32 @@ import io.ktor.server.response.respondBytes
 /**
  * A route-scoped plugin that validates the `Content-Encoding` request header for unary Connect RPCs.
  *
- * This guard intercepts the receive pipeline after Ktor's [io.ktor.server.plugins.compression.Compression]
- * plugin has had the opportunity to decode the request body.  If the `Content-Encoding` header is still
- * present at that point (i.e. the encoding was not handled by [Compression]) the guard responds with
- * [Code.UNIMPLEMENTED] and prevents the request body from being read.
+ * This guard intercepts the receive pipeline at the `Transform` phase, *after* Ktor's
+ * [io.ktor.server.plugins.compression.Compression] plugin has had the opportunity to decode the
+ * request body.  If the `Content-Encoding` header is still present at that point (i.e. the encoding
+ * was not handled by `Compression`), the guard responds with [Code.UNIMPLEMENTED] and prevents the
+ * request body from being read.
  *
  * `identity` (i.e. no compression) is always permitted.
  *
+ * ## Important: install `Compression` at the application scope
+ *
+ * The guard relies on the [io.ktor.server.plugins.compression.Compression] plugin running its
+ * `ContentDecoding` phase *before* `UnaryCompressionGuard`'s `onCallReceive` interceptor.  This
+ * ordering is only guaranteed when `Compression` is installed at the **application scope** (i.e.
+ * outside the `routing { }` block).  If `Compression` is installed inside the same route scope as
+ * `UnaryCompressionGuard` — or omitted entirely — the guard will treat *every* non-identity
+ * `Content-Encoding` (including `gzip`) as unknown and respond with `Code.UNIMPLEMENTED`, because
+ * no decoder will have stripped the header.
+ *
  * ## Usage
  *
- * Install the Ktor [io.ktor.server.plugins.compression.Compression] plugin in your application with
- * the encodings you want to support, then install [UnaryCompressionGuard] on the route scope that
- * serves Connect unary RPCs:
+ * Install the Ktor [io.ktor.server.plugins.compression.Compression] plugin at the **application
+ * scope** with the encodings you want to support, then install [UnaryCompressionGuard] on the
+ * route scope that serves Connect unary RPCs:
  *
  * ```kotlin
- * install(Compression) {
+ * install(Compression) {       // <- application scope (outside `routing { }`)
  *     gzip()
  *     identity()
  * }
@@ -37,6 +48,13 @@ import io.ktor.server.response.respondBytes
  *
  * When [io.ktor.server.plugins.compression.Compression] is not installed, all non-identity encodings
  * are rejected because no decompressor will strip the `Content-Encoding` header.
+ *
+ * ## Implementation note
+ *
+ * This guard relies on Ktor's internal receive-pipeline phase ordering (`ContentDecoding` is
+ * inserted *before* `Transform`, and `onCallReceive` interceptors run at `Transform`).  A
+ * `testApplication` regression test exercises a real gzip-encoded request body to pin this
+ * contract; if Ktor changes the phase layout the test will fail.
  */
 val UnaryCompressionGuard: RouteScopedPlugin<Unit> = createRouteScopedPlugin("UnaryCompressionGuard") {
     onCallReceive { call ->
