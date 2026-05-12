@@ -262,11 +262,19 @@ gzip-encoded request and response bodies. `UnaryCompressionGuard` rejects any
 `Content-Encoding` that is not registered with `Compression`, returning
 `Code.UNIMPLEMENTED` before the body is read.
 
+> **Important:** install `Compression` at the **application scope** (i.e.
+> *outside* the `routing { }` block). The guard relies on Ktor's
+> `Compression` plugin running its `ContentDecoding` phase before the
+> `Transform` phase where `UnaryCompressionGuard` intercepts. Installing
+> `Compression` inside the same route scope as `UnaryCompressionGuard`
+> would reverse that order and cause every non-identity request — even
+> ones the server knows how to decode — to be rejected.
+
 ```kotlin
 fun main() {
     embeddedServer(CIO, port = 8080) {
         install(Resources)
-        install(Compression) {
+        install(Compression) {       // <- application scope (outside `routing { }`)
             gzip()
             identity()
         }
