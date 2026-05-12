@@ -62,23 +62,21 @@ private fun parsePkcs8PrivateKey(pem: ByteArray): PrivateKey {
     val body = match.groupValues[2].replace(Regex("\\s"), "")
     val rawDer = Base64.getDecoder().decode(body)
 
-    // Conformance runner emits PKCS#1 ("BEGIN RSA PRIVATE KEY"); newer
-    // tooling may also emit SEC1 ("BEGIN EC PRIVATE KEY") or unencrypted
-    // PKCS#8 ("BEGIN PRIVATE KEY"). Promote PKCS#1 / SEC1 to PKCS#8 so the
-    // standard KeyFactory can consume it.
-    val (der, algoCandidates) = when {
-        type == "RSA PRIVATE KEY" -> wrapPkcs1RsaIntoPkcs8(rawDer) to listOf("RSA")
+    // Today the conformance runner emits PKCS#1 ("BEGIN RSA PRIVATE KEY"),
+    // which Java's KeyFactory cannot consume directly, so wrap it in a
+    // PKCS#8 PrivateKeyInfo. Unencrypted PKCS#8 ("BEGIN PRIVATE KEY") is
+    // passed through as-is. SEC1 ("BEGIN EC PRIVATE KEY") would need a
+    // dedicated PKCS#8 wrapper that embeds the curve OID, and the runner
+    // never emits it, so it is rejected loudly rather than mis-parsed.
+    val (der, algoCandidates) = when (type) {
+        "RSA PRIVATE KEY" -> wrapPkcs1RsaIntoPkcs8(rawDer) to listOf("RSA")
 
-        type == "EC PRIVATE KEY" -> rawDer to listOf("EC")
+        "PRIVATE KEY" -> rawDer to listOf("RSA", "EC", "DSA")
 
-        // SEC1; JDK accepts via PKCS8
-        type.contains("RSA") -> rawDer to listOf("RSA")
-
-        type.contains("EC") -> rawDer to listOf("EC")
-
-        type.contains("DSA") -> rawDer to listOf("DSA")
-
-        else -> rawDer to listOf("EC", "RSA", "DSA")
+        else -> error(
+            "unsupported private key PEM type '$type'; " +
+                "expected 'PRIVATE KEY' (PKCS#8) or 'RSA PRIVATE KEY' (PKCS#1)",
+        )
     }
 
     val keySpec = PKCS8EncodedKeySpec(der)
