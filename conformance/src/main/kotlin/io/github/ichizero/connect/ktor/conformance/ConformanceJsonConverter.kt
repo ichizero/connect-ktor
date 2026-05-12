@@ -23,7 +23,7 @@ import kotlinx.coroutines.withContext
  * Used by the conformance server because [com.connectrpc.extensions.GoogleJavaJSONAdapter]
  * does not propagate the registry when printing messages (only when parsing them).
  */
-class ConformanceJsonConverter(private val registry: TypeRegistry) : ContentConverter {
+class ConformanceJsonConverter(registry: TypeRegistry) : ContentConverter {
     private val printer = JsonFormat.printer().usingTypeRegistry(registry)
     private val parser = JsonFormat.parser().ignoringUnknownFields().usingTypeRegistry(registry)
 
@@ -45,12 +45,17 @@ class ConformanceJsonConverter(private val registry: TypeRegistry) : ContentConv
         typeInfo: TypeInfo,
         content: ByteReadChannel,
     ): Any = withContext(Dispatchers.IO) {
-        val builder = newBuilderFor(typeInfo.type.java as Class<out Message>)
+        @Suppress("UNCHECKED_CAST")
+        val messageClass = typeInfo.type.java as Class<out Message>
+        val builder = newBuilderFor(messageClass)
         try {
             parser.merge(content.toInputStream().reader(charset), builder)
             builder.build()
         } catch (cause: Throwable) {
-            throw JsonConvertException("Failed to deserialize Connect JSON: ${cause.message}", cause)
+            throw JsonConvertException(
+                "Failed to deserialize Connect JSON into ${messageClass.name}: ${cause.message}",
+                cause,
+            )
         }
     }
 
