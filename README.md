@@ -30,7 +30,7 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 |  | `PROTOCOL_GRPC` | ❌ |
 |  | `PROTOCOL_GRPC_WEB` | ❌ |
 | HTTP version | `HTTP_VERSION_1` (HTTP/1.1) | ✅ |
-|  | `HTTP_VERSION_2` (HTTP/2 / h2c) | ❌ |
+|  | `HTTP_VERSION_2` (HTTP/2 / h2c) | ✅ (Netty only) |
 |  | `HTTP_VERSION_3` (HTTP/3 over QUIC) | ❌ |
 | Codec | `CODEC_PROTO` (`application/proto`) | ✅ |
 |  | `CODEC_JSON` (`application/json`) | ✅ |
@@ -49,10 +49,10 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 
 Verified Ktor engines:
 
-| Engine | Conformance run | Notes |
-|---|:-:|---|
-| `io.ktor.server.cio.CIO` | ✅ | Three test cases that send duplicate request headers fail because CIO collapses repeated header values; tracked in `conformance/known-failing-cio.txt`. |
-| `io.ktor.server.netty.Netty` | ✅ | All in-scope cases pass; `unexpected-compression` is the only known failure (see roadmap below). |
+| Engine | HTTP versions | Notes |
+|---|---|---|
+| `io.ktor.server.cio.CIO` | HTTP/1.1 | CIO does not speak HTTP/2. A handful of test cases that send duplicate request headers fail because CIO collapses repeated header values; tracked in `conformance/known-failing-cio.txt`. |
+| `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c) | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for Netty, so the same connector serves both HTTP/1.1 and HTTP/2 cleartext. `unexpected-compression` is the only known failure (see roadmap below). |
 
 Run the suite locally with:
 
@@ -62,7 +62,8 @@ task conformance
 
 which builds the `:conformance` subproject, installs
 `connectconformance`, and runs the suite once per engine using the
-`config.yaml` and `known-failing-<engine>.txt` files in `conformance/`.
+`config-<engine>.yaml` and `known-failing-<engine>.txt` files in
+`conformance/`.
 
 ### Connect protocol roadmap
 
@@ -76,9 +77,9 @@ additional work in the library and/or protoc plugin:
 - **gRPC / gRPC-Web** — connect-ktor speaks Connect only. Supporting
   gRPC additionally requires Length-Prefixed-Message framing and a
   trailer-only error response path.
-- **HTTP/2 and HTTP/3** — gated on engine choice; would need TLS or
-  h2c configuration on a Netty-based deployment, plus protocol support
-  for streaming.
+- **HTTP/2 (CIO) and HTTP/3** — the CIO engine has no HTTP/2 server
+  support upstream; HTTP/3 needs QUIC plus TLS, which Ktor does not
+  ship out of the box.
 - **TLS / mTLS** — the conformance runner already hands the server a
   self-signed certificate; the bootstrap just needs an `sslConnector`
   wired into `embeddedServer`.

@@ -48,7 +48,7 @@ tasks:
       - >-
         {{.BIN_DIR}}/connectconformance
         --mode server
-        --conf {{.TASKFILE_DIR}}/config.yaml
+        --conf {{.TASKFILE_DIR}}/config-{{.ENGINE}}.yaml
         --known-failing @{{.TASKFILE_DIR}}/known-failing-{{.ENGINE}}.txt
         -v
         --

@@ -3,7 +3,10 @@ package io.github.ichizero.connect.ktor.conformance
 import com.connectrpc.conformance.v1.ConformanceServiceHandlerInterface
 import com.connectrpc.conformance.v1.ServerCompatRequest
 import com.connectrpc.conformance.v1.ServerCompatResponse
-import io.ktor.server.engine.ApplicationEngineFactory
+import io.ktor.server.application.Application
+import io.ktor.server.cio.CIO
+import io.ktor.server.engine.EmbeddedServer
+import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import java.io.PrintStream
@@ -36,13 +39,27 @@ fun main(args: Array<String>) {
     }
 
     val handler: ConformanceServiceHandlerInterface = ConformanceServiceImpl()
+    val module: Application.() -> Unit = { conformanceModule(handler) }
 
-    val server = embeddedServer(
-        factory = engine.factory,
-        port = 0,
-        host = "127.0.0.1",
-        module = { conformanceModule(handler) },
-    )
+    val server: EmbeddedServer<*, *> = when (engine) {
+        Engine.CIO -> embeddedServer(CIO, port = 0, host = "127.0.0.1", module = module)
+
+        Engine.NETTY -> embeddedServer(
+            Netty,
+            configure = {
+                connector {
+                    port = 0
+                    host = "127.0.0.1"
+                }
+                // Default Netty config only speaks HTTP/1.1. Opt into h2c so the
+                // same connector can also serve HTTP/2 over cleartext for the
+                // conformance suite's HTTP_VERSION_2 cases.
+                enableHttp2 = true
+                enableH2c = true
+            },
+            module = module,
+        )
+    }
     server.start(wait = false)
 
     val port = awaitPort(server.engine)
@@ -68,9 +85,9 @@ fun main(args: Array<String>) {
     latch.await()
 }
 
-internal enum class Engine(val factory: ApplicationEngineFactory<*, *>) {
-    CIO(io.ktor.server.cio.CIO),
-    NETTY(Netty),
+internal enum class Engine {
+    CIO,
+    NETTY,
     ;
 
     companion object {
