@@ -17,6 +17,83 @@ It aims to gradually introduce the Connect Protocol into existing Ktor REST serv
 - protoc-gen-connect-ktor
   - Generate Ktor route handler interfaces from Protocol Buffers service definitions.
 
+## Connect Protocol support matrix
+
+The following matrix summarises which axes of the [Connect protocol
+conformance suite](https://github.com/connectrpc/conformance) connect-ktor
+currently exercises. Anything marked ❌ is out of scope today; see the
+[Roadmap](#connect-protocol-roadmap) section below for the reasons.
+
+| Feature | Option | Supported |
+|---|---|:-:|
+| Protocol | `PROTOCOL_CONNECT` | ✅ |
+|  | `PROTOCOL_GRPC` | ❌ |
+|  | `PROTOCOL_GRPC_WEB` | ❌ |
+| HTTP version | `HTTP_VERSION_1` (HTTP/1.1) | ✅ |
+|  | `HTTP_VERSION_2` (HTTP/2 / h2c) | ❌ |
+|  | `HTTP_VERSION_3` (HTTP/3 over QUIC) | ❌ |
+| Codec | `CODEC_PROTO` (`application/proto`) | ✅ |
+|  | `CODEC_JSON` (`application/json`) | ✅ |
+| Compression | `COMPRESSION_IDENTITY` | ✅ |
+|  | `COMPRESSION_GZIP` / `BR` / `ZSTD` / `DEFLATE` / `SNAPPY` | ❌ |
+| Stream type | `STREAM_TYPE_UNARY` | ✅ |
+|  | `STREAM_TYPE_CLIENT_STREAM` | ❌ |
+|  | `STREAM_TYPE_SERVER_STREAM` | ❌ |
+|  | `STREAM_TYPE_HALF_DUPLEX_BIDI_STREAM` | ❌ |
+|  | `STREAM_TYPE_FULL_DUPLEX_BIDI_STREAM` | ❌ |
+| TLS | `supports_tls` | ❌ |
+|  | `supports_tls_client_certs` (mTLS) | ❌ |
+| Trailers | `supports_trailers` (sent as `Trailer-*` headers on unary responses) | ✅ |
+| Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ❌ |
+| Message receive limit | `supports_message_receive_limit` | ❌ |
+
+Verified Ktor engines:
+
+| Engine | Conformance run | Notes |
+|---|:-:|---|
+| `io.ktor.server.cio.CIO` | ✅ | Three test cases that send duplicate request headers fail because CIO collapses repeated header values; tracked in `conformance/known-failing-cio.txt`. |
+| `io.ktor.server.netty.Netty` | ✅ | All in-scope cases pass; `unexpected-compression` is the only known failure (see roadmap below). |
+
+Run the suite locally with:
+
+```bash
+task conformance
+```
+
+which builds the `:conformance` subproject, installs
+`connectconformance`, and runs the suite once per engine using the
+`config.yaml` and `known-failing-<engine>.txt` files in `conformance/`.
+
+### Connect protocol roadmap
+
+These are intentionally outside the current matrix and would require
+additional work in the library and/or protoc plugin:
+
+- **Streaming RPCs** — `protoc-gen-connect-ktor` only emits unary
+  `post<Resource, Req>` routes today. Adding client/server/bidi streams
+  requires both generator changes and a streaming framing layer in the
+  library.
+- **gRPC / gRPC-Web** — connect-ktor speaks Connect only. Supporting
+  gRPC additionally requires Length-Prefixed-Message framing and a
+  trailer-only error response path.
+- **HTTP/2 and HTTP/3** — gated on engine choice; would need TLS or
+  h2c configuration on a Netty-based deployment, plus protocol support
+  for streaming.
+- **TLS / mTLS** — the conformance runner already hands the server a
+  self-signed certificate; the bootstrap just needs an `sslConnector`
+  wired into `embeddedServer`.
+- **Connect GET (idempotent unary)** — the generator emits POST routes
+  only; opt-in `option idempotency_level = NO_SIDE_EFFECTS;` handling
+  is the prerequisite.
+- **Compression negotiation** — gzip/br/zstd/deflate/snappy require
+  Ktor's `Compression` plugin and Connect-aware
+  `Content-Encoding`/`Accept-Encoding` validation. Today an unsupported
+  encoding is silently accepted, which is the sole known-failing case
+  on Netty.
+- **`message_receive_limit` enforcement** — the conformance runner
+  passes a max body size; the server would need to enforce it before
+  parsing the body.
+
 
 ## Usage
 
