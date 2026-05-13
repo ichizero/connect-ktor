@@ -1,6 +1,7 @@
 package io.github.ichizero.connect.ktor.conformance
 
 import java.io.ByteArrayInputStream
+import java.security.GeneralSecurityException
 import java.security.KeyFactory
 import java.security.KeyStore
 import java.security.PrivateKey
@@ -80,11 +81,13 @@ private fun parsePkcs8PrivateKey(pem: ByteArray): PrivateKey {
     }
 
     val keySpec = PKCS8EncodedKeySpec(der)
-    var lastError: Throwable? = null
+    var lastError: GeneralSecurityException? = null
     for (algo in algoCandidates) {
         try {
             return KeyFactory.getInstance(algo).generatePrivate(keySpec)
-        } catch (ex: Throwable) {
+        } catch (ex: GeneralSecurityException) {
+            // NoSuchAlgorithmException / InvalidKeySpecException — try the next algorithm.
+            // Other Throwables (e.g. OOME) propagate.
             lastError = ex
         }
     }
