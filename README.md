@@ -52,8 +52,8 @@ Verified Ktor engines:
 
 | Engine | HTTP versions | Notes |
 |---|---|---|
-| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. A handful of test cases that send duplicate request headers fail because CIO collapses repeated header values; tracked in `conformance/known-failing-cio.txt`. |
-| `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. `unexpected-compression` is the only known failure (see roadmap below). |
+| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. 8 cases are known-failing — chiefly because CIO collapses duplicate request headers into one — and are pinned in `conformance/known-failing-cio.txt`. |
+| `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. 4 cases are known-failing — all four `Connect Unexpected Requests/**/unexpected-compression` permutations across HTTP/1.1 + HTTP/2 × TLS off/on — and are pinned in `conformance/known-failing-netty.txt`. |
 
 Run the suite locally with:
 
@@ -91,8 +91,9 @@ additional work in the library and/or protoc plugin:
 - **Compression negotiation** — gzip/br/zstd/deflate/snappy require
   Ktor's `Compression` plugin and Connect-aware
   `Content-Encoding`/`Accept-Encoding` validation. Today an unsupported
-  encoding is silently accepted, which is the sole known-failing case
-  on Netty.
+  encoding is silently accepted, which is the only category of known
+  failure on Netty (4 permutations across HTTP/1.1 + HTTP/2 × TLS
+  off/on).
 - **`message_receive_limit` enforcement** — the conformance runner
   passes a max body size; the server would need to enforce it before
   parsing the body.
