@@ -1,0 +1,16 @@
+version: v2
+clean: true
+inputs:
+  - module: buf.build/connectrpc/conformance
+managed:
+  enabled: true
+  override:
+    - file_option: java_package_prefix
+      value: com
+plugins:
+  - remote: buf.build/protocolbuffers/java:v34.1
+    out: build/generated/sources/bufgen
+  - remote: buf.build/protocolbuffers/kotlin:v34.1
+    out: build/generated/sources/bufgen
+  - local: ../protoc-gen-connect-ktor/out/protoc-gen-connect-ktor
+    out: build/generated/sources/bufgen

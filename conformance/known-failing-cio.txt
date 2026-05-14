@@ -1,0 +1,19 @@
+# Known-failing conformance test cases for the connect-ktor server.
+# Entries follow https://github.com/connectrpc/conformance/blob/main/docs/configuring_and_running_tests.md
+#
+# Ktor's CIO server collapses repeated request headers down to a single value,
+# so tests that depend on round-tripping duplicate header values cannot pass
+# without switching engines.
+Duplicate Metadata/**
+# Reference client sends duplicate "X-Conformance-Test" headers in these cases;
+# CIO collapses them so the echoed request_info disagrees with the expectation.
+# Listed with the exact case names so an unrelated regression in `Basic` does
+# not get silently absorbed.
+Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_PROTO/Compression:COMPRESSION_IDENTITY/TLS:false/unary/success
+Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_JSON/Compression:COMPRESSION_IDENTITY/TLS:false/unary/success
+Server Empty Requests/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/TLS:false/unary/empty-request
+
+# connect-ktor does not yet recognise/reject unsupported request compression
+# encodings, so the server processes the body and responds with 200 OK rather
+# than CODE_UNIMPLEMENTED.
+Connect Unexpected Requests/**/unexpected-compression

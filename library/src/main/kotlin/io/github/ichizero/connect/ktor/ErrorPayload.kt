@@ -12,15 +12,17 @@ import okio.ByteString.Companion.toByteString
  *
  * For more details about the error response, see [Connect Protocol Reference](https://connectrpc.com/docs/protocol#error-end-stream).
  */
-fun ConnectException.toErrorJsonBytes(): ByteArray = Json
+fun ConnectException.toErrorJsonBytes(): ByteArray = errorJson
     .encodeToString(
         ErrorPayload.serializer(),
         ErrorPayload(
             code = code.codeName,
             message = message,
-            details = details.map { ErrorDetailPayload.of(it) },
+            details = details.map { ErrorDetailPayload.of(it) }.ifEmpty { null },
         ),
     ).toByteArray()
+
+private val errorJson = Json { explicitNulls = false }
 
 /**
  * Error represents an error response of the Connect protocol.
@@ -43,7 +45,9 @@ internal data class ErrorDetailPayload(
     companion object {
         fun of(detail: ConnectErrorDetail): ErrorDetailPayload = ErrorDetailPayload(
             type = detail.type,
-            value = detail.payload.base64(),
+            // Connect protocol requires base64 without padding for error details.
+            // https://connectrpc.com/docs/protocol/#error-end-stream
+            value = detail.payload.base64().trimEnd('='),
         )
     }
 }

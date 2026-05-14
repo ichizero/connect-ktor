@@ -12,3 +12,4 @@ plugins {
 
 rootProject.name = "connect-ktor"
 include(":library")
+include(":conformance")

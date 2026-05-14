@@ -195,3 +195,5 @@ go.work.sum
 
 # Added by goreleaser init:
 dist/
+# Conformance runner scratch dir (connectconformance binary, etc.)
+.tmp/
