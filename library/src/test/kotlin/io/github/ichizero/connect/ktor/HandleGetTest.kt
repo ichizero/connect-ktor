@@ -14,6 +14,8 @@ import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.resources.Resource
 import io.ktor.server.application.ApplicationCall
@@ -63,6 +65,8 @@ class HandleGetTest : FunSpec({
             )
 
             response.status shouldBe HttpStatusCode.OK
+            // Connect spec: proto request → proto response Content-Type.
+            response.headers[HttpHeaders.ContentType] shouldContain "application/proto"
 
             // Decode and verify the response body.
             val responseBytes = response.bodyAsBytes()
@@ -87,7 +91,37 @@ class HandleGetTest : FunSpec({
             )
 
             response.status shouldBe HttpStatusCode.OK
+            // Connect spec: json request → json response Content-Type.
+            response.headers[HttpHeaders.ContentType] shouldContain ContentType.Application.Json.contentType
             response.bodyAsText() shouldContain "hello json"
+        }
+    }
+
+    test("compression=identity is accepted") {
+        // Explicit `compression=identity` is the no-op case and MUST succeed (spec).
+        startApp {
+            val req = SayRequest.newBuilder().setSentence("identity ok").build()
+            val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(req.toByteArray())
+
+            val response = client.get(
+                "/connectrpc.eliza.v1.ElizaService/Say" +
+                    "?connect=v1&encoding=proto&base64=1&compression=identity&message=$encoded",
+            )
+
+            response.status shouldBe HttpStatusCode.OK
+        }
+    }
+
+    test("malformed base64 message returns 400 invalid_argument") {
+        startApp {
+            // '!!!' is not valid base64url and triggers IllegalArgumentException in decode().
+            val response = client.get(
+                "/connectrpc.eliza.v1.ElizaService/Say" +
+                    "?connect=v1&encoding=proto&base64=1&message=!!!",
+            )
+
+            response.status shouldBe HttpStatusCode.BadRequest
+            response.bodyAsText() shouldContain "invalid_argument"
         }
     }
 
