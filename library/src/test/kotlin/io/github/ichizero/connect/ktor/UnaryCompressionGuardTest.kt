@@ -37,7 +37,10 @@ class UnaryCompressionGuardTest : FunSpec({
         return sink.toByteArray()
     }
 
-    fun Application.withGuard(installCompression: Boolean) {
+    fun Application.withGuard(
+        installCompression: Boolean,
+        maxDecompressedBytes: Long = Long.MAX_VALUE,
+    ) {
         if (installCompression) {
             install(Compression) {
                 gzip()
@@ -45,7 +48,10 @@ class UnaryCompressionGuardTest : FunSpec({
             }
         }
         routing {
-            install(UnaryCompressionGuard)
+            install(UnaryCompressionGuard) {
+                supportedEncodings = setOf("gzip", "identity")
+                this.maxDecompressedBytes = maxDecompressedBytes
+            }
             post("/echo") {
                 val body = call.receiveText()
                 call.respondText(body, ContentType.Text.Plain)
@@ -115,9 +121,54 @@ class UnaryCompressionGuardTest : FunSpec({
             response.bodyAsText() shouldEqualJson """
                 {
                     "code": "unimplemented",
-                    "message": "unsupported Content-Encoding: br"
+                    "message": "unsupported Content-Encoding \"br\"; supported: gzip, identity"
                 }
             """
+        }
+    }
+
+    test("empty Content-Encoding header is treated as absent and passes through") {
+        testApplication {
+            application { withGuard(installCompression = true) }
+
+            val response = client.post("/echo") {
+                header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                header(HttpHeaders.ContentEncoding, "")
+                setBody("hello")
+            }
+
+            response.status shouldBe HttpStatusCode.OK
+            response.bodyAsText() shouldBe "hello"
+        }
+    }
+
+    test("whitespace-only Content-Encoding header is treated as absent and passes through") {
+        testApplication {
+            application { withGuard(installCompression = true) }
+
+            val response = client.post("/echo") {
+                header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                header(HttpHeaders.ContentEncoding, "   ")
+                setBody("hello")
+            }
+
+            response.status shouldBe HttpStatusCode.OK
+            response.bodyAsText() shouldBe "hello"
+        }
+    }
+
+    test("uppercase IDENTITY Content-Encoding is accepted") {
+        testApplication {
+            application { withGuard(installCompression = true) }
+
+            val response = client.post("/echo") {
+                header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                header(HttpHeaders.ContentEncoding, "IDENTITY")
+                setBody("hello")
+            }
+
+            response.status shouldBe HttpStatusCode.OK
+            response.bodyAsText() shouldBe "hello"
         }
     }
 
@@ -132,6 +183,70 @@ class UnaryCompressionGuardTest : FunSpec({
             }
 
             response.status shouldBe HttpStatusCode.NotImplemented
+        }
+    }
+
+    test("body within maxDecompressedBytes passes through after buffering") {
+        testApplication {
+            application { withGuard(installCompression = true, maxDecompressedBytes = 16) }
+
+            val response = client.post("/echo") {
+                header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                setBody("hello")
+            }
+
+            response.status shouldBe HttpStatusCode.OK
+            response.bodyAsText() shouldBe "hello"
+        }
+    }
+
+    test("body equal to maxDecompressedBytes is accepted") {
+        testApplication {
+            application { withGuard(installCompression = true, maxDecompressedBytes = 5) }
+
+            val response = client.post("/echo") {
+                header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                setBody("hello")
+            }
+
+            response.status shouldBe HttpStatusCode.OK
+            response.bodyAsText() shouldBe "hello"
+        }
+    }
+
+    test("body exceeding maxDecompressedBytes is rejected with RESOURCE_EXHAUSTED") {
+        testApplication {
+            application { withGuard(installCompression = true, maxDecompressedBytes = 4) }
+
+            val response = client.post("/echo") {
+                header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                setBody("hello")
+            }
+
+            response.status shouldBe HttpStatusCode.TooManyRequests
+            // language=json
+            response.bodyAsText() shouldEqualJson """
+                {
+                    "code": "resource_exhausted",
+                    "message": "decompressed request body exceeds the 4 byte limit"
+                }
+            """
+        }
+    }
+
+    test("gzip-bomb whose decompressed body exceeds maxDecompressedBytes is rejected") {
+        testApplication {
+            application { withGuard(installCompression = true, maxDecompressedBytes = 8) }
+
+            // 256 'A's compresses to ~15 bytes but decodes to 256 bytes — exceeds the 8-byte cap.
+            val payload = "A".repeat(256)
+            val response = client.post("/echo") {
+                header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                header(HttpHeaders.ContentEncoding, "gzip")
+                setBody(gzip(payload))
+            }
+
+            response.status shouldBe HttpStatusCode.TooManyRequests
         }
     }
 })

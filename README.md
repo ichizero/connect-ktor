@@ -269,6 +269,11 @@ gzip-encoded request and response bodies. `UnaryCompressionGuard` rejects any
 > `Compression` inside the same route scope as `UnaryCompressionGuard`
 > would reverse that order and cause every non-identity request — even
 > ones the server knows how to decode — to be rejected.
+>
+> **Keep `supportedEncodings` in sync with the installed encoders.** The
+> set is only used to populate error messages (per the Connect spec's
+> recommendation), so a mismatch will not change which encodings are
+> accepted but will produce misleading rejection responses.
 
 ```kotlin
 fun main() {
@@ -282,7 +287,13 @@ fun main() {
             install(ContentNegotiation) {
                 connectJson()
             }
-            install(UnaryCompressionGuard)
+            install(UnaryCompressionGuard) {
+                supportedEncodings = setOf("gzip", "identity")
+                // Cap the post-decompression body size to defend against gzip
+                // bombs. Choose a value larger than your largest legitimate
+                // request; the body is buffered in memory up to this limit.
+                maxDecompressedBytes = 4 * 1024 * 1024
+            }
             elizaService(ElizaServiceHandler)
         }
     }.start(wait = false)
