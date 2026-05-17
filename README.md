@@ -49,7 +49,7 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 | TLS | `supports_tls` | ✅ (Netty only) |
 |  | `supports_tls_client_certs` (mTLS) | ✅ (Netty only) |
 | Trailers | `supports_trailers` (unary: `Trailer-*` HTTP headers; streaming: end-frame `metadata` field) | ✅ |
-| Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ✅ |
+| Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ✅ (Netty fully; CIO passes except the two `Connect with GET/.../success` cases that exercise duplicate `X-Conformance-Test` headers — same CIO upstream limitation as the `Duplicate Metadata` / `Basic` entries in `conformance/known-failing-cio.txt`) |
 | Message receive limit | `supports_message_receive_limit` | ❌ |
 
 Verified Ktor engines:
