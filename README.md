@@ -76,7 +76,11 @@ additional work in the library and/or protoc plugin:
 - **Streaming RPCs** — `protoc-gen-connect-ktor` only emits unary
   `post<Resource, Req>` routes today. Adding client/server/bidi streams
   requires both generator changes and a streaming framing layer in the
-  library.
+  library. Note that Ktor's `Compression` plugin will corrupt
+  Length-Prefixed-Message frames if applied to streaming routes; when
+  streaming support lands, callers will need to scope `Compression` so
+  it does not match the streaming routes (e.g. via Ktor's
+  `condition { }` or `suppressCompression()`).
 - **gRPC / gRPC-Web** — connect-ktor speaks Connect only. Supporting
   gRPC additionally requires Length-Prefixed-Message framing and a
   trailer-only error response path.
@@ -214,6 +218,11 @@ gzip-encoded request and response bodies. `UnaryCompressionGuard` rejects any
 > `Compression` inside the same route scope as `UnaryCompressionGuard`
 > would reverse that order and cause every non-identity request — even
 > ones the server knows how to decode — to be rejected.
+>
+> **Keep `supportedEncodings` in sync with the installed encoders.** The
+> set is only used to populate error messages (per the Connect spec's
+> recommendation), so a mismatch will not change which encodings are
+> accepted but will produce misleading rejection responses.
 
 ```kotlin
 fun main() {
@@ -227,7 +236,13 @@ fun main() {
             install(ContentNegotiation) {
                 connectJson()
             }
-            install(UnaryCompressionGuard)
+            install(UnaryCompressionGuard) {
+                supportedEncodings = setOf("gzip", "identity")
+                // Cap the post-decompression body size to defend against gzip
+                // bombs. Choose a value larger than your largest legitimate
+                // request; the body is buffered in memory up to this limit.
+                maxDecompressedBytes = 4 * 1024 * 1024
+            }
             elizaService(ElizaServiceHandler)
         }
     }.start(wait = false)
