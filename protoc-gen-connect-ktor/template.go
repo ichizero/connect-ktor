@@ -18,6 +18,7 @@ type serviceData struct {
 	Name             string
 	Comment          string
 	Methods          []*methodData
+	HasIdempotent    bool
 }
 
 type methodData struct {
@@ -36,10 +37,14 @@ package {{ .JavaPackageName }}
 
 import com.connectrpc.ResponseMessage
 import io.github.ichizero.connect.ktor.handle
+{{- if .HasIdempotent }}
 import io.github.ichizero.connect.ktor.handleGet
+{{- end }}
 import io.ktor.resources.Resource
 import io.ktor.server.application.ApplicationCall
+{{- if .HasIdempotent }}
 import io.ktor.server.resources.get
+{{- end }}
 import io.ktor.server.resources.post
 import io.ktor.server.routing.Route
 
