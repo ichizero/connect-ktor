@@ -76,6 +76,7 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     }
 
     // Validate that compression is either absent or 'identity'.
+    // TODO: accept-encoding query param is ignored; revisit when adding gzip response support.
     val compression = request.queryParameters["compression"]
     if (compression != null && compression != "identity") {
         val error = ConnectException(
