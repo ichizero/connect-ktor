@@ -12,53 +12,23 @@ import io.ktor.server.request.contentLength
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 
-/**
- * Configuration for [ConnectBodyLimit].
- */
-class ConnectBodyLimitConfig {
-    /**
-     * The maximum number of bytes allowed for an incoming request body.
-     *
-     * Requests exceeding this limit are rejected with a [Code.RESOURCE_EXHAUSTED]
-     * Connect error.  Defaults to [Long.MAX_VALUE] (effectively unlimited) so that
-     * accidentally installing the plugin without configuration is a no-op, but
-     * callers are strongly encouraged to set an explicit ceiling.
-     */
+internal class ConnectBodyLimitConfig {
     var maxBytes: Long = Long.MAX_VALUE
 }
 
 /**
- * A route-scoped plugin that enforces a maximum request body size for Connect RPCs
- * and translates the resulting [PayloadTooLargeException] into a Connect-protocol
- * `resource_exhausted` error response (HTTP 429) instead of the default Ktor 413.
+ * Route-scoped plugin that translates an over-limit [PayloadTooLargeException]
+ * into the Connect-protocol `resource_exhausted` JSON error (HTTP 429) instead
+ * of Ktor's default 413.
  *
- * The plugin handles the error translation only; for the actual byte counting it
- * relies on Ktor's [RequestBodyLimit] plugin which must be installed on the same
- * route (typically the parent service route).  In addition, this plugin performs a
- * defensive `Content-Length` precheck so that obviously oversized requests fail
- * before any bytes are read.
- *
- * Usage:
- * ```kotlin
- * routing {
- *     route("/com.example.v1.Service") {
- *         connectBodyLimit(maxBytes = 4 * 1024 * 1024)
- *         // Connect routes …
- *     }
- * }
- * ```
- *
- * The convenience extension [connectBodyLimit] installs both [RequestBodyLimit] and
- * [ConnectBodyLimit] together with the same limit so that streaming and chunked
- * (`Transfer-Encoding: chunked`) requests are also capped, not just those that
- * advertise a `Content-Length`.
- *
- * Out of scope (tracked separately):
- * - Evaluating the *decompressed* body size for compressed (e.g. gzip) requests.
- *   The current implementation caps the on-wire byte count only.  See
- *   [#191](https://github.com/ichizero/connect-ktor/issues/191) for context.
+ * **Not part of the public API.**  Installing this plugin in isolation would
+ * be a foot-gun: it only handles the error translation, while the actual byte
+ * counting is done by Ktor's [RequestBodyLimit].  Wiring just one of the two
+ * would silently let `Transfer-Encoding: chunked` (or Content-Length-spoofed)
+ * payloads bypass the cap.  Use [Route.connectBodyLimit] instead — it installs
+ * both plugins together with the same limit.
  */
-val ConnectBodyLimit = createRouteScopedPlugin(
+internal val ConnectBodyLimit = createRouteScopedPlugin(
     "ConnectBodyLimit",
     ::ConnectBodyLimitConfig,
 ) {
@@ -75,9 +45,14 @@ val ConnectBodyLimit = createRouteScopedPlugin(
         }
     }
 
-    // Translate PayloadTooLargeException (thrown either by our Content-Length
-    // precheck or by Ktor's RequestBodyLimit byte counter) into a Connect-protocol
-    // RESOURCE_EXHAUSTED JSON error.
+    // Translate PayloadTooLargeException into a Connect-protocol JSON error.
+    //
+    // This is a route-scoped `CallFailed` interceptor, so it runs *before* any
+    // app-wide handler for the same exception type.  It does **not** suppress
+    // a blanket app-wide `StatusPages.exception<Throwable>` handler though —
+    // Ktor's `StatusPages.on(CallFailed)` invokes its handler unconditionally,
+    // even when our route-scoped handler has already responded.  See the
+    // KDoc on `Route.connectBodyLimit` for guidance.
     on(CallFailed) { call, cause ->
         if (cause !is PayloadTooLargeException) return@on
 
@@ -94,12 +69,42 @@ val ConnectBodyLimit = createRouteScopedPlugin(
 }
 
 /**
- * Installs both [RequestBodyLimit] (byte counting) and [ConnectBodyLimit] (error
- * translation) on this [Route] with the same [maxBytes] limit.
+ * Enforces a maximum request body size for Connect RPCs on this [Route].
  *
- * Prefer this helper over installing the two plugins manually: it guarantees that
- * the limits stay in sync and that streamed / chunked requests are capped in
- * addition to those carrying an honest `Content-Length`.
+ * Installs both Ktor's [RequestBodyLimit] (byte counter — also catches
+ * `Transfer-Encoding: chunked` and Content-Length-spoofed bodies) and the
+ * Connect error-translation plugin so requests over [maxBytes] are rejected
+ * with a Connect-protocol `resource_exhausted` JSON response (HTTP 429)
+ * instead of Ktor's default 413.
+ *
+ * Usage:
+ * ```kotlin
+ * routing {
+ *     route("/com.example.v1.Service") {
+ *         connectBodyLimit(maxBytes = 4 * 1024 * 1024)
+ *         // Connect routes …
+ *     }
+ * }
+ * ```
+ *
+ * ### Interaction with app-wide StatusPages
+ *
+ * Ktor's `StatusPages` plugin installs an app-wide `CallFailed` interceptor
+ * that does not check whether the response has already been sent.  As a
+ * result, a blanket `exception<Throwable>` handler installed app-wide will
+ * still fire for the [PayloadTooLargeException] this plugin emits and will
+ * overwrite the Connect-protocol 429 response.  To preserve the Connect
+ * response, either:
+ *
+ * - register `StatusPages` handlers only for the specific exception types you
+ *   actually want to translate (do **not** catch `Throwable` blindly), or
+ * - guard inside the `StatusPages` handler:
+ *   `if (call.response.isSent) return@exception`.
+ *
+ * Out of scope (tracked separately):
+ * - Evaluating the *decompressed* body size for compressed (e.g. gzip)
+ *   requests.  The current implementation caps the on-wire byte count only.
+ *   See [#200](https://github.com/ichizero/connect-ktor/issues/200).
  */
 fun Route.connectBodyLimit(maxBytes: Long) {
     install(RequestBodyLimit) {
