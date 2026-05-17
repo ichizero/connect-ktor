@@ -7,13 +7,13 @@ on:
   schedule:
     - cron: '0 9 * * 5'
 
-permissions: read-all
-
 jobs:
   analysis:
     name: Scorecard analysis
     runs-on: ubuntu-latest
     permissions:
+      # Needed by scorecard-action to read repository data via GraphQL
+      contents: read
       # Needed for Code scanning upload
       security-events: write
       # Needed if publish_results: true
