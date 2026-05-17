@@ -3,7 +3,9 @@
 #
 # Ktor's CIO server collapses repeated request headers down to a single value,
 # so tests that depend on round-tripping duplicate header values cannot pass
-# without switching engines.
+# without switching engines. This is a CIO upstream limitation, not a
+# connect-ktor regression, and is treated as out-of-scope for the Connect GET
+# work (PR #194 / issue #189): all listed cases pass on Netty.
 Duplicate Metadata/**
 # Reference client sends duplicate "X-Conformance-Test" headers in these cases;
 # CIO collapses them so the echoed request_info disagrees with the expectation.
@@ -12,6 +14,10 @@ Duplicate Metadata/**
 Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_PROTO/Compression:COMPRESSION_IDENTITY/TLS:false/unary/success
 Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_JSON/Compression:COMPRESSION_IDENTITY/TLS:false/unary/success
 Server Empty Requests/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/TLS:false/unary/empty-request
+# The two GET cases below also fail solely due to CIO's duplicate-header
+# collapsing (the reference client sends duplicate `X-Conformance-Test`
+# headers as part of the success path); they pass on Netty and are
+# accepted as known-failing for this PR.
 Connect with GET/HTTPVersion:1/Codec:CODEC_PROTO/TLS:false/success
 Connect with GET/HTTPVersion:1/Codec:CODEC_JSON/TLS:false/success
 
