@@ -16,7 +16,7 @@ jobs:
     permissions:
       # Needed for Code scanning upload
       security-events: write
-      # Needed if publish_results: true (read is already covered by top-level read-all)
+      # Needed if publish_results: true
       id-token: write
 
     steps:
