@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![CI](https://github.com/ichizero/connect-ktor/actions/workflows/ci.yml/badge.svg)
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/ichizero/connect-ktor?utm_source=oss&utm_medium=github&utm_campaign=ichizero%2Fconnect-ktor&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ichizero/connect-ktor/badge)](https://scorecard.dev/viewer/?uri=github.com/ichizero/connect-ktor)
 
 Connect-Ktor is a library developed as an extension of
 [Connect-Kotlin](https://github.com/connectrpc/connect-kotlin)

@@ -17,7 +17,7 @@ jobs:
       # Needed for Code scanning upload
       security-events: write
       # Needed if publish_results: true (read is already covered by top-level read-all)
-      # id-token: write
+      id-token: write
 
     steps:
       - name: "Checkout code"
@@ -30,7 +30,7 @@ jobs:
         with:
           results_file: results.sarif
           results_format: sarif
-          publish_results: false
+          publish_results: true
 
       - name: "Upload artifact"
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
