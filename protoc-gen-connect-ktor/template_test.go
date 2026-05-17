@@ -116,4 +116,13 @@ func Test_template_no_idempotent_methods_still_compiles(t *testing.T) {
 	if strings.Contains(output, `get<`) {
 		t.Error("unexpected GET route in output for non-idempotent-only service")
 	}
+
+	// GET-related imports must not be emitted when no idempotent method exists,
+	// otherwise the generated Kotlin file fails to compile with "unused import" warnings.
+	if strings.Contains(output, `import io.ktor.server.resources.get`) {
+		t.Error("unexpected 'import io.ktor.server.resources.get' for non-idempotent-only service")
+	}
+	if strings.Contains(output, `import io.github.ichizero.connect.ktor.handleGet`) {
+		t.Error("unexpected 'import io.github.ichizero.connect.ktor.handleGet' for non-idempotent-only service")
+	}
 }
