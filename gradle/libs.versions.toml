@@ -2,7 +2,7 @@
 kotlin = "2.3.21"
 kotlinx-serialization = "1.11.0"
 maven-publish = "0.36.0"
-spotless = "8.5.0"
+spotless = "8.5.1"
 
 connect = "0.8.0"
 ktor = "3.5.0"
