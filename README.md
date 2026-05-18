@@ -15,9 +15,12 @@ It aims to gradually introduce the Connect Protocol into existing Ktor REST serv
 
 - connect-ktor
   - Serialize/Deserialize Protocol Buffers JSON messages with Connect-Kotlin.
+  - Client-streaming RPCs (`stream Req -> Res`) with envelope framing
+    (`application/connect+proto` / `application/connect+json`).
   - Request validation support with [protovalidate](https://github.com/bufbuild/protovalidate).
 - protoc-gen-connect-ktor
-  - Generate Ktor route handler interfaces from Protocol Buffers service definitions.
+  - Generate Ktor route handler interfaces from Protocol Buffers service definitions,
+    including client-streaming handlers that receive a `Flow<Req>`.
 
 ## Connect Protocol support matrix
 
@@ -39,13 +42,13 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 | Compression | `COMPRESSION_IDENTITY` | ✅ |
 |  | `COMPRESSION_GZIP` / `BR` / `ZSTD` / `DEFLATE` / `SNAPPY` | ❌ |
 | Stream type | `STREAM_TYPE_UNARY` | ✅ |
-|  | `STREAM_TYPE_CLIENT_STREAM` | ❌ |
+|  | `STREAM_TYPE_CLIENT_STREAM` | ✅ |
 |  | `STREAM_TYPE_SERVER_STREAM` | ❌ |
 |  | `STREAM_TYPE_HALF_DUPLEX_BIDI_STREAM` | ❌ |
 |  | `STREAM_TYPE_FULL_DUPLEX_BIDI_STREAM` | ❌ |
 | TLS | `supports_tls` | ✅ (Netty only) |
 |  | `supports_tls_client_certs` (mTLS) | ✅ (Netty only) |
-| Trailers | `supports_trailers` (sent as `Trailer-*` headers on unary responses) | ✅ |
+| Trailers | `supports_trailers` (unary: `Trailer-*` HTTP headers; streaming: end-frame `metadata` field) | ✅ |
 | Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ❌ |
 | Message receive limit | `supports_message_receive_limit` | ❌ |
 
@@ -72,10 +75,12 @@ which builds the `:conformance` subproject, installs
 These are intentionally outside the current matrix and would require
 additional work in the library and/or protoc plugin:
 
-- **Streaming RPCs** — `protoc-gen-connect-ktor` only emits unary
-  `post<Resource, Req>` routes today. Adding client/server/bidi streams
-  requires both generator changes and a streaming framing layer in the
-  library.
+- **Server-streaming and bidi-streaming RPCs** — client streaming is
+  supported today via `handleClientStream` and the matching generator
+  output. Server streaming (`Req -> stream Res`) and bidirectional
+  streaming require additional generator branches and a streaming
+  response writer; the envelope framing layer (`io.github.ichizero.connect.ktor.streaming`)
+  is already shaped to be reused. Bidi additionally needs HTTP/2.
 - **gRPC / gRPC-Web** — connect-ktor speaks Connect only. Supporting
   gRPC additionally requires Length-Prefixed-Message framing and a
   trailer-only error response path.
@@ -150,20 +155,30 @@ plugins:
 buf generate
 ```
 
-Generated handler interface is like below:
+Generated handler interface is like below. Unary RPCs receive a single
+request; client-streaming RPCs (declared with `rpc X(stream Req) returns (Res)`)
+receive a cold `Flow<Req>` instead:
 
 ```kotlin
 public interface ElizaServiceHandlerInterface {
     public suspend fun say(request: SayRequest, call: ApplicationCall): ResponseMessage<SayResponse>
 
+    public suspend fun upload(
+        requests: Flow<UploadRequest>,
+        call: ApplicationCall,
+    ): ResponseMessage<UploadResponse>
+
     public object Procedures {
         @Resource("/connectrpc.eliza.v1.ElizaService/Say")
         public class Say
+        @Resource("/connectrpc.eliza.v1.ElizaService/Upload")
+        public class Upload
     }
 }
 
 public fun Route.elizaService(handler: ElizaServiceHandlerInterface) {
-    post<ElizaServiceHandler.Procedures.Say, SayRequest>(handle(handler::say))
+    post<ElizaServiceHandlerInterface.Procedures.Say, SayRequest>(handle(handler::say))
+    post<ElizaServiceHandlerInterface.Procedures.Upload>(handleClientStream(handler::upload))
 }
 ```
 
@@ -172,7 +187,7 @@ public fun Route.elizaService(handler: ElizaServiceHandlerInterface) {
 #### 1. Implement the generated handler interface
 
 ```kotlin
-object ElizaServiceHandler: ElizaServiceHandlerInterface {
+object ElizaServiceHandler : ElizaServiceHandlerInterface {
     override suspend fun say(
         request: SayRequest,
         call: ApplicationCall,
@@ -181,6 +196,22 @@ object ElizaServiceHandler: ElizaServiceHandlerInterface {
         emptyMap(),
         emptyMap(),
     )
+
+    // Client-streaming RPC: collect the entire request stream, then return a
+    // single response. Throwing a ConnectException (or returning
+    // ResponseMessage.Failure) emits an end-stream frame with `error`; HTTP
+    // status stays 200 per the Connect streaming protocol.
+    override suspend fun upload(
+        requests: Flow<UploadRequest>,
+        call: ApplicationCall,
+    ): ResponseMessage<UploadResponse> {
+        val totalChars = requests.fold(0L) { acc, r -> acc + r.chunk.length }
+        return ResponseMessage.Success(
+            uploadResponse { this.totalChars = totalChars },
+            emptyMap(),
+            emptyMap(),
+        )
+    }
 }
 ```
 
@@ -199,6 +230,26 @@ fun main() {
     }.start(wait = false)
 }
 ```
+
+> Note for client-streaming endpoints: the `handleClientStream` runtime
+> bypasses Ktor `ContentNegotiation` (the body is a sequence of envelope
+> frames, not a single message) and unconditionally calls
+> `call.suppressCompression()` / `call.suppressDecompression()` so that
+> a user-installed `Compression` plugin cannot double-encode the
+> length-prefixed body. No extra wiring is required for the typical
+> case. If your streaming responses embed `google.protobuf.Any` whose
+> concrete types must round-trip through JSON, register a
+> registry-aware JSON strategy at the application level:
+>
+> ```kotlin
+> install(Resources)
+> installConnectStreamingCodecs(
+>     ConnectStreamingStrategies(
+>         proto = GoogleJavaProtobufStrategy(),
+>         json = GoogleJavaJSONStrategy(typeRegistry),
+>     ),
+> )
+> ```
 
 ### Request Validation with protovalidate
 
