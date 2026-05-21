@@ -47,6 +47,17 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
           ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+
+      - name: Generate CycloneDX SBOM
+        run: ./gradlew :library:cyclonedxBom
+        env:
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: connect-ktor-sbom
+          path: library/build/reports/bom.json
+          if-no-files-found: error
   plugin:
     runs-on: ubuntu-latest
     permissions:
@@ -62,6 +73,9 @@ jobs:
           go-version-file: "./protoc-gen-connect-ktor/go.mod"
           cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
           cache: false
+
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
 
       - uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89 # v7.2.2
         with:

@@ -35,6 +35,9 @@ archives:
       - goos: windows
         formats: zip
 
+sboms:
+  - artifacts: archive
+
 changelog:
   sort: asc
   filters:
