@@ -37,6 +37,13 @@ archives:
 
 sboms:
   - artifacts: archive
+    documents:
+      - "${artifact}.cdx.sbom.json"
+    cmd: syft
+    args:
+      - "$artifact"
+      - "--output"
+      - "cyclonedx-json=$document"
 
 changelog:
   sort: asc
