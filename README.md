@@ -255,9 +255,9 @@ by [cosign](https://github.com/sigstore/cosign) keyless signing via GitHub OIDC:
 cosign verify-blob \
   --certificate-identity-regexp "^https://github.com/ichizero/connect-ktor/\\.github/workflows/release\\.yml@refs/tags/v.*$" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  --signature protoc-gen-connect-ktor_Linux_x86_64.tar.gz.sig \
-  --certificate protoc-gen-connect-ktor_Linux_x86_64.tar.gz.pem \
-  protoc-gen-connect-ktor_Linux_x86_64.tar.gz
+  --signature connect-ktor_Linux_x86_64.tar.gz.sig \
+  --certificate connect-ktor_Linux_x86_64.tar.gz.pem \
+  connect-ktor_Linux_x86_64.tar.gz
 ```
 
 ### Verify SLSA build provenance
@@ -266,7 +266,7 @@ Every release archive (Go binaries and library JARs) is published with a SLSA bu
 attestation. Verify it with the GitHub CLI:
 
 ```sh
-gh attestation verify protoc-gen-connect-ktor_Linux_x86_64.tar.gz \
+gh attestation verify connect-ktor_Linux_x86_64.tar.gz \
   --repo ichizero/connect-ktor
 ```
 
