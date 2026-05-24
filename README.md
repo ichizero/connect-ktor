@@ -248,15 +248,16 @@ metadata so consumers can verify provenance and integrity.
 
 ### Verify the protoc-gen-connect-ktor archive signature with cosign
 
-Each release archive ships with a detached signature (`*.sig`) and certificate (`*.pem`) produced
-by [cosign](https://github.com/sigstore/cosign) keyless signing via GitHub OIDC:
+Each release archive ships with a sigstore bundle (`*.sigstore.json`) produced by
+[cosign](https://github.com/sigstore/cosign) keyless signing via GitHub OIDC. The bundle
+embeds the signature, certificate, and transparency-log inclusion proof:
 
 ```sh
 cosign verify-blob \
+  --new-bundle-format \
+  --bundle connect-ktor_Linux_x86_64.tar.gz.sigstore.json \
   --certificate-identity-regexp "^https://github.com/ichizero/connect-ktor/\\.github/workflows/release\\.yml@refs/tags/v.*$" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  --signature connect-ktor_Linux_x86_64.tar.gz.sig \
-  --certificate connect-ktor_Linux_x86_64.tar.gz.pem \
   connect-ktor_Linux_x86_64.tar.gz
 ```
 
