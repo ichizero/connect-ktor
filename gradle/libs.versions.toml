@@ -3,6 +3,7 @@ kotlin = "2.3.21"
 kotlinx-serialization = "1.11.0"
 maven-publish = "0.36.0"
 spotless = "8.5.1"
+cyclonedx = "3.2.4"
 
 connect = "0.8.2"
 ktor = "3.5.0"
@@ -20,6 +21,7 @@ kotest = "5.9.1"
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+cyclonedx-bom = { id = "org.cyclonedx.bom", version.ref = "cyclonedx" }
 
 [libraries]
 kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }

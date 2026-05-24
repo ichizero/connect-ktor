@@ -1,9 +1,18 @@
 import com.vanniktech.maven.publish.KotlinJvm
+import org.cyclonedx.gradle.CyclonedxDirectTask
 
 plugins {
     kotlin("jvm")
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.cyclonedx.bom)
     id("com.vanniktech.maven.publish.base")
+}
+
+tasks.named<CyclonedxDirectTask>("cyclonedxDirectBom") {
+    schemaVersion.set(org.cyclonedx.Version.VERSION_16)
+    jsonOutput.set(layout.buildDirectory.file("reports/bom.json"))
+    xmlOutput.set(layout.buildDirectory.file("reports/bom.xml"))
+    includeConfigs.set(listOf("runtimeClasspath"))
 }
 
 kotlin {
