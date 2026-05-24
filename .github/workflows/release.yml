@@ -43,6 +43,11 @@ jobs:
         env:
           ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
 
+      - name: Assemble library JAR
+        run: ./gradlew :library:assemble
+        env:
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+
       - name: Generate SLSA build provenance for library JARs
         uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
         with:
