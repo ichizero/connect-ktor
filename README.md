@@ -241,6 +241,35 @@ fun main() {
 }
 ```
 
+## Verifying release artifacts
+
+Releases for the `protoc-gen-connect-ktor` Go binaries and the `library` JARs publish supply-chain
+metadata so consumers can verify provenance and integrity.
+
+### Verify the protoc-gen-connect-ktor archive signature with cosign
+
+Each release archive ships with a detached signature (`*.sig`) and certificate (`*.pem`) produced
+by [cosign](https://github.com/sigstore/cosign) keyless signing via GitHub OIDC:
+
+```sh
+cosign verify-blob \
+  --certificate-identity-regexp "^https://github.com/ichizero/connect-ktor/\\.github/workflows/release\\.yml@refs/tags/v.*$" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --signature connect-ktor_Linux_x86_64.tar.gz.sig \
+  --certificate connect-ktor_Linux_x86_64.tar.gz.pem \
+  connect-ktor_Linux_x86_64.tar.gz
+```
+
+### Verify SLSA build provenance
+
+Every release archive (Go binaries and library JARs) is published with a SLSA build provenance
+attestation. Verify it with the GitHub CLI:
+
+```sh
+gh attestation verify connect-ktor_Linux_x86_64.tar.gz \
+  --repo ichizero/connect-ktor
+```
+
 ## License
 
 Offered under the [Apache 2 license](https://github.com/ichizero/connect-ktor/blob/main/LICENSE).
