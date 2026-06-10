@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
-	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 // streamType mirrors Connect's StreamType vocabulary (see connect-go's connect.StreamType and
