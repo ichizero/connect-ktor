@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
-	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 func Run(plugin *protogen.Plugin) error {

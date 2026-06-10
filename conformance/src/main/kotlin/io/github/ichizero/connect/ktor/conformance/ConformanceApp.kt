@@ -5,6 +5,7 @@ import com.connectrpc.conformance.v1.IdempotentUnaryRequest
 import com.connectrpc.conformance.v1.UnaryRequest
 import com.connectrpc.conformance.v1.UnimplementedRequest
 import com.connectrpc.conformance.v1.conformanceService
+import com.connectrpc.extensions.GoogleJavaJSONStrategy
 import com.connectrpc.extensions.GoogleJavaProtobufStrategy
 import com.google.protobuf.Message
 import com.google.protobuf.TypeRegistry
@@ -54,7 +55,7 @@ internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInt
     installConnectGetCodecs(
         ConnectGetStrategies(
             proto = GoogleJavaProtobufStrategy(),
-            json = com.connectrpc.extensions.GoogleJavaJSONStrategy(conformanceTypeRegistry),
+            json = GoogleJavaJSONStrategy(conformanceTypeRegistry),
             jsonSerializer = ConformanceGetJsonSerializer(conformanceTypeRegistry),
         ),
     )
