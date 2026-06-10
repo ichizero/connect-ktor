@@ -53,7 +53,7 @@ Verified Ktor engines:
 
 | Engine | HTTP versions | Notes |
 |---|---|---|
-| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. 8 cases are known-failing — chiefly because CIO collapses duplicate request headers into one — and are pinned in `conformance/known-failing-cio.txt`. |
+| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. 10 cases are known-failing — chiefly because CIO collapses duplicate request headers into one (including the two `Connect with GET/.../success` cases) — and are pinned in `conformance/known-failing-cio.txt`. |
 | `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. 4 cases are known-failing — all four `Connect Unexpected Requests/**/unexpected-compression` permutations across HTTP/1.1 + HTTP/2 × TLS off/on — and are pinned in `conformance/known-failing-netty.txt`. |
 
 Run the suite locally with:
@@ -195,6 +195,44 @@ fun main() {
         routing {
             install(ContentNegotiation) {
                 connectJson()
+            }
+            elizaService(ElizaServiceHandler)
+        }
+    }.start(wait = false)
+}
+```
+
+#### 3. (Connect GET) Keep POST and GET codecs in sync
+
+The Connect GET path (idempotent unary RPCs annotated with
+`option idempotency_level = NO_SIDE_EFFECTS;`) does not go through
+`ContentNegotiation` — there is no request body to negotiate on — so it
+resolves its codecs via `installConnectGetCodecs` instead. With the defaults
+(`connectJson()` and no `installConnectGetCodecs`) nothing extra is needed.
+However, if you pass a custom `TypeRegistry` to `connectJson(...)` — for
+example because your messages contain `google.protobuf.Any` fields — you must
+register the same registry for the GET path as well; forgetting this makes GET
+requests fail at runtime when (de)serialising those `Any` fields:
+
+```kotlin
+fun main() {
+    val typeRegistry = TypeRegistry.newBuilder()
+        .add(SayRequest.getDescriptor())
+        .build()
+
+    embeddedServer(CIO, port = 8080) {
+        install(Resources)
+        // GET path: query-parameter decoding + manual response serialisation.
+        installConnectGetCodecs(
+            ConnectGetStrategies(
+                proto = GoogleJavaProtobufStrategy(),
+                json = GoogleJavaJSONStrategy(typeRegistry),
+            ),
+        )
+        routing {
+            install(ContentNegotiation) {
+                // POST path: body-based content negotiation.
+                connectJson(typeRegistry)
             }
             elizaService(ElizaServiceHandler)
         }
