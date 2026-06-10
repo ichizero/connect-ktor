@@ -56,8 +56,8 @@ internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInt
     }
     routing {
         install(UnaryCompressionGuard) {
-            // Mirror the encoders installed on Compression above so that error responses
-            // accurately advertise what the server can decode.
+            // Mirror the encoders installed on Compression above: this set decides which
+            // Content-Encoding values are accepted, and is surfaced in error responses.
             supportedEncodings = setOf("gzip", "identity")
         }
         conformanceService(handler)
