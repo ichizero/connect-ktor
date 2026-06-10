@@ -158,7 +158,8 @@ class HandleGetTest : FunSpec({
         }
     }
 
-    test("unknown encoding parameter returns 400") {
+    test("unknown encoding parameter returns 501 unimplemented with supported codecs") {
+        // Connect spec: an unsupported codec yields CODE_UNIMPLEMENTED plus the supported list.
         startApp {
             val req = SayRequest.newBuilder().setSentence("hi").build()
             val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(req.toByteArray())
@@ -166,8 +167,9 @@ class HandleGetTest : FunSpec({
                 "/connectrpc.eliza.v1.ElizaService/Say?connect=v1&encoding=xml&base64=1&message=$encoded",
             )
 
-            response.status shouldBe HttpStatusCode.BadRequest
-            response.bodyAsText() shouldContain "invalid_argument"
+            response.status shouldBe HttpStatusCode.NotImplemented
+            response.bodyAsText() shouldContain "unimplemented"
+            response.bodyAsText() shouldContain "supported: proto, json"
         }
     }
 
