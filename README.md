@@ -54,7 +54,7 @@ Verified Ktor engines:
 
 | Engine | HTTP versions | Notes |
 |---|---|---|
-| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. 15 cases are known-failing — chiefly because CIO collapses duplicate request headers into one — and are pinned in `conformance/known-failing-cio.txt`. |
+| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. 13 cases are known-failing — chiefly because CIO collapses duplicate request headers into one — and are pinned in `conformance/known-failing-cio.txt`. |
 | `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. No cases are known-failing; `conformance/known-failing-netty.txt` is empty. |
 
 Run the suite locally with:
@@ -208,21 +208,34 @@ fun main() {
 
 Install Ktor's `Compression` plugin alongside `UnaryCompressionGuard` to support
 gzip-encoded request and response bodies. `UnaryCompressionGuard` rejects any
-`Content-Encoding` that is not registered with `Compression`, returning
-`Code.UNIMPLEMENTED` before the body is read.
+`Content-Encoding` outside its `supportedEncodings` set with
+`Code.UNIMPLEMENTED` before the route handler runs and before the body is
+parsed, and can optionally cap the post-decompression body size
+(`maxDecompressedBytes`) to defend against decompression bombs.
 
-> **Important:** install `Compression` at the **application scope** (i.e.
-> *outside* the `routing { }` block). The guard relies on Ktor's
-> `Compression` plugin running its `ContentDecoding` phase before the
-> `Transform` phase where `UnaryCompressionGuard` intercepts. Installing
-> `Compression` inside the same route scope as `UnaryCompressionGuard`
-> would reverse that order and cause every non-identity request — even
-> ones the server knows how to decode — to be rejected.
+> **Plugin install order matters.** Ktor runs the request-decode step of
+> `Compression` and the deserialization step of `ContentNegotiation` in the
+> same receive-pipeline `Transform` phase; their relative order is decided
+> by scope (application-scoped plugins run before route-scoped ones) and,
+> within a scope, by install order. For the `maxDecompressedBytes` cap to
+> measure the decoded bytes before they are deserialized, install:
 >
-> **Keep `supportedEncodings` in sync with the installed encoders.** The
-> set is only used to populate error messages (per the Connect spec's
-> recommendation), so a mismatch will not change which encodings are
-> accepted but will produce misleading rejection responses.
+> 1. `Compression` at the application scope (outside `routing { }`),
+> 2. `UnaryCompressionGuard` inside `routing { }`,
+> 3. `ContentNegotiation` inside `routing { }`, *after* the guard.
+>
+> If `ContentNegotiation` runs before the guard (e.g. installed at the
+> application scope) while `maxDecompressedBytes` is set, the guard fails
+> those requests loudly instead of silently skipping the cap. The
+> `Content-Encoding` check itself does not depend on this ordering — it runs
+> before the body is touched in any configuration.
+>
+> **Keep `supportedEncodings` in sync with the installed encoders.** The set
+> decides which encodings the guard accepts and is surfaced in error
+> messages (per the Connect spec's recommendation), but the actual decoding
+> is done by the encoders registered on `Compression`. Listing an encoding
+> without a matching encoder makes compressed bodies reach deserialization
+> undecoded and fail with an opaque parse error.
 
 ```kotlin
 fun main() {
@@ -233,9 +246,6 @@ fun main() {
             identity()
         }
         routing {
-            install(ContentNegotiation) {
-                connectJson()
-            }
             install(UnaryCompressionGuard) {
                 supportedEncodings = setOf("gzip", "identity")
                 // Cap the post-decompression body size to defend against gzip
@@ -243,15 +253,25 @@ fun main() {
                 // request; the body is buffered in memory up to this limit.
                 maxDecompressedBytes = 4 * 1024 * 1024
             }
+            install(ContentNegotiation) { // <- after the guard, in the same scope
+                connectJson()
+            }
             elizaService(ElizaServiceHandler)
         }
     }.start(wait = false)
 }
 ```
 
-> **Note:** brotli (`br`), zstd, snappy, and deflate are not bundled with Ktor.
-> Provide a custom `ContentEncoder` and register it with the `Compression` plugin;
-> `UnaryCompressionGuard` will then accept those encodings automatically.
+> **Note:** Ktor bundles `gzip` and `deflate` encoders; brotli (`br`), zstd,
+> and snappy require a custom `ContentEncoder` registered with the
+> `Compression` plugin. Add every registered encoder name to
+> `supportedEncodings` so the guard accepts it.
+>
+> **Note:** encoding names are matched case-sensitively (except `identity`)
+> because Ktor's `Compression` plugin looks decoders up case-sensitively: a
+> request sending `Content-Encoding: GZIP` is rejected with
+> `Code.UNIMPLEMENTED` since Ktor would not decode it. Content-coding values
+> are lowercase in practice.
 
 ### Request Validation with protovalidate
 
