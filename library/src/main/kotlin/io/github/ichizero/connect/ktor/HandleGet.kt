@@ -13,6 +13,9 @@ import okio.Buffer
 import java.util.Base64
 import kotlin.reflect.KClass
 
+/** Codecs supported by the Connect GET path; anything else is rejected with CODE_UNIMPLEMENTED. */
+private val supportedGetEncodings: Set<String> = setOf("proto", "json")
+
 /**
  * handleGet is a utility function that decodes a Connect GET request (query-parameter encoding)
  * and bridges it to the same Connect-Ktor handler interface used by the POST path.
@@ -71,6 +74,20 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
             bytes = error.toErrorJsonBytes(),
             contentType = ContentType.Application.Json,
             status = Code.INVALID_ARGUMENT.asHTTPStatusCode(),
+        )
+        return
+    }
+    // Connect spec: an unsupported codec MUST yield CODE_UNIMPLEMENTED together with the list
+    // of codecs the server does support.
+    if (encoding !in supportedGetEncodings) {
+        val error = ConnectException(
+            code = Code.UNIMPLEMENTED,
+            message = "unsupported encoding: \"$encoding\" (supported: ${supportedGetEncodings.joinToString(", ")})",
+        )
+        call.respondBytes(
+            bytes = error.toErrorJsonBytes(),
+            contentType = ContentType.Application.Json,
+            status = Code.UNIMPLEMENTED.asHTTPStatusCode(),
         )
         return
     }
@@ -146,17 +163,12 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     // Resolve serialization strategies from the application (respects custom TypeRegistry).
     val strategies = call.application.connectGetStrategies()
 
-    // Deserialize the request message.
+    // Deserialize the request message. `encoding` is guaranteed to be 'proto' or 'json' here
+    // because unsupported codecs were rejected with CODE_UNIMPLEMENTED above.
     val req: Req = try {
         when (encoding) {
             "proto" -> strategies.proto.codec(reqClass).deserialize(Buffer().write(messageBytes))
-
-            "json" -> strategies.json.codec(reqClass).deserialize(Buffer().write(messageBytes))
-
-            else -> throw ConnectException(
-                code = Code.INVALID_ARGUMENT,
-                message = "unsupported encoding: $encoding (must be 'proto' or 'json')",
-            )
+            else -> strategies.json.codec(reqClass).deserialize(Buffer().write(messageBytes))
         }
     } catch (e: ConnectException) {
         call.respondBytes(
@@ -165,7 +177,9 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
             status = e.code.asHTTPStatusCode(),
         )
         return
-    } catch (e: Throwable) {
+    } catch (e: Exception) {
+        // Deliberately Exception, not Throwable: JVM Errors must escape, and this is a
+        // non-suspending call so CancellationException cannot originate here.
         val error = ConnectException(
             code = Code.INVALID_ARGUMENT,
             message = "failed to deserialize request: ${e.message}",
