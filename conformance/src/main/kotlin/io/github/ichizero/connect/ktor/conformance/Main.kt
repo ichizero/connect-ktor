@@ -36,7 +36,9 @@ fun main(args: Array<String>) {
 
     val handler: ConformanceServiceHandlerInterface = ConformanceServiceImpl()
     // message_receive_limit = 0 means "not set"; pass 0 to disable ConnectBodyLimit.
-    val receiveLimit = request.messageReceiveLimit.toLong()
+    // The field is a uint32, so convert via Integer.toUnsignedLong to keep
+    // values above 2^31 - 1 positive.
+    val receiveLimit = Integer.toUnsignedLong(request.messageReceiveLimit)
     val module: Application.() -> Unit = { conformanceModule(handler, receiveLimit) }
 
     val tls = TlsSetup.from(request)
