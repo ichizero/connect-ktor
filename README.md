@@ -51,7 +51,7 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 |  | `supports_tls_client_certs` (mTLS) | ✅ (Netty only) |
 | Trailers | `supports_trailers` (unary: `Trailer-*` HTTP headers; streaming: end-frame `metadata` field) | ✅ |
 | Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ✅ (Netty fully; CIO passes except the two `Connect with GET/.../success` cases that exercise duplicate `X-Conformance-Test` headers — same CIO upstream limitation as the `Duplicate Metadata` / `Basic` entries in `conformance/known-failing-cio.txt`) |
-| Message receive limit | `supports_message_receive_limit` | ❌ |
+| Message receive limit | `supports_message_receive_limit` | ✅ (unary) |
 
 Verified Ktor engines:
 
@@ -99,9 +99,11 @@ additional work in the library and/or protoc plugin:
   `Compression` plugin (`deflate` ships with Ktor). Once registered,
   also add those encoding names to `UnaryCompressionGuard.supportedEncodings`;
   the guard only accepts encodings listed there.
-- **`message_receive_limit` enforcement** — the conformance runner
-  passes a max body size; the server would need to enforce it before
-  parsing the body.
+- **`message_receive_limit` for client-streaming** — `connectBodyLimit`
+  caps the whole request body, which equals a single message for unary
+  RPCs. Client-streaming needs a per-message receive limit and a
+  streaming end-of-stream error frame; the `client-stream` Server Message
+  Size cases are pinned as known-failing for now.
 
 
 ## Usage

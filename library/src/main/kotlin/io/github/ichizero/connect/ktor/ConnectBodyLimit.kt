@@ -24,8 +24,8 @@ internal class ConnectBodyLimitConfig {
  * **Not part of the public API.**  Installing this plugin in isolation would
  * be a foot-gun: it only handles the error translation, while the actual byte
  * counting is done by Ktor's [RequestBodyLimit].  Wiring just one of the two
- * would silently let `Transfer-Encoding: chunked` (or Content-Length-spoofed)
- * payloads bypass the cap.  Use [Route.connectBodyLimit] instead — it installs
+ * would silently let `Transfer-Encoding: chunked` payloads (which carry no
+ * Content-Length) bypass the cap.  Use [Route.connectBodyLimit] instead — it installs
  * both plugins together with the same limit.
  */
 internal val ConnectBodyLimit = createRouteScopedPlugin(
@@ -72,7 +72,7 @@ internal val ConnectBodyLimit = createRouteScopedPlugin(
  * Enforces a maximum request body size for Connect RPCs on this [Route].
  *
  * Installs both Ktor's [RequestBodyLimit] (byte counter — also catches
- * `Transfer-Encoding: chunked` and Content-Length-spoofed bodies) and the
+ * `Transfer-Encoding: chunked` bodies that carry no Content-Length) and the
  * Connect error-translation plugin so requests over [maxBytes] are rejected
  * with a Connect-protocol `resource_exhausted` JSON response (HTTP 429)
  * instead of Ktor's default 413.
@@ -107,6 +107,7 @@ internal val ConnectBodyLimit = createRouteScopedPlugin(
  *   See [#200](https://github.com/ichizero/connect-ktor/issues/200).
  */
 fun Route.connectBodyLimit(maxBytes: Long) {
+    require(maxBytes > 0) { "maxBytes must be positive, but was $maxBytes" }
     install(RequestBodyLimit) {
         bodyLimit { maxBytes }
     }

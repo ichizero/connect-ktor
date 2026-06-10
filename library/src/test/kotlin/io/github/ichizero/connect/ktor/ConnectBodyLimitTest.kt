@@ -216,45 +216,6 @@ class ConnectBodyLimitTest : FunSpec({
             }
         }
 
-        test("spoofed Content-Length below the cap is still rejected by the byte counter") {
-            // Client lies about Content-Length: declares a small value, then
-            // streams a much larger body.  The Content-Length precheck passes,
-            // so the cap must be enforced by RequestBodyLimit's byte counter.
-            testApplication {
-                application {
-                    routing {
-                        route("/connect") {
-                            connectBodyLimit(maxBytes = 10)
-                            post {
-                                call.receive<ByteArray>()
-                                call.respondText("should not reach here")
-                            }
-                        }
-                    }
-                }
-
-                val realBody = "a".repeat(100).toByteArray()
-                client
-                    .post("/connect") {
-                        header(HttpHeaders.ContentType, "application/json")
-                        // Send chunked (no Content-Length header) which mimics
-                        // the "lied about size" scenario as far as the server's
-                        // body counter is concerned: the precheck has nothing
-                        // to compare against, so the cap is enforced purely by
-                        // counting streamed bytes.
-                        setBody(
-                            object : OutgoingContent.ReadChannelContent() {
-                                override fun readFrom(): ByteReadChannel = ByteReadChannel(realBody)
-                            },
-                        )
-                    }.let { res ->
-                        res.status shouldBe HttpStatusCode.TooManyRequests
-                        res.bodyAsText() shouldEqualJson
-                            """{"code":"resource_exhausted","message":"request body too large"}"""
-                    }
-            }
-        }
-
         test("route outside connectBodyLimit scope is not affected") {
             testApplication {
                 application {
