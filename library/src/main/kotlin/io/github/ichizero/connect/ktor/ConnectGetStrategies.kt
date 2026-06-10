@@ -41,6 +41,18 @@ private val ConnectGetStrategiesKey: AttributeKey<ConnectGetStrategies> =
     AttributeKey("io.github.ichizero.connect.ktor.ConnectGetStrategies")
 
 /**
+ * Shared fallback used when [installConnectGetCodecs] was never called. The default strategies
+ * are stateless, so a single lazily-created instance can be reused across requests instead of
+ * allocating fresh strategies per call.
+ */
+private val defaultConnectGetStrategies: ConnectGetStrategies by lazy {
+    ConnectGetStrategies(
+        proto = GoogleJavaProtobufStrategy(),
+        json = GoogleJavaJSONStrategy(),
+    )
+}
+
+/**
  * Register custom [SerializationStrategy] instances for the Connect GET path.
  *
  * Use this when the default `GoogleJavaJSONStrategy()` needs a non-empty
@@ -54,8 +66,4 @@ fun Application.installConnectGetCodecs(strategies: ConnectGetStrategies) {
 }
 
 internal fun Application.connectGetStrategies(): ConnectGetStrategies =
-    attributes.getOrNull(ConnectGetStrategiesKey)
-        ?: ConnectGetStrategies(
-            proto = GoogleJavaProtobufStrategy(),
-            json = GoogleJavaJSONStrategy(),
-        )
+    attributes.getOrNull(ConnectGetStrategiesKey) ?: defaultConnectGetStrategies
