@@ -10,6 +10,7 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.writeFully
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 
 class EnvelopeFrameReaderTest : FunSpec({
     test("reads a single data frame") {
@@ -110,6 +111,24 @@ class EnvelopeFrameReaderTest : FunSpec({
             val channel = byteChannelOf(byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x64) + ByteArray(100))
             val ex = shouldThrow<ConnectException> {
                 channel.readEnvelopeFrames(maxMessageSize = 10).toList()
+            }
+            ex.code shouldBe Code.RESOURCE_EXHAUSTED
+        }
+    }
+
+    test("RESOURCE_EXHAUSTED is reported without waiting for the declared payload") {
+        // Defence-in-depth: a stalled or malicious peer can advertise a huge length and never
+        // send the body. The reader must fail fast rather than block on the unread bytes.
+        runTest {
+            val channel = ByteChannel(autoFlush = true)
+            // Write header with a length far larger than max, then leave the channel open
+            // (no further bytes, no close) to simulate the attack pattern.
+            channel.writeFully(byteArrayOf(0x00, 0x00, 0x00, 0x10, 0x00)) // length = 4096
+
+            val ex = withTimeout(1_000) {
+                shouldThrow<ConnectException> {
+                    channel.readEnvelopeFrames(maxMessageSize = 64).toList()
+                }
             }
             ex.code shouldBe Code.RESOURCE_EXHAUSTED
         }

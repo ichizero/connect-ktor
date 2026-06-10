@@ -3,7 +3,6 @@ package io.github.ichizero.connect.ktor.streaming
 import com.connectrpc.Code
 import com.connectrpc.ConnectException
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.discardExact
 import io.ktor.utils.io.readByteArray
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -18,9 +17,10 @@ import kotlinx.io.EOFException
  * - Completes normally if the channel closes without an end-stream frame (Connect allows the
  *   request side to close without an explicit end-stream).
  * - Throws [ConnectException] with [Code.INVALID_ARGUMENT] when the prefix or payload is truncated.
- * - Throws [ConnectException] with [Code.RESOURCE_EXHAUSTED] when a frame's length exceeds
- *   [maxMessageSize]. The declared payload bytes are discarded first to keep downstream readers
- *   from stalling on un-drained channel bytes.
+ * - Throws [ConnectException] with [Code.RESOURCE_EXHAUSTED] as soon as a frame's declared
+ *   length exceeds [maxMessageSize], without waiting for the payload bytes to arrive — a
+ *   malicious or stalled peer must not be able to block the failure response by withholding
+ *   the body.
  *
  * Mirrors connect-go `envelopeReader.Read` (envelope.go).
  */
@@ -40,8 +40,11 @@ internal fun ByteReadChannel.readEnvelopeFrames(maxMessageSize: Int): Flow<Envel
             )
         }
         if (header.length > maxMessageSize) {
-            // Discard the declared payload bytes to avoid leaving the channel in a bad state.
-            runCatching { channel.discardExact(header.length.toLong()) }
+            // Fail before reading the declared payload. A malicious or stalled peer can advertise
+            // a huge length and then stop sending bytes; waiting for those bytes would block this
+            // coroutine indefinitely and prevent the server from emitting the RESOURCE_EXHAUSTED
+            // end-frame. The Ktor request channel is closed when the call completes, so abandoning
+            // the unread body is safe at the cost of not being able to reuse this connection.
             throw ConnectException(
                 code = Code.RESOURCE_EXHAUSTED,
                 message = "message size ${header.length} exceeds configured max $maxMessageSize",
