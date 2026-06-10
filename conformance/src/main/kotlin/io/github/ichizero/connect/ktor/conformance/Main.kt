@@ -35,7 +35,11 @@ fun main(args: Array<String>) {
     val request = readDelimited(System.`in`, ServerCompatRequest.parser())
 
     val handler: ConformanceServiceHandlerInterface = ConformanceServiceImpl()
-    val module: Application.() -> Unit = { conformanceModule(handler) }
+    // message_receive_limit = 0 means "not set"; pass 0 to disable ConnectBodyLimit.
+    // The field is a uint32, so convert via Integer.toUnsignedLong to keep
+    // values above 2^31 - 1 positive.
+    val receiveLimit = Integer.toUnsignedLong(request.messageReceiveLimit)
+    val module: Application.() -> Unit = { conformanceModule(handler, receiveLimit) }
 
     val tls = TlsSetup.from(request)
     val server: EmbeddedServer<*, *> = when (engine) {

@@ -47,7 +47,7 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 |  | `supports_tls_client_certs` (mTLS) | ✅ (Netty only) |
 | Trailers | `supports_trailers` (sent as `Trailer-*` headers on unary responses) | ✅ |
 | Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ❌ |
-| Message receive limit | `supports_message_receive_limit` | ❌ |
+| Message receive limit | `supports_message_receive_limit` | ✅ |
 
 Verified Ktor engines:
 
@@ -95,9 +95,10 @@ additional work in the library and/or protoc plugin:
   encoding is silently accepted, which is the only category of known
   failure on Netty (4 permutations across HTTP/1.1 + HTTP/2 × TLS
   off/on).
-- **`message_receive_limit` enforcement** — the conformance runner
-  passes a max body size; the server would need to enforce it before
-  parsing the body.
+- **Decompressed-size cap for `message_receive_limit`** — the
+  `connectBodyLimit` helper caps the on-the-wire byte count only;
+  evaluating the *decompressed* size of compressed (e.g. gzip) requests
+  is tracked in [#200](https://github.com/ichizero/connect-ktor/issues/200).
 
 
 ## Usage
@@ -240,6 +241,39 @@ fun main() {
     }.start(wait = false)
 }
 ```
+
+### Request Body Size Limit
+
+Use `Route.connectBodyLimit(maxBytes)` to cap the inbound request body size for Connect RPCs. When
+the body exceeds the configured limit the server responds with a `resource_exhausted` Connect error
+(HTTP 429) instead of the default Ktor 413.
+
+The helper installs Ktor's built-in `RequestBodyLimit` (which counts bytes as they stream in, so
+`Transfer-Encoding: chunked` requests are capped too) together with the `ConnectBodyLimit` plugin
+that translates the resulting `PayloadTooLargeException` into a Connect-protocol JSON error.
+
+```kotlin
+fun main() {
+    embeddedServer(CIO, port = 8080) {
+        install(Resources)
+        routing {
+            route("/com.example.v1.MyService") {
+                install(ContentNegotiation) {
+                    connectJson()
+                }
+                connectBodyLimit(maxBytes = 4 * 1024 * 1024)
+                myService(MyServiceHandler)
+            }
+        }
+    }.start(wait = false)
+}
+```
+
+Routes outside the `connectBodyLimit` scope are not affected and continue to use the default Ktor
+body-limit behaviour.
+
+> **Note:** the cap is applied to the on-the-wire byte count. Evaluating the *decompressed* size of
+> compressed (e.g. gzip) requests is tracked separately and not enforced by this plugin.
 
 ## Verifying release artifacts
 
