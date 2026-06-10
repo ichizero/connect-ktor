@@ -1,4 +1,4 @@
-package io.github.ichizero.connect.ktor.conformance
+package io.github.ichizero.connect.ktor.streaming
 
 import com.connectrpc.CODEC_NAME_JSON
 import com.connectrpc.Codec
@@ -17,12 +17,27 @@ import kotlin.reflect.cast
 import kotlin.reflect.full.isSubclassOf
 
 /**
- * JSON [SerializationStrategy] that propagates a [TypeRegistry] to BOTH the printer and the
- * parser. Required for `google.protobuf.Any` round-trip in streaming responses (e.g. the
- * conformance `RequestInfo.requests` field) — the stock [GoogleJavaJSONStrategy]'s adapter only
- * applies the registry on parse, not on print, so encoding fails with "Cannot find type for url".
+ * JSON [SerializationStrategy] for the Connect streaming path that propagates a [TypeRegistry]
+ * to BOTH the JSON printer and parser.
+ *
+ * The stock [com.connectrpc.extensions.GoogleJavaJSONStrategy] uses an adapter that only forwards
+ * the registry to the parser side, so serialising a response that embeds a
+ * `google.protobuf.Any` whose concrete type lives in [registry] fails with
+ * `Cannot find type for url`. Use this strategy when streaming responses round-trip `Any` values
+ * — typically wired through [installConnectStreamingCodecs]:
+ *
+ * ```
+ * installConnectStreamingCodecs(
+ *     ConnectStreamingStrategies(
+ *         proto = GoogleJavaProtobufStrategy(),
+ *         json = ConnectStreamingJsonStrategy(typeRegistry),
+ *     ),
+ * )
+ * ```
+ *
+ * For responses that do not embed `Any`, the default `GoogleJavaJSONStrategy()` is sufficient.
  */
-class ConformanceJsonStrategy(
+class ConnectStreamingJsonStrategy(
     private val registry: TypeRegistry,
 ) : SerializationStrategy {
     private val errorDetailParser = GoogleJavaJSONStrategy().errorDetailParser()

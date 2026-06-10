@@ -239,14 +239,18 @@ fun main() {
 > length-prefixed body. No extra wiring is required for the typical
 > case. If your streaming responses embed `google.protobuf.Any` whose
 > concrete types must round-trip through JSON, register a
-> registry-aware JSON strategy at the application level:
+> registry-aware JSON strategy at the application level using
+> `ConnectStreamingJsonStrategy`. The stock
+> `GoogleJavaJSONStrategy(typeRegistry)` only forwards the registry to
+> the parser, not the printer, so encoding a response that contains
+> `Any` would fail with `Cannot find type for url`.
 >
 > ```kotlin
 > install(Resources)
 > installConnectStreamingCodecs(
 >     ConnectStreamingStrategies(
 >         proto = GoogleJavaProtobufStrategy(),
->         json = GoogleJavaJSONStrategy(typeRegistry),
+>         json = ConnectStreamingJsonStrategy(typeRegistry),
 >     ),
 > )
 > ```

@@ -8,6 +8,7 @@ import com.connectrpc.conformance.v1.UnimplementedRequest
 import com.connectrpc.conformance.v1.conformanceService
 import com.connectrpc.extensions.GoogleJavaProtobufStrategy
 import com.google.protobuf.TypeRegistry
+import io.github.ichizero.connect.ktor.streaming.ConnectStreamingJsonStrategy
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingStrategies
 import io.github.ichizero.connect.ktor.streaming.installConnectStreamingCodecs
 import io.github.ichizero.ktor.serialization.connect.connectProto
@@ -38,7 +39,7 @@ internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInt
     installConnectStreamingCodecs(
         ConnectStreamingStrategies(
             proto = GoogleJavaProtobufStrategy(),
-            json = ConformanceJsonStrategy(conformanceTypeRegistry),
+            json = ConnectStreamingJsonStrategy(conformanceTypeRegistry),
         ),
     )
     install(ContentNegotiation) {

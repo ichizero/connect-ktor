@@ -367,6 +367,9 @@ private fun decodeFrames(bytes: ByteArray): List<EnvelopeFrame> {
             ((bytes[i + 2].toInt() and 0xFF) shl 16) or
             ((bytes[i + 3].toInt() and 0xFF) shl 8) or
             (bytes[i + 4].toInt() and 0xFF)
+        if (i + ENVELOPE_HEADER_SIZE + length > bytes.size) {
+            error("truncated payload at $i: declared length $length exceeds remaining bytes")
+        }
         val payload = bytes.copyOfRange(i + ENVELOPE_HEADER_SIZE, i + ENVELOPE_HEADER_SIZE + length)
         frames.add(EnvelopeFrame(flags, payload))
         i += ENVELOPE_HEADER_SIZE + length
