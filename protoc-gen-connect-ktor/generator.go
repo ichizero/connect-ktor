@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 func Run(plugin *protogen.Plugin) error {
@@ -45,6 +46,7 @@ func run(plugin *protogen.Plugin, file *protogen.File) error {
 
 func serviceToData(service *protogen.Service, protoPackageName, javaPackageName, sourceFileName string) *serviceData {
 	methods := make([]*methodData, 0, len(service.Methods))
+	hasIdempotent := false
 	for _, method := range service.Methods {
 		if method.Desc.IsStreamingServer() || method.Desc.IsStreamingClient() {
 			continue
@@ -52,11 +54,16 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 
 		inputTypeName := method.Input.GoIdent.GoName
 		outputTypeName := method.Output.GoIdent.GoName
+		idempotent := method.Desc.Options().(*descriptorpb.MethodOptions).GetIdempotencyLevel() == descriptorpb.MethodOptions_NO_SIDE_EFFECTS
+		if idempotent {
+			hasIdempotent = true
+		}
 		methods = append(methods, &methodData{
 			Name:           string(method.Desc.Name()),
 			Comment:        toKDocComment(method.Comments.Leading),
 			InputTypeName:  inputTypeName,
 			OutputTypeName: outputTypeName,
+			Idempotent:     idempotent,
 		})
 	}
 
@@ -67,6 +74,7 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 		Name:             string(service.Desc.Name()),
 		Comment:          toKDocComment(service.Comments.Leading),
 		Methods:          methods,
+		HasIdempotent:    hasIdempotent,
 	}
 }
 
