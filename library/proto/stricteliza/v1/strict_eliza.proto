@@ -8,6 +8,9 @@ service StrictElizaService {
     rpc Say(SayRequest) returns (SayResponse) {
         option idempotency_level = NO_SIDE_EFFECTS;
     }
+
+    // Upload is a client-streaming RPC used to exercise envelope-framed request bodies.
+    rpc Upload(stream UploadRequest) returns (UploadResponse);
 }
 
 message SayRequest {
@@ -17,4 +20,13 @@ message SayRequest {
 
 message SayResponse {
     string sentence = 1;
+}
+
+message UploadRequest {
+    string chunk = 1;
+}
+
+message UploadResponse {
+    int64 total_chars = 1;
+    int64 chunk_count = 2;
 }
