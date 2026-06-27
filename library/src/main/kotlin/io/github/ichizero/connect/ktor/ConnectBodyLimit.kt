@@ -12,10 +12,6 @@ import io.ktor.server.request.contentLength
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 
-internal class ConnectBodyLimitConfig {
-    var maxBytes: Long = Long.MAX_VALUE
-}
-
 /**
  * Route-scoped plugin that translates an over-limit [PayloadTooLargeException]
  * into the Connect-protocol `resource_exhausted` JSON error (HTTP 429) instead
@@ -76,6 +72,11 @@ internal val ConnectBodyLimit = createRouteScopedPlugin(
  * Connect error-translation plugin so requests over [maxBytes] are rejected
  * with a Connect-protocol `resource_exhausted` JSON response (HTTP 429)
  * instead of Ktor's default 413.
+ *
+ * This caps the size of the whole HTTP request body, which for unary RPCs is a
+ * single message.  It is intended for unary RPCs; it does **not** implement the
+ * per-message receive limit that streaming RPCs require (the error would also be
+ * emitted as a unary JSON response rather than a streaming end-of-stream frame).
  *
  * Usage:
  * ```kotlin

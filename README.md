@@ -104,6 +104,10 @@ additional work in the library and/or protoc plugin:
   RPCs. Client-streaming needs a per-message receive limit and a
   streaming end-of-stream error frame; the `client-stream` Server Message
   Size cases are pinned as known-failing for now.
+- **Decompressed-size cap for `message_receive_limit`** — the
+  `connectBodyLimit` helper caps the on-the-wire byte count only;
+  evaluating the *decompressed* size of compressed (e.g. gzip) requests
+  is tracked in [#200](https://github.com/ichizero/connect-ktor/issues/200).
 
 
 ## Usage
