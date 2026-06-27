@@ -18,3 +18,15 @@ Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_JSON/Compression:COMPR
 Server Empty Requests/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/TLS:false/unary/empty-request
 Server Empty Requests/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/TLS:false/client-stream/empty-request
 
+# Per-message (envelope) compression for streaming RPCs is not implemented yet
+# (see issue #190): handleClientStream rejects a non-identity
+# `Connect-Content-Encoding` and any compressed envelope frame with
+# CODE_UNIMPLEMENTED. The conformance config advertises COMPRESSION_GZIP for the
+# whole server, so the runner also exercises gzip against client-stream, where
+# every case fails the same way. Unary gzip is fully supported. The Timeouts
+# suite races the rejection against the deadline and is tracked in
+# known-flaky-cio.txt instead.
+Basic/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Connect to HTTP Code Mapping/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Deadline Propagation/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Errors/**/Compression:COMPRESSION_GZIP/**/client-stream/**

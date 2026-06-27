@@ -1,2 +1,17 @@
 # Known-failing conformance test cases for the Ktor Netty engine.
 # Entries follow https://github.com/connectrpc/conformance/blob/main/docs/configuring_and_running_tests.md
+#
+# Per-message (envelope) compression for streaming RPCs is not implemented yet
+# (see issue #190): handleClientStream rejects a non-identity
+# `Connect-Content-Encoding` and any compressed envelope frame with
+# CODE_UNIMPLEMENTED. The conformance config advertises COMPRESSION_GZIP for the
+# whole server, so the runner also exercises gzip against client-stream, where
+# every case fails the same way. Unary gzip is fully supported. The Timeouts
+# suite races the rejection against the deadline and is tracked in
+# known-flaky-netty.txt instead.
+Basic/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Connect to HTTP Code Mapping/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Deadline Propagation/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Duplicate Metadata/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Errors/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+TLS Client Certs/**/Compression:COMPRESSION_GZIP/**/client-stream

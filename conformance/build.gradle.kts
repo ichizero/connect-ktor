@@ -61,9 +61,11 @@ val generateProtos = tasks.register<Exec>("bufGenerate") {
     // configuration when the binary has not been built yet; we rely on
     // `task plugin:build` (or the root `task build`) to produce it before
     // this task executes.
-    inputs.files(rootProject.fileTree("protoc-gen-connect-ktor/out") {
-        include("protoc-gen-connect-ktor")
-    })
+    inputs.files(
+        rootProject.fileTree("protoc-gen-connect-ktor/out") {
+            include("protoc-gen-connect-ktor")
+        },
+    )
     outputs.dir("build/generated/sources/bufgen")
 }
 
