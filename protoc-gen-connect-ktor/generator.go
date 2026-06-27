@@ -36,7 +36,7 @@ func run(plugin *protogen.Plugin, file *protogen.File) error {
 	for _, service := range file.Services {
 		tmpl, err := loadTemplate()
 		if err != nil {
-			return fmt.Errorf("failed to load template: %v", err)
+			return fmt.Errorf("failed to load template: %w", err)
 		}
 
 		javaPackage := file.Proto.GetOptions().GetJavaPackage()
@@ -47,7 +47,7 @@ func run(plugin *protogen.Plugin, file *protogen.File) error {
 		data := serviceToData(service, file.Proto.GetPackage(), file.Proto.GetOptions().GetJavaPackage(), file.Desc.Path())
 
 		if err := tmpl.Execute(g, data); err != nil {
-			return fmt.Errorf("failed to execute template: %v", err)
+			return fmt.Errorf("failed to execute template: %w", err)
 		}
 	}
 
@@ -116,7 +116,7 @@ func toKDocComment(comments protogen.Comments) string {
 	b.Grow(len(c))
 
 	b.WriteString("/**\n")
-	for _, line := range strings.Split(strings.TrimSuffix(c, "\n"), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSuffix(c, "\n"), "\n") {
 		b.WriteString(" * ")
 		b.WriteString(line)
 		b.WriteString("\n")

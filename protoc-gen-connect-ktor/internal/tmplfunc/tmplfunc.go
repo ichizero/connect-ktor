@@ -20,7 +20,7 @@ func toLowerFirst(value string) string {
 
 func indent(spaces int, value string) string {
 	padding := strings.Repeat(" ", spaces)
-	return padding + strings.Replace(value, "\n", "\n"+padding, -1)
+	return padding + strings.ReplaceAll(value, "\n", "\n"+padding)
 }
 
 func nIndent(spaces int, value string) string {
