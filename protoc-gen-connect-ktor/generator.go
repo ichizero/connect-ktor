@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 // streamType mirrors Connect's StreamType vocabulary (see connect-go's connect.StreamType and
@@ -61,6 +62,7 @@ func run(plugin *protogen.Plugin, file *protogen.File) error {
 func serviceToData(service *protogen.Service, protoPackageName, javaPackageName, sourceFileName string) *serviceData {
 	methods := make([]*methodData, 0, len(service.Methods))
 	hasClientStream := false
+	hasIdempotent := false
 	for _, method := range service.Methods {
 		st, ok := streamTypeOf(method)
 		if !ok {
@@ -70,12 +72,19 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 		if st == streamTypeClient {
 			hasClientStream = true
 		}
+		// Connect GET applies only to idempotent (NO_SIDE_EFFECTS) unary RPCs.
+		idempotent := st == streamTypeUnary &&
+			method.Desc.Options().(*descriptorpb.MethodOptions).GetIdempotencyLevel() == descriptorpb.MethodOptions_NO_SIDE_EFFECTS
+		if idempotent {
+			hasIdempotent = true
+		}
 		methods = append(methods, &methodData{
 			Name:           string(method.Desc.Name()),
 			Comment:        toKDocComment(method.Comments.Leading),
 			InputTypeName:  method.Input.GoIdent.GoName,
 			OutputTypeName: method.Output.GoIdent.GoName,
 			StreamType:     st,
+			Idempotent:     idempotent,
 		})
 	}
 
@@ -87,6 +96,7 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 		Comment:          toKDocComment(service.Comments.Leading),
 		Methods:          methods,
 		HasClientStream:  hasClientStream,
+		HasIdempotent:    hasIdempotent,
 	}
 }
 
