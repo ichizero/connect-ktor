@@ -17,16 +17,13 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.resources.Resource
+import io.ktor.http.encodeURLQueryComponent
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.resources.Resources
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import java.util.Base64
-
-@Resource("/connectrpc.eliza.v1.ElizaService/Say")
-private class SayProcedure
 
 // Handler that echoes the request sentence back.
 private object EchoHandler : ElizaServiceHandlerInterface {
@@ -197,6 +194,40 @@ class HandleGetTest : FunSpec({
             response.status shouldBe HttpStatusCode.BadRequest
             response.bodyAsText() shouldContain "invalid_argument"
             response.bodyAsText() shouldContain "base64=1"
+        }
+    }
+
+    test("base64=0 is ignored and the json message is treated as non-base64 text") {
+        // Connect spec: any value other than "1" for the base64 flag is ignored, NOT rejected.
+        // With base64 != "1", the message is the percent-decoded query value verbatim (here JSON).
+        startApp {
+            val json = JsonFormat.printer().print(
+                SayRequest.newBuilder().setSentence("hello flag zero").build(),
+            )
+            val response = client.get(
+                "/connectrpc.eliza.v1.ElizaService/Say" +
+                    "?connect=v1&encoding=json&base64=0&message=${json.encodeURLQueryComponent()}",
+            )
+
+            response.status shouldBe HttpStatusCode.OK
+            response.bodyAsText() shouldContain "hello flag zero"
+        }
+    }
+
+    test("unknown base64 flag value is ignored rather than rejected") {
+        // "foo" is neither "1" nor absent; the spec says it is ignored (treated as non-base64),
+        // matching the connect-go reference (`query.Get("base64") == "1"`).
+        startApp {
+            val json = JsonFormat.printer().print(
+                SayRequest.newBuilder().setSentence("hello flag foo").build(),
+            )
+            val response = client.get(
+                "/connectrpc.eliza.v1.ElizaService/Say" +
+                    "?connect=v1&encoding=json&base64=foo&message=${json.encodeURLQueryComponent()}",
+            )
+
+            response.status shouldBe HttpStatusCode.OK
+            response.bodyAsText() shouldContain "hello flag foo"
         }
     }
 
