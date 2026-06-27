@@ -1,3 +1,5 @@
+// Binary protoc-gen-connect-ktor is a protoc plugin that emits Ktor route
+// handler interfaces from Protocol Buffers service definitions.
 package main
 
 import (

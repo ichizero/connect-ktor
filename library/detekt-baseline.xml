@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:ErrorCodes.kt$fun Code.asHTTPStatusCode(): HttpStatusCode</ID>
+    <ID>LongMethod:HandleClientStream.kt$@PublishedApi internal suspend fun &lt;Req : Any, Res : Any&gt; handleClientStreamCall( call: ApplicationCall, maxMessageSize: Int, reqClass: KClass&lt;Req&gt;, resClass: KClass&lt;Res&gt;, handlerFunc: suspend (Flow&lt;Req&gt;, ApplicationCall) -&gt; ResponseMessage&lt;Res&gt;, )</ID>
+    <ID>MagicNumber:EnvelopeFrameReader.kt$0xFF</ID>
+    <ID>MagicNumber:EnvelopeFrameReader.kt$16</ID>
+    <ID>MagicNumber:EnvelopeFrameReader.kt$24</ID>
+    <ID>MagicNumber:EnvelopeFrameReader.kt$3</ID>
+    <ID>MagicNumber:EnvelopeFrameReader.kt$4</ID>
+    <ID>MagicNumber:EnvelopeFrameReader.kt$8</ID>
+    <ID>MagicNumber:EnvelopeFrameWriter.kt$0xFF</ID>
+    <ID>MagicNumber:EnvelopeFrameWriter.kt$16</ID>
+    <ID>MagicNumber:EnvelopeFrameWriter.kt$24</ID>
+    <ID>MagicNumber:EnvelopeFrameWriter.kt$3</ID>
+    <ID>MagicNumber:EnvelopeFrameWriter.kt$4</ID>
+    <ID>MagicNumber:EnvelopeFrameWriter.kt$8</ID>
+    <ID>MatchingDeclarationName:Configuration.kt$ConnectContentType</ID>
+    <ID>MaxLineLength:ErrorPayload.kt$*</ID>
+    <ID>ThrowsCount:HandleClientStream.kt$@PublishedApi internal suspend fun &lt;Req : Any, Res : Any&gt; handleClientStreamCall( call: ApplicationCall, maxMessageSize: Int, reqClass: KClass&lt;Req&gt;, resClass: KClass&lt;Res&gt;, handlerFunc: suspend (Flow&lt;Req&gt;, ApplicationCall) -&gt; ResponseMessage&lt;Res&gt;, )</ID>
+    <ID>TooGenericExceptionCaught:HandleClientStream.kt$e: Throwable</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,52 @@
+# detekt configuration for connect-ktor.
+#
+# Inherits the default rule set; only deltas relative to the upstream
+# defaults are listed below. Anything you would otherwise place in a
+# baseline that represents a deliberate project-wide allowance should
+# go here instead, so the baselines stay reserved for legitimate
+# legacy debt that is being fixed over time.
+
+style:
+  # ktor / kotest / kotlinx.coroutines expose large, DSL-shaped APIs
+  # that are conventionally pulled in with a single wildcard import.
+  # Forcing per-symbol imports there hurts readability without
+  # buying any safety.
+  WildcardImport:
+    active: true
+    excludeImports:
+      - "io.kotest.*"
+      - "io.ktor.*"
+      - "kotlinx.coroutines.*"
+
+  # The conformance harness is internal test infra (CLI arg parsers and
+  # similar plumbing), not a public library surface. Multiple early
+  # returns are an idiomatic shape there.
+  ReturnCount:
+    active: true
+    excludes:
+      - "**/src/test/**"
+      - "**/src/testFixtures/**"
+      - "**/conformance/**"
+
+  # MagicNumber on test sources is mostly fixture data; the same goes
+  # for the conformance harness which encodes TLS record bytes and
+  # other protocol constants inline.
+  MagicNumber:
+    active: true
+    excludes:
+      - "**/src/test/**"
+      - "**/src/testFixtures/**"
+      - "**/conformance/**"
+
+exceptions:
+  # Test code and the conformance harness routinely catch a broad
+  # Throwable / Exception to reflect arbitrary handler failures back
+  # to the test framework or the conformance runner. Production code
+  # is still expected to catch specific exceptions.
+  TooGenericExceptionCaught:
+    active: true
+    excludes:
+      - "**/src/test/**"
+      - "**/src/testFixtures/**"
+      - "**/conformance/**"
+

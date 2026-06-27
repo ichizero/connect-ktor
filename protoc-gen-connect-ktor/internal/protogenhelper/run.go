@@ -1,3 +1,6 @@
+// Package protogenhelper wraps protoc plugin boilerplate (request decode,
+// dummy go_package injection, response marshalling) so generators only need
+// to provide the actual code-emit callback.
 package protogenhelper
 
 import (
@@ -10,6 +13,9 @@ import (
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
+// Run reads a CodeGeneratorRequest from stdin, dispatches it to generator,
+// and writes the CodeGeneratorResponse to stdout. It is the canonical main
+// for a protoc plugin built on top of [protogen].
 func Run(opts *protogen.Options, generator func(*protogen.Plugin) error) error {
 	if len(os.Args) > 1 {
 		return fmt.Errorf("unknown argument %q", os.Args[1])
