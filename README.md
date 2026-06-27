@@ -50,7 +50,7 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 |  | `supports_tls_client_certs` (mTLS) | ✅ (Netty only) |
 | Trailers | `supports_trailers` (unary: `Trailer-*` HTTP headers; streaming: end-frame `metadata` field) | ✅ |
 | Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ❌ |
-| Message receive limit | `supports_message_receive_limit` | ✅ |
+| Message receive limit | `supports_message_receive_limit` | ✅ (unary) |
 
 Verified Ktor engines:
 
@@ -100,6 +100,11 @@ additional work in the library and/or protoc plugin:
   encoding is silently accepted, which is the only category of known
   failure on Netty (4 permutations across HTTP/1.1 + HTTP/2 × TLS
   off/on).
+- **`message_receive_limit` for client-streaming** — `connectBodyLimit`
+  caps the whole request body, which equals a single message for unary
+  RPCs. Client-streaming needs a per-message receive limit and a
+  streaming end-of-stream error frame; the `client-stream` Server Message
+  Size cases are pinned as known-failing for now.
 - **Decompressed-size cap for `message_receive_limit`** — the
   `connectBodyLimit` helper caps the on-the-wire byte count only;
   evaluating the *decompressed* size of compressed (e.g. gzip) requests
