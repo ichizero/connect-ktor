@@ -7,14 +7,15 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
-// methodKind enumerates the RPC shapes connect-ktor currently knows how to generate.
-// Server-streaming and bidirectional streaming are reserved for future work; methods of
-// those kinds are skipped during generation.
-type methodKind string
+// streamType mirrors Connect's StreamType vocabulary (see connect-go's connect.StreamType and
+// connect-kotlin's com.connectrpc.StreamType) for the RPC shapes connect-ktor currently knows
+// how to generate. Server-streaming and bidirectional streaming are reserved for future work;
+// methods of those kinds are skipped during generation.
+type streamType string
 
 const (
-	methodKindUnary        methodKind = "Unary"
-	methodKindClientStream methodKind = "ClientStream"
+	streamTypeUnary  streamType = "Unary"
+	streamTypeClient streamType = "Client"
 )
 
 func Run(plugin *protogen.Plugin) error {
@@ -57,12 +58,12 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 	methods := make([]*methodData, 0, len(service.Methods))
 	hasClientStream := false
 	for _, method := range service.Methods {
-		kind, ok := classifyMethod(method)
+		st, ok := streamTypeOf(method)
 		if !ok {
 			// Server-streaming / bidirectional streaming: skip for now.
 			continue
 		}
-		if kind == methodKindClientStream {
+		if st == streamTypeClient {
 			hasClientStream = true
 		}
 		methods = append(methods, &methodData{
@@ -70,7 +71,7 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 			Comment:        toKDocComment(method.Comments.Leading),
 			InputTypeName:  method.Input.GoIdent.GoName,
 			OutputTypeName: method.Output.GoIdent.GoName,
-			Kind:           kind,
+			StreamType:     st,
 		})
 	}
 
@@ -85,20 +86,20 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 	}
 }
 
-// classifyMethod returns the supported method kind and true, or (_, false) when the
-// method is a server-streaming or bidirectional RPC that we do not yet generate code for.
-func classifyMethod(method *protogen.Method) (methodKind, bool) {
-	return classifyStreamKind(method.Desc.IsStreamingClient(), method.Desc.IsStreamingServer())
+// streamTypeOf returns the supported stream type and true, or (_, false) when the method is a
+// server-streaming or bidirectional RPC that we do not yet generate code for.
+func streamTypeOf(method *protogen.Method) (streamType, bool) {
+	return classifyStreamType(method.Desc.IsStreamingClient(), method.Desc.IsStreamingServer())
 }
 
-// classifyStreamKind is the pure-boolean form of [classifyMethod], split out so it can be
+// classifyStreamType is the pure-boolean form of [streamTypeOf], split out so it can be
 // table-driven tested without constructing protogen descriptors.
-func classifyStreamKind(clientStream, serverStream bool) (methodKind, bool) {
+func classifyStreamType(clientStream, serverStream bool) (streamType, bool) {
 	switch {
 	case !clientStream && !serverStream:
-		return methodKindUnary, true
+		return streamTypeUnary, true
 	case clientStream && !serverStream:
-		return methodKindClientStream, true
+		return streamTypeClient, true
 	default:
 		return "", false
 	}

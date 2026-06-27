@@ -6,14 +6,14 @@ import (
 	"testing"
 )
 
-func Test_classifyStreamKind(t *testing.T) {
+func Test_classifyStreamType(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name           string
 		clientStream   bool
 		serverStream   bool
-		wantKind       methodKind
+		wantType       streamType
 		wantSupported  bool
 		describesShape string
 	}{
@@ -21,7 +21,7 @@ func Test_classifyStreamKind(t *testing.T) {
 			name:           "unary",
 			clientStream:   false,
 			serverStream:   false,
-			wantKind:       methodKindUnary,
+			wantType:       streamTypeUnary,
 			wantSupported:  true,
 			describesShape: "Req -> Res",
 		},
@@ -29,7 +29,7 @@ func Test_classifyStreamKind(t *testing.T) {
 			name:           "client streaming",
 			clientStream:   true,
 			serverStream:   false,
-			wantKind:       methodKindClientStream,
+			wantType:       streamTypeClient,
 			wantSupported:  true,
 			describesShape: "stream Req -> Res",
 		},
@@ -52,14 +52,14 @@ func Test_classifyStreamKind(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			kind, ok := classifyStreamKind(tt.clientStream, tt.serverStream)
+			st, ok := classifyStreamType(tt.clientStream, tt.serverStream)
 			if ok != tt.wantSupported {
-				t.Errorf("classifyStreamKind(%v, %v) supported = %v, want %v (%s)",
+				t.Errorf("classifyStreamType(%v, %v) supported = %v, want %v (%s)",
 					tt.clientStream, tt.serverStream, ok, tt.wantSupported, tt.describesShape)
 			}
-			if ok && kind != tt.wantKind {
-				t.Errorf("classifyStreamKind(%v, %v) kind = %q, want %q",
-					tt.clientStream, tt.serverStream, kind, tt.wantKind)
+			if ok && st != tt.wantType {
+				t.Errorf("classifyStreamType(%v, %v) type = %q, want %q",
+					tt.clientStream, tt.serverStream, st, tt.wantType)
 			}
 		})
 	}
@@ -76,7 +76,7 @@ func Test_template_unaryOnly(t *testing.T) {
 		SourceFileName:   "example/v1/example.proto",
 		Name:             "Example",
 		Methods: []*methodData{
-			{Name: "Say", InputTypeName: "SayRequest", OutputTypeName: "SayResponse", Kind: methodKindUnary},
+			{Name: "Say", InputTypeName: "SayRequest", OutputTypeName: "SayResponse", StreamType: streamTypeUnary},
 		},
 		HasClientStream: false,
 	})
@@ -98,8 +98,8 @@ func Test_template_mixedKinds(t *testing.T) {
 		SourceFileName:   "example/v1/example.proto",
 		Name:             "Example",
 		Methods: []*methodData{
-			{Name: "Say", InputTypeName: "SayRequest", OutputTypeName: "SayResponse", Kind: methodKindUnary},
-			{Name: "Upload", InputTypeName: "UploadRequest", OutputTypeName: "UploadResponse", Kind: methodKindClientStream},
+			{Name: "Say", InputTypeName: "SayRequest", OutputTypeName: "SayResponse", StreamType: streamTypeUnary},
+			{Name: "Upload", InputTypeName: "UploadRequest", OutputTypeName: "UploadResponse", StreamType: streamTypeClient},
 		},
 		HasClientStream: true,
 	})
