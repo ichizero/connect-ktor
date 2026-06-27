@@ -1,11 +1,16 @@
 package io.github.ichizero.connect.ktor.conformance
 
+import com.connectrpc.conformance.v1.ClientStreamRequest
 import com.connectrpc.conformance.v1.ConformanceServiceHandlerInterface
 import com.connectrpc.conformance.v1.IdempotentUnaryRequest
 import com.connectrpc.conformance.v1.UnaryRequest
 import com.connectrpc.conformance.v1.UnimplementedRequest
 import com.connectrpc.conformance.v1.conformanceService
+import com.connectrpc.extensions.GoogleJavaProtobufStrategy
 import com.google.protobuf.TypeRegistry
+import io.github.ichizero.connect.ktor.streaming.ConnectStreamingJsonStrategy
+import io.github.ichizero.connect.ktor.streaming.ConnectStreamingStrategies
+import io.github.ichizero.connect.ktor.streaming.installConnectStreamingCodecs
 import io.github.ichizero.ktor.serialization.connect.connectProto
 import io.ktor.http.ContentType
 import io.ktor.server.application.Application
@@ -23,10 +28,20 @@ internal val conformanceTypeRegistry: TypeRegistry = TypeRegistry.newBuilder()
     .add(UnaryRequest.getDescriptor())
     .add(IdempotentUnaryRequest.getDescriptor())
     .add(UnimplementedRequest.getDescriptor())
+    .add(ClientStreamRequest.getDescriptor())
     .build()
 
 internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInterface) {
     install(Resources)
+    // Streaming JSON responses contain `google.protobuf.Any` (RequestInfo.requests); the JSON
+    // strategy needs the same TypeRegistry as the unary path or encoding fails with
+    // "Cannot find type for url: ..." for ClientStreamRequest et al.
+    installConnectStreamingCodecs(
+        ConnectStreamingStrategies(
+            proto = GoogleJavaProtobufStrategy(),
+            json = ConnectStreamingJsonStrategy(conformanceTypeRegistry),
+        ),
+    )
     install(ContentNegotiation) {
         val jsonConverter = ConformanceJsonConverter(conformanceTypeRegistry)
         register(ContentType.Application.Json, jsonConverter)
