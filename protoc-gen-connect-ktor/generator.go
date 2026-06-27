@@ -1,3 +1,5 @@
+// Package generator implements the protoc plugin entry point that emits
+// Ktor route handler interfaces from Protocol Buffers service definitions.
 package generator
 
 import (
@@ -18,6 +20,8 @@ const (
 	streamTypeClient streamType = "Client"
 )
 
+// Run is the protogen entry point: it iterates the files marked for
+// generation by protoc and emits one Ktor handler file per input.
 func Run(plugin *protogen.Plugin) error {
 	for _, file := range plugin.Files {
 		if !file.Generate {

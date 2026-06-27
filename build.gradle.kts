@@ -12,6 +12,7 @@ buildscript {
         classpath(libs.maven.plugin)
         classpath(libs.kotlin.plugin)
         classpath(libs.spotless)
+        classpath(libs.detekt.plugin)
     }
     repositories {
         mavenCentral()
@@ -50,6 +51,32 @@ allprojects {
             )
             target("**/*.kts")
         }
+    }
+
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+    extensions.configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
+        buildUponDefaultConfig = true
+        allRules = false
+        config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+        baseline = file("detekt-baseline.xml")
+        source.setFrom(
+            files(
+                "src/main/kotlin",
+                "src/test/kotlin",
+            ),
+        )
+    }
+    tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+        jvmTarget = "21"
+        reports {
+            html.required.set(true)
+            xml.required.set(true)
+            sarif.required.set(false)
+            md.required.set(false)
+        }
+    }
+    tasks.withType<io.gitlab.arturbosch.detekt.DetektCreateBaselineTask>().configureEach {
+        jvmTarget = "21"
     }
 
     tasks.withType<Test> {

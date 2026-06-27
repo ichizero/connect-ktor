@@ -13,7 +13,7 @@ includes:
 tasks:
   lint:
     cmds:
-      - ./gradlew spotlessKotlinCheck
+      - ./gradlew spotlessCheck detekt
       - task: plugin:lint
   build:
     cmds:

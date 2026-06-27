@@ -1,3 +1,5 @@
+// Package tmplfunc provides the template.FuncMap used by the protoc plugin
+// templates for case manipulation and indentation helpers.
 package tmplfunc
 
 import (
@@ -5,6 +7,7 @@ import (
 	"text/template"
 )
 
+// Map is the FuncMap bound into every template the plugin renders.
 var Map = template.FuncMap{
 	"toLowerFirst": toLowerFirst,
 	"indent":       indent,
@@ -20,7 +23,7 @@ func toLowerFirst(value string) string {
 
 func indent(spaces int, value string) string {
 	padding := strings.Repeat(" ", spaces)
-	return padding + strings.Replace(value, "\n", "\n"+padding, -1)
+	return padding + strings.ReplaceAll(value, "\n", "\n"+padding)
 }
 
 func nIndent(spaces int, value string) string {
