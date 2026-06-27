@@ -93,7 +93,8 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     }
 
     // Validate that compression is either absent or 'identity'.
-    // TODO: accept-encoding query param is ignored; revisit when adding gzip response support.
+    // NOTE: the accept-encoding query param is ignored for now; revisit when adding gzip
+    // response support.
     val compression = request.queryParameters["compression"]
     if (compression != null && compression != "identity") {
         val error = ConnectException(
@@ -123,6 +124,13 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
         return
     }
 
+    // Connect spec: "If the base64 query parameter is present, the value of the parameter should
+    // be 1. Other values for the base64 parameter will simply be ignored." So treat only the exact
+    // literal "1" as base64url; any other value (e.g. "0", "true", "foo") or its absence means the
+    // message is NOT base64. This deliberately does NOT reject unexpected values with
+    // INVALID_ARGUMENT — that would diverge from the spec and from the connect-go reference
+    // implementation, which uses the same `query.Get("base64") == "1"` check.
+    // See https://connectrpc.com/docs/protocol#unary-get-request.
     val isBase64 = request.queryParameters["base64"] == "1"
     // Connect spec: arbitrary binary proto payloads cannot survive a UTF-8 round-trip through
     // percent-decoded query values, so `encoding=proto` REQUIRES `base64=1`. Rejecting up-front
