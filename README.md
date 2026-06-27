@@ -281,6 +281,8 @@ fun main() {
         installConnectGetCodecs(
             ConnectGetStrategies(
                 proto = GoogleJavaProtobufStrategy(),
+                // `json` covers request *deserialisation* (and response serialisation when no
+                // `jsonSerializer` is set). See the note below if responses contain `Any`.
                 json = GoogleJavaJSONStrategy(typeRegistry),
             ),
         )
@@ -294,6 +296,28 @@ fun main() {
     }.start(wait = false)
 }
 ```
+
+> Note: `GoogleJavaJSONStrategy(typeRegistry)` only forwards the registry to its
+> `JsonFormat.parser` (request decoding), not to its `JsonFormat.printer`
+> (response encoding). So the `json` strategy above is enough to *read* GET
+> requests whose `message` embeds `google.protobuf.Any`, but a JSON *response*
+> that contains `Any` would still fail to serialise with `Cannot find type for
+> url`. When your responses embed `Any`, also pass a `jsonSerializer` — a
+> `ConnectGetJsonSerializer` backed by `JsonFormat.printer().usingTypeRegistry(typeRegistry)`:
+>
+> ```kotlin
+> installConnectGetCodecs(
+>     ConnectGetStrategies(
+>         proto = GoogleJavaProtobufStrategy(),
+>         json = GoogleJavaJSONStrategy(typeRegistry),
+>         jsonSerializer = object : ConnectGetJsonSerializer {
+>             private val printer = JsonFormat.printer().usingTypeRegistry(typeRegistry)
+>             override fun <T : Any> serialize(value: T, clazz: KClass<T>): ByteArray =
+>                 printer.print(value as Message).toByteArray(Charsets.UTF_8)
+>         },
+>     ),
+> )
+> ```
 
 ### Request Validation with protovalidate
 
