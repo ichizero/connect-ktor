@@ -57,8 +57,8 @@ Verified Ktor engines:
 
 | Engine | HTTP versions | Notes |
 |---|---|---|
-| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. 13 cases are known-failing — chiefly because CIO collapses duplicate request headers into one — and are pinned in `conformance/known-failing-cio.txt`. |
-| `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. No cases are known-failing; `conformance/known-failing-netty.txt` is empty. |
+| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. Known-failing cases fall into two buckets, pinned in `conformance/known-failing-cio.txt`: CIO collapses duplicate request headers into one, and gzip `client-stream` RPCs are rejected because per-message streaming compression is unimplemented (see Roadmap). |
+| `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. The only known-failing cases, pinned in `conformance/known-failing-netty.txt`, are gzip `client-stream` RPCs, which are rejected because per-message streaming compression is unimplemented (see Roadmap). |
 
 Run the suite locally with:
 
@@ -68,8 +68,10 @@ task conformance
 
 which builds the `:conformance` subproject, installs
 `connectconformance`, and runs the suite once per engine using the
-`config-<engine>.yaml` and `known-failing-<engine>.txt` files in
-`conformance/`.
+`config-<engine>.yaml`, `known-failing-<engine>.txt`, and
+`known-flaky-<engine>.txt` files in `conformance/`. (The gzip `client-stream`
+`Timeouts` cases race the server's `unimplemented` rejection against the
+deadline, so they are tracked as flaky rather than known-failing.)
 
 ### Connect protocol roadmap
 
