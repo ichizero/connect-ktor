@@ -1,0 +1,32 @@
+# lefthook configuration for connect-ktor.
+#
+# Install lefthook locally and enable the hooks:
+#
+#     brew install lefthook
+#     lefthook install
+#
+# The pre-commit pipeline runs fast local quality gates. CI re-runs the
+# same checks, so these hooks are convenience-only and can be skipped
+# with `LEFTHOOK=0 git commit` if needed.
+
+pre-commit:
+  parallel: true
+  commands:
+    # Kotlin: run Spotless (ktlint) and detekt in a single Gradle
+    # invocation so the JVM only starts once per commit.
+    gradle-quality:
+      glob: "*.{kt,kts}"
+      run: ./gradlew --no-daemon spotlessCheck detekt
+
+    # Go: golangci-lint v2 already runs `govet` internally, so we
+    # don't duplicate it here. Falls back to a no-op when the binary
+    # is not installed locally (CI still runs it).
+    golangci:
+      root: "protoc-gen-connect-ktor/"
+      glob: "*.go"
+      run: |
+        if command -v golangci-lint >/dev/null 2>&1; then
+          golangci-lint run
+        else
+          echo "golangci-lint not installed locally; skipping (CI will run it)."
+        fi

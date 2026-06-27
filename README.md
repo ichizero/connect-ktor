@@ -296,6 +296,22 @@ fun main() {
 }
 ```
 
+## Local development
+
+This repository ships a [lefthook](https://github.com/evilmartians/lefthook)
+configuration (`lefthook.yml`) that wires fast quality gates into
+`pre-commit`. Install it once per clone:
+
+```bash
+brew install lefthook
+lefthook install
+```
+
+The hooks run Spotless (ktlint), detekt, `go vet`, and golangci-lint on
+staged files. They are convenience-only — CI re-runs the same checks —
+so a commit can still be made with `LEFTHOOK=0 git commit ...` when
+needed.
+
 ## Verifying release artifacts
 
 Releases for the `protoc-gen-connect-ktor` Go binaries and the `library` JARs publish supply-chain
