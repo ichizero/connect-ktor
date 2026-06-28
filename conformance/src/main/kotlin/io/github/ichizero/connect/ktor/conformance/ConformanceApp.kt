@@ -8,6 +8,7 @@ import com.connectrpc.conformance.v1.UnimplementedRequest
 import com.connectrpc.conformance.v1.conformanceService
 import com.connectrpc.extensions.GoogleJavaProtobufStrategy
 import com.google.protobuf.TypeRegistry
+import io.github.ichizero.connect.ktor.UnaryCompressionGuard
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingJsonStrategy
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingStrategies
 import io.github.ichizero.connect.ktor.streaming.installConnectStreamingCodecs
@@ -16,6 +17,9 @@ import io.ktor.http.ContentType
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.engine.ApplicationEngine
+import io.ktor.server.plugins.compression.Compression
+import io.ktor.server.plugins.compression.gzip
+import io.ktor.server.plugins.compression.identity
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.contentnegotiation.ContentTypeWithQuality
 import io.ktor.server.request.contentType
@@ -42,6 +46,10 @@ internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInt
             json = ConnectStreamingJsonStrategy(conformanceTypeRegistry),
         ),
     )
+    install(Compression) {
+        gzip()
+        identity()
+    }
     install(ContentNegotiation) {
         val jsonConverter = ConformanceJsonConverter(conformanceTypeRegistry)
         register(ContentType.Application.Json, jsonConverter)
@@ -62,6 +70,11 @@ internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInt
         }
     }
     routing {
+        install(UnaryCompressionGuard) {
+            // Mirror the encoders installed on Compression above: this set decides which
+            // Content-Encoding values are accepted, and is surfaced in error responses.
+            supportedEncodings = setOf("gzip", "identity")
+        }
         conformanceService(handler)
     }
 }

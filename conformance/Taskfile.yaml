@@ -52,6 +52,7 @@ tasks:
         --mode server
         --conf {{.TASKFILE_DIR}}/config-{{.ENGINE}}.yaml
         --known-failing @{{.TASKFILE_DIR}}/known-failing-{{.ENGINE}}.txt
+        --known-flaky @{{.TASKFILE_DIR}}/known-flaky-{{.ENGINE}}.txt
         -v
         --
         {{.SERVER_BIN}} --engine {{.ENGINE}}
