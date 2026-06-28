@@ -17,6 +17,9 @@ buildscript {
     repositories {
         mavenCentral()
     }
+    configurations.classpath {
+        resolutionStrategy.activateDependencyLocking()
+    }
 }
 
 val snapshotVersion = "0.0.1"
@@ -28,6 +31,10 @@ allprojects {
     repositories {
         mavenCentral()
         gradlePluginPortal()
+    }
+
+    dependencyLocking {
+        lockAllConfigurations()
     }
 
     apply(plugin = "com.diffplug.spotless")
