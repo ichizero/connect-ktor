@@ -49,14 +49,14 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 | TLS | `supports_tls` | ✅ (Netty only) |
 |  | `supports_tls_client_certs` (mTLS) | ✅ (Netty only) |
 | Trailers | `supports_trailers` (unary: `Trailer-*` HTTP headers; streaming: end-frame `metadata` field) | ✅ |
-| Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ❌ |
+| Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ✅ (Netty fully; CIO passes except the two `Connect with GET/.../success` cases that exercise duplicate `X-Conformance-Test` headers — same CIO upstream limitation as the `Duplicate Metadata` / `Basic` entries in `conformance/known-failing-cio.txt`) |
 | Message receive limit | `supports_message_receive_limit` | ❌ |
 
 Verified Ktor engines:
 
 | Engine | HTTP versions | Notes |
 |---|---|---|
-| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. 8 cases are known-failing — chiefly because CIO collapses duplicate request headers into one — and are pinned in `conformance/known-failing-cio.txt`. |
+| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. 10 cases are known-failing — chiefly because CIO collapses duplicate request headers into one (including the two `Connect with GET/.../success` cases) — and are pinned in `conformance/known-failing-cio.txt`. |
 | `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. 4 cases are known-failing — all four `Connect Unexpected Requests/**/unexpected-compression` permutations across HTTP/1.1 + HTTP/2 × TLS off/on — and are pinned in `conformance/known-failing-netty.txt`. |
 
 Run the suite locally with:
@@ -91,9 +91,11 @@ additional work in the library and/or protoc plugin:
   `UnsupportedOperationException` for HTTPS. Use Netty if you need
   TLS termination at the Ktor layer; otherwise terminate TLS in
   front of CIO.
-- **Connect GET (idempotent unary)** — the generator emits POST routes
-  only; opt-in `option idempotency_level = NO_SIDE_EFFECTS;` handling
-  is the prerequisite.
+- **Connect GET (idempotent unary)** — implemented. Methods annotated
+  with `option idempotency_level = NO_SIDE_EFFECTS;` get a `GET` route
+  in addition to `POST`. Query-parameter decoding (`connect=v1`,
+  `encoding=proto|json`, `message=<base64url>`) is handled by
+  `handleGet<Resource, Req, Res>(handler::method)` in the library.
 - **Compression negotiation** — gzip/br/zstd/deflate/snappy require
   Ktor's `Compression` plugin and Connect-aware
   `Content-Encoding`/`Accept-Encoding` validation. Today an unsupported
@@ -251,6 +253,68 @@ fun main() {
 >     ConnectStreamingStrategies(
 >         proto = GoogleJavaProtobufStrategy(),
 >         json = ConnectStreamingJsonStrategy(typeRegistry),
+>     ),
+> )
+> ```
+
+#### 3. (Connect GET) Keep POST and GET codecs in sync
+
+The Connect GET path (idempotent unary RPCs annotated with
+`option idempotency_level = NO_SIDE_EFFECTS;`) does not go through
+`ContentNegotiation` — there is no request body to negotiate on — so it
+resolves its codecs via `installConnectGetCodecs` instead. With the defaults
+(`connectJson()` and no `installConnectGetCodecs`) nothing extra is needed.
+However, if you pass a custom `TypeRegistry` to `connectJson(...)` — for
+example because your messages contain `google.protobuf.Any` fields — you must
+register the same registry for the GET path as well; forgetting this makes GET
+requests fail at runtime when (de)serialising those `Any` fields:
+
+```kotlin
+fun main() {
+    val typeRegistry = TypeRegistry.newBuilder()
+        .add(SayRequest.getDescriptor())
+        .build()
+
+    embeddedServer(CIO, port = 8080) {
+        install(Resources)
+        // GET path: query-parameter decoding + manual response serialisation.
+        installConnectGetCodecs(
+            ConnectGetStrategies(
+                proto = GoogleJavaProtobufStrategy(),
+                // `json` covers request *deserialisation* (and response serialisation when no
+                // `jsonSerializer` is set). See the note below if responses contain `Any`.
+                json = GoogleJavaJSONStrategy(typeRegistry),
+            ),
+        )
+        routing {
+            install(ContentNegotiation) {
+                // POST path: body-based content negotiation.
+                connectJson(typeRegistry)
+            }
+            elizaService(ElizaServiceHandler)
+        }
+    }.start(wait = false)
+}
+```
+
+> Note: `GoogleJavaJSONStrategy(typeRegistry)` only forwards the registry to its
+> `JsonFormat.parser` (request decoding), not to its `JsonFormat.printer`
+> (response encoding). So the `json` strategy above is enough to *read* GET
+> requests whose `message` embeds `google.protobuf.Any`, but a JSON *response*
+> that contains `Any` would still fail to serialise with `Cannot find type for
+> url`. When your responses embed `Any`, also pass a `jsonSerializer` — a
+> `ConnectGetJsonSerializer` backed by `JsonFormat.printer().usingTypeRegistry(typeRegistry)`:
+>
+> ```kotlin
+> installConnectGetCodecs(
+>     ConnectGetStrategies(
+>         proto = GoogleJavaProtobufStrategy(),
+>         json = GoogleJavaJSONStrategy(typeRegistry),
+>         jsonSerializer = object : ConnectGetJsonSerializer {
+>             private val printer = JsonFormat.printer().usingTypeRegistry(typeRegistry)
+>             override fun <T : Any> serialize(value: T, clazz: KClass<T>): ByteArray =
+>                 printer.print(value as Message).toByteArray(Charsets.UTF_8)
+>         },
 >     ),
 > )
 > ```

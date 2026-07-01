@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 // streamType mirrors Connect's StreamType vocabulary (see connect-go's connect.StreamType and
@@ -61,6 +62,7 @@ func run(plugin *protogen.Plugin, file *protogen.File) error {
 func serviceToData(service *protogen.Service, protoPackageName, javaPackageName, sourceFileName string) *serviceData {
 	methods := make([]*methodData, 0, len(service.Methods))
 	hasClientStream := false
+	hasGetRoute := false
 	for _, method := range service.Methods {
 		st, ok := streamTypeOf(method)
 		if !ok {
@@ -70,12 +72,19 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 		if st == streamTypeClient {
 			hasClientStream = true
 		}
+		noSideEffects := isNoSideEffects(method)
+		// Connect GET is emitted only for unary RPCs annotated NO_SIDE_EFFECTS
+		// (see template: the GET route lives inside the Unary branch).
+		if st == streamTypeUnary && noSideEffects {
+			hasGetRoute = true
+		}
 		methods = append(methods, &methodData{
 			Name:           string(method.Desc.Name()),
 			Comment:        toKDocComment(method.Comments.Leading),
 			InputTypeName:  method.Input.GoIdent.GoName,
 			OutputTypeName: method.Output.GoIdent.GoName,
 			StreamType:     st,
+			NoSideEffects:  noSideEffects,
 		})
 	}
 
@@ -87,7 +96,30 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 		Comment:          toKDocComment(service.Comments.Leading),
 		Methods:          methods,
 		HasClientStream:  hasClientStream,
+		HasGetRoute:      hasGetRoute,
 	}
+}
+
+// isNoSideEffects reports whether the method is annotated with
+// idempotency_level = NO_SIDE_EFFECTS, the only level eligible for a Connect
+// GET route. The IDEMPOTENT level is deliberately excluded: it permits safe
+// retries but still allows side effects, so it must not be exposed over GET.
+// See https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto
+// (MethodOptions.IdempotencyLevel) and
+// https://connectrpc.com/docs/protocol#unary-get-request.
+func isNoSideEffects(method *protogen.Method) bool {
+	opts, ok := method.Desc.Options().(*descriptorpb.MethodOptions)
+	if !ok {
+		return false
+	}
+	return idempotencyAllowsGet(opts.GetIdempotencyLevel())
+}
+
+// idempotencyAllowsGet is the pure form of the NO_SIDE_EFFECTS check, split out
+// so it can be table-driven tested over every IdempotencyLevel. Only
+// NO_SIDE_EFFECTS is GET-eligible; IDEMPOTENT and IDEMPOTENCY_UNKNOWN are not.
+func idempotencyAllowsGet(level descriptorpb.MethodOptions_IdempotencyLevel) bool {
+	return level == descriptorpb.MethodOptions_NO_SIDE_EFFECTS
 }
 
 // streamTypeOf returns the supported stream type and true, or (_, false) when the method is a

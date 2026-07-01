@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 func Test_toKDocComment(t *testing.T) {
@@ -102,6 +103,31 @@ func Test_classifyStreamType(t *testing.T) {
 			if ok && st != tt.wantType {
 				t.Errorf("classifyStreamType(%v, %v) type = %q, want %q",
 					tt.clientStream, tt.serverStream, st, tt.wantType)
+			}
+		})
+	}
+}
+
+// Test_idempotencyAllowsGet pins down that only NO_SIDE_EFFECTS is eligible for a Connect
+// GET route. IDEMPOTENT permits safe retries but still allows side effects, so it must not
+// be exposed over GET; IDEMPOTENCY_UNKNOWN (the default) is likewise excluded.
+func Test_idempotencyAllowsGet(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		level descriptorpb.MethodOptions_IdempotencyLevel
+		want  bool
+	}{
+		{"unknown (default)", descriptorpb.MethodOptions_IDEMPOTENCY_UNKNOWN, false},
+		{"idempotent (has side effects)", descriptorpb.MethodOptions_IDEMPOTENT, false},
+		{"no side effects", descriptorpb.MethodOptions_NO_SIDE_EFFECTS, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := idempotencyAllowsGet(tt.level); got != tt.want {
+				t.Errorf("idempotencyAllowsGet(%v) = %v, want %v", tt.level, got, tt.want)
 			}
 		})
 	}
