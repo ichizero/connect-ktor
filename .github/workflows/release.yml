@@ -49,7 +49,7 @@ jobs:
           ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
 
       - name: Generate SLSA build provenance for library JARs
-        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
         with:
           subject-path: |
             library/build/libs/*.jar
@@ -107,7 +107,7 @@ jobs:
           TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
 
       - name: Generate SLSA build provenance for Go release archives
-        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
         with:
           subject-path: |
             dist/*.tar.gz
