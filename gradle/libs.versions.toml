@@ -15,7 +15,7 @@ okio = "3.17.0"
 okhttp = "5.4.0"
 slf4j = "2.0.18"
 
-junit-jupiter-engine = "6.1.1"
+junit-jupiter-engine = "6.1.2"
 kotest = "5.9.1"
 
 [plugins]
