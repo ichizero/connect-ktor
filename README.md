@@ -56,7 +56,7 @@ Verified Ktor engines:
 
 | Engine | HTTP versions | Notes |
 |---|---|---|
-| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. 10 cases are known-failing — chiefly because CIO collapses duplicate request headers into one (including the two `Connect with GET/.../success` cases) — and are pinned in `conformance/known-failing-cio.txt`. |
+| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. 17 cases are known-failing (as reported by the conformance runner; the `Duplicate Metadata/**` wildcard alone expands to 8 cases) — chiefly because CIO collapses duplicate request headers into one (including the two `Connect with GET/.../success` cases) — and are pinned in `conformance/known-failing-cio.txt`. |
 | `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. 4 cases are known-failing — all four `Connect Unexpected Requests/**/unexpected-compression` permutations across HTTP/1.1 + HTTP/2 × TLS off/on — and are pinned in `conformance/known-failing-netty.txt`. |
 
 Run the suite locally with:
