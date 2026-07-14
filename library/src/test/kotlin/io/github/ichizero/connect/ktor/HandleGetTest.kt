@@ -6,6 +6,7 @@ import com.connectrpc.eliza.v1.SayRequest
 import com.connectrpc.eliza.v1.SayResponse
 import com.connectrpc.eliza.v1.elizaService
 import com.connectrpc.eliza.v1.sayResponse
+import com.connectrpc.extensions.GoogleJavaJSONStrategy
 import com.connectrpc.extensions.GoogleJavaProtobufStrategy
 import com.google.protobuf.util.JsonFormat
 import io.kotest.core.spec.style.FunSpec
@@ -17,6 +18,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Parameters
 import io.ktor.http.encodeURLQueryComponent
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
@@ -24,6 +26,7 @@ import io.ktor.server.resources.Resources
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import java.util.Base64
+import kotlin.reflect.KClass
 
 // Handler that echoes the request sentence back.
 private object EchoHandler : ElizaServiceHandlerInterface {
@@ -247,7 +250,7 @@ class HandleGetTest : FunSpec({
 
     test("query params are stored in call attributes") {
         // Use a handler that reads ConnectGetQueryParamsKey to verify it was set.
-        val capturedQueryParams = mutableListOf<List<Pair<String, List<String>>>>()
+        val capturedQueryParams = mutableListOf<Parameters>()
 
         val capturingHandler = object : ElizaServiceHandlerInterface {
             override suspend fun say(
@@ -277,9 +280,43 @@ class HandleGetTest : FunSpec({
 
             capturedQueryParams.size shouldBe 1
             val params = capturedQueryParams.first()
-            params.find { it.first == "connect" }?.second shouldBe listOf("v1")
-            params.find { it.first == "encoding" }?.second shouldBe listOf("proto")
-            params.find { it.first == "base64" }?.second shouldBe listOf("1")
+            params["connect"] shouldBe "v1"
+            params["encoding"] shouldBe "proto"
+            params["base64"] shouldBe "1"
+        }
+    }
+
+    test("jsonSerializer override takes precedence over the json strategy for GET responses") {
+        testApplication {
+            application {
+                installConnectGetCodecs(
+                    ConnectGetStrategies(
+                        proto = GoogleJavaProtobufStrategy(),
+                        json = GoogleJavaJSONStrategy(),
+                        jsonSerializer = object : ConnectGetJsonSerializer {
+                            override fun <T : Any> serialize(value: T, clazz: KClass<T>): ByteArray =
+                                """{"sentence":"overridden by jsonSerializer"}""".toByteArray(Charsets.UTF_8)
+                        },
+                    ),
+                )
+                install(Resources)
+                routing {
+                    elizaService(EchoHandler)
+                }
+            }
+
+            val req = SayRequest.newBuilder().setSentence("hello json").build()
+            val json = JsonFormat.printer().print(req)
+            val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(json.toByteArray())
+
+            val response = client.get(
+                "/connectrpc.eliza.v1.ElizaService/Say" +
+                    "?connect=v1&encoding=json&base64=1&message=$encoded",
+            )
+
+            response.status shouldBe HttpStatusCode.OK
+            response.headers[HttpHeaders.ContentType] shouldContain ContentType.Application.Json.contentType
+            response.bodyAsText() shouldContain "overridden by jsonSerializer"
         }
     }
 })
