@@ -91,11 +91,6 @@ additional work in the library and/or protoc plugin:
   `UnsupportedOperationException` for HTTPS. Use Netty if you need
   TLS termination at the Ktor layer; otherwise terminate TLS in
   front of CIO.
-- **Connect GET (idempotent unary)** — implemented. Methods annotated
-  with `option idempotency_level = NO_SIDE_EFFECTS;` get a `GET` route
-  in addition to `POST`. Query-parameter decoding (`connect=v1`,
-  `encoding=proto|json`, `message=<base64url>`) is handled by
-  `handleGet<Resource, Req, Res>(handler::method)` in the library.
 - **Compression negotiation** — gzip/br/zstd/deflate/snappy require
   Ktor's `Compression` plugin and Connect-aware
   `Content-Encoding`/`Accept-Encoding` validation. Today an unsupported
