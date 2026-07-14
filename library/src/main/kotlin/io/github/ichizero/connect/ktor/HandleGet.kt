@@ -17,6 +17,23 @@ import kotlin.reflect.KClass
 private val supportedGetEncodings: Set<String> = setOf("proto", "json")
 
 /**
+ * Responds with a Connect-protocol error payload.
+ *
+ * Connect error responses are always JSON regardless of request encoding.
+ */
+private suspend fun ApplicationCall.respondConnectError(error: ConnectException) {
+    respondBytes(
+        bytes = error.toErrorJsonBytes(),
+        contentType = ContentType.Application.Json,
+        status = error.code.asHTTPStatusCode(),
+    )
+}
+
+private suspend fun ApplicationCall.respondConnectError(code: Code, message: String) {
+    respondConnectError(ConnectException(code = code, message = message))
+}
+
+/**
  * handleGet is a utility function that decodes a Connect GET request (query-parameter encoding)
  * and bridges it to the same Connect-Ktor handler interface used by the POST path.
  *
@@ -51,14 +68,9 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     // Validate the Connect version marker.
     val connectVersion = request.queryParameters["connect"]
     if (connectVersion != "v1") {
-        val error = ConnectException(
-            code = Code.INVALID_ARGUMENT,
-            message = "missing or invalid 'connect' query parameter: expected 'v1', got '$connectVersion'",
-        )
-        call.respondBytes(
-            bytes = error.toErrorJsonBytes(),
-            contentType = ContentType.Application.Json,
-            status = Code.INVALID_ARGUMENT.asHTTPStatusCode(),
+        call.respondConnectError(
+            Code.INVALID_ARGUMENT,
+            "missing or invalid 'connect' query parameter: expected 'v1', got '$connectVersion'",
         )
         return
     }
@@ -66,28 +78,15 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     // Validate encoding.
     val encoding = request.queryParameters["encoding"]
     if (encoding == null) {
-        val error = ConnectException(
-            code = Code.INVALID_ARGUMENT,
-            message = "missing 'encoding' query parameter",
-        )
-        call.respondBytes(
-            bytes = error.toErrorJsonBytes(),
-            contentType = ContentType.Application.Json,
-            status = Code.INVALID_ARGUMENT.asHTTPStatusCode(),
-        )
+        call.respondConnectError(Code.INVALID_ARGUMENT, "missing 'encoding' query parameter")
         return
     }
     // Connect spec: an unsupported codec MUST yield CODE_UNIMPLEMENTED together with the list
     // of codecs the server does support.
     if (encoding !in supportedGetEncodings) {
-        val error = ConnectException(
-            code = Code.UNIMPLEMENTED,
-            message = "unsupported encoding: \"$encoding\" (supported: ${supportedGetEncodings.joinToString(", ")})",
-        )
-        call.respondBytes(
-            bytes = error.toErrorJsonBytes(),
-            contentType = ContentType.Application.Json,
-            status = Code.UNIMPLEMENTED.asHTTPStatusCode(),
+        call.respondConnectError(
+            Code.UNIMPLEMENTED,
+            "unsupported encoding: \"$encoding\" (supported: ${supportedGetEncodings.joinToString(", ")})",
         )
         return
     }
@@ -97,30 +96,14 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     // response support.
     val compression = request.queryParameters["compression"]
     if (compression != null && compression != "identity") {
-        val error = ConnectException(
-            code = Code.UNIMPLEMENTED,
-            message = "unsupported compression: $compression",
-        )
-        call.respondBytes(
-            bytes = error.toErrorJsonBytes(),
-            contentType = ContentType.Application.Json,
-            status = Code.UNIMPLEMENTED.asHTTPStatusCode(),
-        )
+        call.respondConnectError(Code.UNIMPLEMENTED, "unsupported compression: $compression")
         return
     }
 
     // Decode the message payload.
     val messageParam = request.queryParameters["message"]
     if (messageParam == null) {
-        val error = ConnectException(
-            code = Code.INVALID_ARGUMENT,
-            message = "missing 'message' query parameter",
-        )
-        call.respondBytes(
-            bytes = error.toErrorJsonBytes(),
-            contentType = ContentType.Application.Json,
-            status = Code.INVALID_ARGUMENT.asHTTPStatusCode(),
-        )
+        call.respondConnectError(Code.INVALID_ARGUMENT, "missing 'message' query parameter")
         return
     }
 
@@ -136,14 +119,9 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     // percent-decoded query values, so `encoding=proto` REQUIRES `base64=1`. Rejecting up-front
     // prevents silent payload corruption (would otherwise re-encode invalid bytes as U+FFFD).
     if (encoding == "proto" && !isBase64) {
-        val error = ConnectException(
-            code = Code.INVALID_ARGUMENT,
-            message = "'encoding=proto' requires 'base64=1' (raw proto bytes are not UTF-8 safe)",
-        )
-        call.respondBytes(
-            bytes = error.toErrorJsonBytes(),
-            contentType = ContentType.Application.Json,
-            status = Code.INVALID_ARGUMENT.asHTTPStatusCode(),
+        call.respondConnectError(
+            Code.INVALID_ARGUMENT,
+            "'encoding=proto' requires 'base64=1' (raw proto bytes are not UTF-8 safe)",
         )
         return
     }
@@ -156,14 +134,9 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
             messageParam.toByteArray(Charsets.UTF_8)
         }
     } catch (e: IllegalArgumentException) {
-        val error = ConnectException(
-            code = Code.INVALID_ARGUMENT,
-            message = "failed to decode 'message' query parameter: ${e.message}",
-        )
-        call.respondBytes(
-            bytes = error.toErrorJsonBytes(),
-            contentType = ContentType.Application.Json,
-            status = Code.INVALID_ARGUMENT.asHTTPStatusCode(),
+        call.respondConnectError(
+            Code.INVALID_ARGUMENT,
+            "failed to decode 'message' query parameter: ${e.message}",
         )
         return
     }
@@ -179,31 +152,17 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
             else -> strategies.json.codec(reqClass).deserialize(Buffer().write(messageBytes))
         }
     } catch (e: ConnectException) {
-        call.respondBytes(
-            bytes = e.toErrorJsonBytes(),
-            contentType = ContentType.Application.Json,
-            status = e.code.asHTTPStatusCode(),
-        )
+        call.respondConnectError(e)
         return
     } catch (e: Exception) {
         // Deliberately Exception, not Throwable: JVM Errors must escape, and this is a
         // non-suspending call so CancellationException cannot originate here.
-        val error = ConnectException(
-            code = Code.INVALID_ARGUMENT,
-            message = "failed to deserialize request: ${e.message}",
-        )
-        call.respondBytes(
-            bytes = error.toErrorJsonBytes(),
-            contentType = ContentType.Application.Json,
-            status = Code.INVALID_ARGUMENT.asHTTPStatusCode(),
-        )
+        call.respondConnectError(Code.INVALID_ARGUMENT, "failed to deserialize request: ${e.message}")
         return
     }
 
     // Store raw query params in call attributes so handlers can inspect connect_get_info.
-    val queryParams: List<Pair<String, List<String>>> = request.queryParameters.entries()
-        .map { (name, values) -> name to values.toList() }
-    call.attributes.put(ConnectGetQueryParamsKey, queryParams)
+    call.attributes.put(ConnectGetQueryParamsKey, request.queryParameters)
 
     // Determine response Content-Type from the request encoding.
     val responseContentType = when (encoding) {
@@ -236,11 +195,7 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
                 // Connect spec: error responses are always JSON regardless of request `encoding`.
                 // See https://connectrpc.com/docs/protocol#error-end-stream — do NOT switch to
                 // `application/proto` here even when the request asked for proto encoding.
-                call.respondBytes(
-                    bytes = it.toErrorJsonBytes(),
-                    contentType = ContentType.Application.Json,
-                    status = it.code.asHTTPStatusCode(),
-                )
+                call.respondConnectError(it)
             },
         )
 }

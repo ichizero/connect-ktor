@@ -183,7 +183,7 @@ private fun buildRequestInfo(call: ApplicationCall, echoMessage: Message): Confo
     val queryParams = call.attributes.getOrNull(ConnectGetQueryParamsKey)
     if (queryParams != null) {
         val connectGetInfo = ConformancePayload.ConnectGetInfo.newBuilder()
-        queryParams.forEach { (name, values) ->
+        queryParams.forEach { name, values ->
             connectGetInfo.addQueryParams(
                 ConformanceHeader.newBuilder().setName(name).addAllValue(values).build(),
             )
