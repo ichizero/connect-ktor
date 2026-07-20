@@ -29,8 +29,9 @@ public class UnaryCompressionGuardConfig {
     /**
      * Optional upper bound (in bytes) on the *post-decompression* body size accepted by unary
      * RPCs.  When a request body decodes to more than this many bytes, the guard responds with
-     * [Code.RESOURCE_EXHAUSTED] and the application handler never runs.  `null` (the default)
-     * disables the cap.
+     * [Code.RESOURCE_EXHAUSTED] before `call.receive()` returns.  Handlers reached through the
+     * generated Connect routing (which calls `receive()` before any handler code runs) never
+     * execute for a rejected request.  `null` (the default) disables the cap.
      *
      * This is a self-defence cap against decompression bombs: a small gzip payload can expand to
      * an arbitrarily large byte stream, so without an explicit limit a single request can drive

@@ -100,8 +100,8 @@ additional work in the library and/or protoc plugin:
 - **Additional compression algorithms** — brotli (`br`), zstd, and
   snappy require an external `ContentEncoder` registered with Ktor's
   `Compression` plugin (`deflate` ships with Ktor). Once registered,
-  `UnaryCompressionGuard` will automatically accept those encodings for
-  Connect unary RPCs.
+  also add those encoding names to `UnaryCompressionGuard.supportedEncodings`;
+  the guard only accepts encodings listed there.
 - **`message_receive_limit` enforcement** — the conformance runner
   passes a max body size; the server would need to enforce it before
   parsing the body.

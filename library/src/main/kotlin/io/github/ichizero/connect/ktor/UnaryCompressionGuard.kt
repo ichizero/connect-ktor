@@ -27,8 +27,10 @@ import kotlinx.io.readByteArray
  *     skipped.
  *  2. If [UnaryCompressionGuardConfig.maxDecompressedBytes] is set, the guard intercepts the
  *     receive pipeline's `Transform` phase, buffers the (already decoded) body with a cap-plus-one
- *     read, and rejects bodies larger than the cap with [Code.RESOURCE_EXHAUSTED] — again without
- *     running the route handler.
+ *     read, and rejects bodies larger than the cap with [Code.RESOURCE_EXHAUSTED] before the body
+ *     reaches `call.receive()`. Handlers reached through the generated Connect routing (which
+ *     calls `receive()` before any handler code runs) never execute for a rejected request; a
+ *     handler that runs other code ahead of its own `receive()` call is not covered by this guard.
  *
  * `identity` (i.e. no compression) is always permitted regardless of configuration.
  *
@@ -159,8 +161,11 @@ public val UnaryCompressionGuard: RouteScopedPlugin<UnaryCompressionGuardConfig>
                         contentType = ContentType.Application.Json,
                         status = Code.RESOURCE_EXHAUSTED.asHTTPStatusCode(),
                     )
-                    // Returning null finishes the receive pipeline; the route handler's receive()
-                    // then fails and the handler body never runs.
+                    // Returning null finishes the receive pipeline, so `call.receive()` throws.
+                    // For the generated Connect routing (`post<Resource, Req>`), receive() is
+                    // called before the handler body runs, so the handler never executes for a
+                    // rejected request; a caller that runs other code ahead of its own receive()
+                    // call is outside this guarantee.
                     return@on null
                 }
                 ByteReadChannel(buffered.readByteArray())
