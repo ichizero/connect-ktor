@@ -1,0 +1,29 @@
+# Code owners for this repository.
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Most-specific rule wins. CODEOWNERS is used here as an *auto-reviewer
+# assignment* layer, not as a hard merge gate — branch protection does
+# not require code-owner approval, so Dependabot's minor/patch
+# auto-merge flow stays untouched.
+
+# Default — anything not matched by a more specific rule.
+*                              @ichizero
+
+# Module owners (kept explicit so future co-maintainers can be slotted
+# in per-module without touching the default rule).
+/library/                      @ichizero
+/protoc-gen-connect-ktor/      @ichizero
+/conformance/                  @ichizero
+
+# Security- and supply-chain-critical files: changes here should always
+# go past the repository owner even if module-level ownership is later
+# delegated.
+/.github/                      @ichizero
+/.github/CODEOWNERS            @ichizero
+/.github/FUNDING.yml           @ichizero
+/.github/workflows/            @ichizero
+/SECURITY.md                   @ichizero
+/LICENSE                       @ichizero
+/.goreleaser.yaml              @ichizero
+/lefthook.yml                  @ichizero
+/gradle/libs.versions.toml     @ichizero
