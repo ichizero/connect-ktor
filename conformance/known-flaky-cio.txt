@@ -1,0 +1,10 @@
+# Flaky conformance test cases for the connect-ktor server (CIO engine).
+# Entries follow https://github.com/connectrpc/conformance/blob/main/docs/configuring_and_running_tests.md
+#
+# Per-message (envelope) compression for streaming RPCs is unimplemented
+# (see issue #190), so gzip client-stream RPCs are rejected with
+# CODE_UNIMPLEMENTED. The Timeouts suite expects CODE_DEADLINE_EXCEEDED; which
+# code the client observes depends on whether the server's rejection or the
+# (very short) deadline wins the race, so these cases are allowed — but not
+# required — to fail.
+Timeouts/**/Compression:COMPRESSION_GZIP/**/client-stream

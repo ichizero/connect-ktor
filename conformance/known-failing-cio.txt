@@ -15,6 +15,8 @@ Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_PROTO/Compression:COMP
 Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_JSON/Compression:COMPRESSION_IDENTITY/TLS:false/unary/success
 Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_PROTO/Compression:COMPRESSION_IDENTITY/TLS:false/client-stream/success
 Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_JSON/Compression:COMPRESSION_IDENTITY/TLS:false/client-stream/success
+Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_PROTO/Compression:COMPRESSION_GZIP/TLS:false/unary/success
+Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_JSON/Compression:COMPRESSION_GZIP/TLS:false/unary/success
 Server Empty Requests/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/TLS:false/unary/empty-request
 Server Empty Requests/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/TLS:false/client-stream/empty-request
 # The two GET cases below also fail solely due to CIO's duplicate-header
@@ -24,7 +26,15 @@ Server Empty Requests/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/TLS:false/client-s
 Connect with GET/HTTPVersion:1/Codec:CODEC_PROTO/TLS:false/success
 Connect with GET/HTTPVersion:1/Codec:CODEC_JSON/TLS:false/success
 
-# connect-ktor does not yet recognise/reject unsupported request compression
-# encodings, so the server processes the body and responds with 200 OK rather
-# than CODE_UNIMPLEMENTED.
-Connect Unexpected Requests/**/unexpected-compression
+# Per-message (envelope) compression for streaming RPCs is not implemented yet
+# (see issue #190): handleClientStream rejects a non-identity
+# `Connect-Content-Encoding` and any compressed envelope frame with
+# CODE_UNIMPLEMENTED. The conformance config advertises COMPRESSION_GZIP for the
+# whole server, so the runner also exercises gzip against client-stream, where
+# every case fails the same way. Unary gzip is fully supported. The Timeouts
+# suite races the rejection against the deadline and is tracked in
+# known-flaky-cio.txt instead.
+Basic/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Connect to HTTP Code Mapping/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Deadline Propagation/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Errors/**/Compression:COMPRESSION_GZIP/**/client-stream/**
