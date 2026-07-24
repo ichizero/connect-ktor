@@ -11,7 +11,7 @@ ktor = "3.5.1"
 protobuf = "4.35.1"
 protovalidate = "1.2.2"
 
-okio = "3.17.0"
+okio = "3.18.0"
 okhttp = "5.4.0"
 slf4j = "2.0.18"
 
