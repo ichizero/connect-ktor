@@ -25,31 +25,4 @@ public class UnaryCompressionGuardConfig {
      * `Compression` then refuses to decode.  Content-coding values are lowercase in practice.
      */
     public var supportedEncodings: Set<String> = setOf("gzip", "identity")
-
-    /**
-     * Optional upper bound (in bytes) on the *post-decompression* body size accepted by unary
-     * RPCs.  When a request body decodes to more than this many bytes, the guard responds with
-     * [Code.RESOURCE_EXHAUSTED] before `call.receive()` returns.  Handlers reached through the
-     * generated Connect routing (which calls `receive()` before any handler code runs) never
-     * execute for a rejected request.  `null` (the default) disables the cap.
-     *
-     * This is a self-defence cap against decompression bombs: a small gzip payload can expand to
-     * an arbitrarily large byte stream, so without an explicit limit a single request can drive
-     * the server out of memory.
-     *
-     * The cap is enforced by buffering the decoded request body in memory (reading at most one
-     * byte past the cap) before deserialization sees it.  Choose a value comfortably larger than
-     * your largest legitimate request and consider the per-request memory cost when sizing the
-     * thread pool / connector backlog.
-     *
-     * Valid values are `1..Int.MAX_VALUE - 1`; anything else is rejected at install time because
-     * the underlying [io.ktor.utils.io.readBuffer] API is `Int`-sized.
-     *
-     * **Install-order requirement:** enforcing the cap requires the guard to observe the decoded
-     * body *before* it is deserialized.  Install `ContentNegotiation` *after*
-     * `UnaryCompressionGuard` in the same route scope (see [UnaryCompressionGuard]).  If a
-     * deserializer installed ahead of the guard consumes the body first, the guard fails the
-     * request loudly instead of silently skipping the check.
-     */
-    public var maxDecompressedBytes: Long? = null
 }

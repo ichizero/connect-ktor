@@ -32,12 +32,11 @@ import java.io.ByteArrayOutputStream
 import java.util.zip.GZIPOutputStream
 
 /**
- * Covers the two enforcement points of [UnaryCompressionGuard]:
+ * Covers [UnaryCompressionGuard]'s `Content-Encoding` check: it runs before the route handler and
+ * before any body deserialization, even with an application-scoped `ContentNegotiation`.
  *
- *  - the `Content-Encoding` check runs before the route handler (and before any body
- *    deserialization, even with an application-scoped `ContentNegotiation`), and
- *  - the `maxDecompressedBytes` cap observes the post-decompression bytes when
- *    `ContentNegotiation` is installed after the guard in the same route scope.
+ * The decompressed-size cap lives on `Route.connectBodyLimit`; see
+ * [io.github.ichizero.connect.ktor.ConnectBodyLimitTest].
  *
  * The "realistic configuration" tests pin the recommended plugin layout (application-scoped
  * `Compression`, route-scoped guard followed by `ContentNegotiation` with the Connect
@@ -61,7 +60,6 @@ class UnaryCompressionGuardTest : FunSpec({
     fun Application.withGuard(
         probe: HandlerProbe,
         installCompression: Boolean,
-        maxDecompressedBytes: Long? = null,
     ) {
         if (installCompression) {
             install(Compression) {
@@ -72,7 +70,6 @@ class UnaryCompressionGuardTest : FunSpec({
         routing {
             install(UnaryCompressionGuard) {
                 supportedEncodings = setOf("gzip", "identity")
-                this.maxDecompressedBytes = maxDecompressedBytes
             }
             post("/echo") {
                 probe.invoked = true
@@ -86,10 +83,7 @@ class UnaryCompressionGuardTest : FunSpec({
      * The recommended real-world layout: application-scoped [Compression], then the guard and
      * [ContentNegotiation] (with the Connect JSON converter) inside `routing { }` in that order.
      */
-    fun Application.withRealisticConnectSetup(
-        probe: HandlerProbe,
-        maxDecompressedBytes: Long? = null,
-    ) {
+    fun Application.withRealisticConnectSetup(probe: HandlerProbe) {
         install(Compression) {
             gzip()
             identity()
@@ -97,7 +91,6 @@ class UnaryCompressionGuardTest : FunSpec({
         routing {
             install(UnaryCompressionGuard) {
                 supportedEncodings = setOf("gzip", "identity")
-                this.maxDecompressedBytes = maxDecompressedBytes
             }
             install(ContentNegotiation) {
                 connectJson()
@@ -250,74 +243,6 @@ class UnaryCompressionGuardTest : FunSpec({
         }
     }
 
-    test("body within maxDecompressedBytes passes through after buffering") {
-        val probe = HandlerProbe()
-        testApplication {
-            application { withGuard(probe, installCompression = true, maxDecompressedBytes = 16) }
-
-            val response = client.post("/echo") {
-                header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
-                setBody("hello")
-            }
-
-            response.status shouldBe HttpStatusCode.OK
-            response.bodyAsText() shouldBe "hello"
-        }
-    }
-
-    test("body equal to maxDecompressedBytes is accepted") {
-        val probe = HandlerProbe()
-        testApplication {
-            application { withGuard(probe, installCompression = true, maxDecompressedBytes = 5) }
-
-            val response = client.post("/echo") {
-                header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
-                setBody("hello")
-            }
-
-            response.status shouldBe HttpStatusCode.OK
-            response.bodyAsText() shouldBe "hello"
-        }
-    }
-
-    test("body exceeding maxDecompressedBytes is rejected with RESOURCE_EXHAUSTED") {
-        val probe = HandlerProbe()
-        testApplication {
-            application { withGuard(probe, installCompression = true, maxDecompressedBytes = 4) }
-
-            val response = client.post("/echo") {
-                header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
-                setBody("hello")
-            }
-
-            response.status shouldBe HttpStatusCode.TooManyRequests
-            // language=json
-            response.bodyAsText() shouldEqualJson """
-                {
-                    "code": "resource_exhausted",
-                    "message": "decompressed request body exceeds the 4 byte limit"
-                }
-            """
-        }
-    }
-
-    test("gzip-bomb whose decompressed body exceeds maxDecompressedBytes is rejected") {
-        val probe = HandlerProbe()
-        testApplication {
-            application { withGuard(probe, installCompression = true, maxDecompressedBytes = 8) }
-
-            // 256 'A's compresses to ~15 bytes but decodes to 256 bytes — exceeds the 8-byte cap.
-            val payload = "A".repeat(256)
-            val response = client.post("/echo") {
-                header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
-                header(HttpHeaders.ContentEncoding, "gzip")
-                setBody(gzip(payload))
-            }
-
-            response.status shouldBe HttpStatusCode.TooManyRequests
-        }
-    }
-
     test("realistic config: gzip-encoded Connect JSON request round-trips") {
         val probe = HandlerProbe()
         testApplication {
@@ -394,60 +319,6 @@ class UnaryCompressionGuardTest : FunSpec({
         }
     }
 
-    test("realistic config: gzip bomb is rejected with RESOURCE_EXHAUSTED before deserialization") {
-        val probe = HandlerProbe()
-        testApplication {
-            application { withRealisticConnectSetup(probe, maxDecompressedBytes = 64) }
-
-            val payload = """{"sentence":"${"A".repeat(4096)}"}"""
-            val response = client.post("/connectrpc.eliza.v1.ElizaService/Say") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header(HttpHeaders.ContentEncoding, "gzip")
-                setBody(gzip(payload))
-            }
-
-            response.status shouldBe HttpStatusCode.TooManyRequests
-            probe.invoked shouldBe false
-        }
-    }
-
-    test("misconfiguration: application-scoped ContentNegotiation with maxDecompressedBytes fails loudly") {
-        val probe = HandlerProbe()
-        testApplication {
-            application {
-                install(Compression) {
-                    gzip()
-                    identity()
-                }
-                // ContentNegotiation at the application scope consumes the body before the
-                // route-scoped guard can measure it. The guard must fail the request rather
-                // than silently skipping the cap.
-                install(ContentNegotiation) {
-                    connectJson()
-                }
-                routing {
-                    install(UnaryCompressionGuard) {
-                        supportedEncodings = setOf("gzip", "identity")
-                        maxDecompressedBytes = 64
-                    }
-                    post("/connectrpc.eliza.v1.ElizaService/Say") {
-                        val request = call.receive<SayRequest>()
-                        probe.invoked = true
-                        call.respond(sayResponse { sentence = request.sentence })
-                    }
-                }
-            }
-
-            val response = client.post("/connectrpc.eliza.v1.ElizaService/Say") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody("""{"sentence":"hello"}""")
-            }
-
-            response.status shouldBe HttpStatusCode.InternalServerError
-            probe.invoked shouldBe false
-        }
-    }
-
     test("non-identity encoding is still validated when Compression plugin is absent") {
         val probe = HandlerProbe()
         testApplication {
@@ -478,37 +349,5 @@ class UnaryCompressionGuardTest : FunSpec({
                 client.post("/echo")
             }
         }.message shouldContain "supportedEncodings must not be empty"
-    }
-
-    test("non-positive maxDecompressedBytes is rejected at install time") {
-        shouldThrowAny {
-            testApplication {
-                application {
-                    routing {
-                        install(UnaryCompressionGuard) {
-                            maxDecompressedBytes = 0
-                        }
-                        post("/echo") { call.respondText("unreachable") }
-                    }
-                }
-                client.post("/echo")
-            }
-        }.message shouldContain "maxDecompressedBytes must be in"
-    }
-
-    test("maxDecompressedBytes above Int.MAX_VALUE - 1 is rejected at install time") {
-        shouldThrowAny {
-            testApplication {
-                application {
-                    routing {
-                        install(UnaryCompressionGuard) {
-                            maxDecompressedBytes = Int.MAX_VALUE.toLong()
-                        }
-                        post("/echo") { call.respondText("unreachable") }
-                    }
-                }
-                client.post("/echo")
-            }
-        }.message shouldContain "maxDecompressedBytes must be in"
     }
 })
