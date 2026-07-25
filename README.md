@@ -354,7 +354,7 @@ fun main() {
             }
             // Cap the decompressed body size to defend against gzip bombs.
             connectBodyLimit(maxBytes = 4 * 1024 * 1024)
-            install(ContentNegotiation) { // <- after connectBodyLimit, same scope
+            install(ContentNegotiation) {
                 connectJson()
             }
             elizaService(ElizaServiceHandler)
@@ -440,7 +440,7 @@ fun main() {
         routing {
             route("/com.example.v1.MyService") {
                 connectBodyLimit(maxBytes = 4 * 1024 * 1024)
-                install(ContentNegotiation) { // <- after connectBodyLimit
+                install(ContentNegotiation) {
                     connectJson()
                 }
                 myService(MyServiceHandler)
@@ -453,21 +453,12 @@ fun main() {
 Routes outside the `connectBodyLimit` scope are not affected and continue to use the default Ktor
 body-limit behaviour.
 
-> **Plugin install order matters when you accept compressed requests.** Ktor runs the
-> request-decode step of `Compression` and the deserialization step of `ContentNegotiation` in the
-> same receive-pipeline `Transform` phase; their relative order is decided by scope
-> (application-scoped plugins run before route-scoped ones) and, within a scope, by install order.
-> To measure the decoded bytes before they are deserialized, install:
+> **Note:** the decoded-size check runs in its own receive-pipeline phase, inserted after the
+> `Compression` plugin's decode and ahead of every body transformer. It therefore holds however
+> the handler receives the body (`receive<ByteArray>()`, `receiveText()`, or a
+> `ContentNegotiation` deserializer) and wherever `ContentNegotiation` is installed — no install
+> ordering is required.
 >
-> 1. `Compression` at the application scope (outside `routing { }`),
-> 2. `connectBodyLimit` inside `routing { }`,
-> 3. `ContentNegotiation` inside `routing { }`, *after* `connectBodyLimit`.
->
-> If `ContentNegotiation` runs first (e.g. installed at the application scope), a compressed
-> request fails loudly with an `IllegalStateException` instead of silently skipping the cap.
-> Servers that never accept compressed requests are unaffected — the wire-byte cap does not depend
-> on install order.
-
 > **Note:** the cap applies to the whole HTTP request body, which for unary RPCs is a single
 > message. Client-streaming RPCs need a per-message receive limit and are not covered; see the
 > [Roadmap](#connect-protocol-roadmap).

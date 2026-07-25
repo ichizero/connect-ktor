@@ -56,21 +56,14 @@ internal val ConnectBodyLimit = createRouteScopedPlugin(
         }
     }
 
-    // Count the *decoded* bytes of compressed requests.  By the time the receive pipeline
-    // reaches the route-scoped part of the Transform phase, the application-scoped Compression
-    // plugin has already decoded the body, so the channel below carries decompressed bytes.
-    // Reading at most `limit + 1` of them bounds both the check and the memory a single request
-    // can claim, no matter how far the payload inflates.
-    on(ReceiveBodyTransform) { call, body ->
+    // Count the *decoded* bytes of compressed requests.  [ReceiveDecodedBody] runs after the
+    // Compression plugin's decode and ahead of every body transformer, so the channel below
+    // carries decompressed bytes.  Reading at most `limit + 1` of them bounds both the check and
+    // the memory a single request can claim, no matter how far the payload inflates.
+    on(ReceiveDecodedBody) { call, body ->
         if (!call.isContentEncoded()) return@on body
 
-        val channel = body as? ByteReadChannel ?: throw IllegalStateException(
-            "connectBodyLimit cannot enforce the limit against the decompressed body because it " +
-                "was already transformed to ${body::class.qualifiedName}. Install " +
-                "ContentNegotiation after connectBodyLimit in the same route scope.",
-        )
-
-        val decoded = channel.readAtMost(limit + 1)
+        val decoded = body.readAtMost(limit + 1)
         if (decoded.size > limit) {
             throw PayloadTooLargeException(limit)
         }
@@ -187,36 +180,20 @@ private fun Throwable.unwrapPayloadTooLarge(): PayloadTooLargeException? {
  * streaming RPCs require (the error would also be emitted as a unary JSON response rather than a
  * streaming end-of-stream frame).
  *
+ * The decoded-size check runs in its own receive-pipeline phase, inserted after the `Compression`
+ * plugin's decode and ahead of every body transformer.  It therefore holds however the handler
+ * receives the body — `receive<ByteArray>()`, `receiveText()` or a `ContentNegotiation`
+ * deserializer — and wherever `ContentNegotiation` happens to be installed.
+ *
  * Usage:
  * ```kotlin
  * routing {
  *     route("/com.example.v1.Service") {
  *         connectBodyLimit(maxBytes = 4 * 1024 * 1024)
- *         install(ContentNegotiation) {
- *             connectJson()
- *         }
  *         // Connect routes …
  *     }
  * }
  * ```
- *
- * ### Install order
- *
- * Enforcing the cap against decompressed bytes requires this plugin to see the decoded body
- * before it is deserialized.  Ktor runs all receive-pipeline `Transform` interceptors in a fixed
- * order — application-scoped plugins first (in install order), then route-scoped plugins (in
- * install order) — and both `Compression`'s request decode and `ContentNegotiation`'s
- * deserialization live in that phase.  So the order must be:
- *
- *  1. `Compression` — application scope (decodes the body, e.g. gunzip),
- *  2. `connectBodyLimit` — route scope (counts the decoded bytes),
- *  3. `ContentNegotiation` — same route scope, installed *after* `connectBodyLimit`.
- *
- * Installing `ContentNegotiation` at the application scope (or before `connectBodyLimit` in the
- * same route scope) makes it consume the body first.  Rather than silently skipping the cap, a
- * compressed request then fails with an [IllegalStateException] explaining the required order.
- * Servers that never accept compressed requests are unaffected — the wire-byte cap does not
- * depend on install order.
  *
  * ### Interaction with app-wide StatusPages
  *

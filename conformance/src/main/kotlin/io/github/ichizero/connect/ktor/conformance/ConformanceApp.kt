@@ -86,6 +86,25 @@ internal fun Application.conformanceModule(
         gzip()
         identity()
     }
+    install(ContentNegotiation) {
+        val jsonConverter = ConformanceJsonConverter(conformanceTypeRegistry)
+        register(ContentType.Application.Json, jsonConverter)
+        register(ContentType("application", "connect+json"), jsonConverter)
+        connectProto()
+
+        // The Connect protocol does not require clients to send an Accept
+        // header — the response Content-Type mirrors the request. Surface
+        // the request Content-Type to ContentNegotiation so that the right
+        // converter is selected for the response body.
+        accept { call, items ->
+            if (items.isNotEmpty()) {
+                items
+            } else {
+                val ct = call.request.contentType()
+                if (ct == ContentType.Any) items else listOf(ContentTypeWithQuality(ct))
+            }
+        }
+    }
     routing {
         install(UnaryCompressionGuard) {
             // Mirror the encoders installed on Compression above: this set decides which
@@ -97,28 +116,6 @@ internal fun Application.conformanceModule(
         // uses 0 as the "unset" sentinel).
         if (messageReceiveLimit > 0L) {
             connectBodyLimit(maxBytes = messageReceiveLimit)
-        }
-        // ContentNegotiation lives inside routing{} and *after* connectBodyLimit on purpose:
-        // both plugins intercept the receive pipeline's Transform phase, and the limit can only
-        // measure the decompressed body if it observes it before the deserializer consumes it.
-        install(ContentNegotiation) {
-            val jsonConverter = ConformanceJsonConverter(conformanceTypeRegistry)
-            register(ContentType.Application.Json, jsonConverter)
-            register(ContentType("application", "connect+json"), jsonConverter)
-            connectProto()
-
-            // The Connect protocol does not require clients to send an Accept
-            // header — the response Content-Type mirrors the request. Surface
-            // the request Content-Type to ContentNegotiation so that the right
-            // converter is selected for the response body.
-            accept { call, items ->
-                if (items.isNotEmpty()) {
-                    items
-                } else {
-                    val ct = call.request.contentType()
-                    if (ct == ContentType.Any) items else listOf(ContentTypeWithQuality(ct))
-                }
-            }
         }
         conformanceService(handler)
     }

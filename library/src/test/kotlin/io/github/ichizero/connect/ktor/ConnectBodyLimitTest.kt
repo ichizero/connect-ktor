@@ -25,6 +25,7 @@ import io.ktor.server.plugins.compression.identity
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.post
@@ -417,7 +418,9 @@ class ConnectBodyLimitTest : FunSpec({
             }
         }
 
-        test("misconfiguration: ContentNegotiation ahead of connectBodyLimit fails loudly") {
+        test("cap holds when ContentNegotiation is installed at the application scope") {
+            // The limit runs in its own receive-pipeline phase ahead of every body transformer,
+            // so it does not care where ContentNegotiation lives.
             val probe = HandlerProbe()
             testApplication {
                 application {
@@ -425,9 +428,6 @@ class ConnectBodyLimitTest : FunSpec({
                         gzip()
                         identity()
                     }
-                    // ContentNegotiation at the application scope consumes the body before the
-                    // route-scoped plugin can measure it. The plugin must fail the request
-                    // rather than silently skipping the cap.
                     install(ContentNegotiation) {
                         connectJson()
                     }
@@ -441,14 +441,102 @@ class ConnectBodyLimitTest : FunSpec({
                     }
                 }
 
-                val response = client.post("/connectrpc.eliza.v1.ElizaService/Say") {
+                client.post("/connectrpc.eliza.v1.ElizaService/Say") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(HttpHeaders.ContentEncoding, "gzip")
                     setBody(gzip("""{"sentence":"hello"}"""))
+                }.let { res ->
+                    res.status shouldBe HttpStatusCode.OK
+                    probe.invoked shouldBe true
                 }
 
-                response.status shouldBe HttpStatusCode.InternalServerError
-                probe.invoked shouldBe false
+                probe.invoked = false
+                client.post("/connectrpc.eliza.v1.ElizaService/Say") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.ContentEncoding, "gzip")
+                    setBody(gzip("""{"sentence":"${"A".repeat(4096)}"}"""))
+                }.let { res ->
+                    res.status shouldBe HttpStatusCode.TooManyRequests
+                    res.bodyAsText() shouldEqualJson RESOURCE_EXHAUSTED_JSON
+                    probe.invoked shouldBe false
+                }
+            }
+        }
+
+        test("cap holds for bodies received as ByteArray rather than deserialized") {
+            // Ktor's built-in transformers materialize the body for receive<ByteArray>() at the
+            // Transform phase; the limit must still see the decoded bytes first.
+            testApplication {
+                application {
+                    install(Compression) {
+                        gzip()
+                        identity()
+                    }
+                    routing {
+                        route("/test") {
+                            connectBodyLimit(maxBytes = 64)
+                            post {
+                                call.respondText(call.receive<ByteArray>().size.toString())
+                            }
+                        }
+                    }
+                }
+
+                client
+                    .post("/test") {
+                        header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                        header(HttpHeaders.ContentEncoding, "gzip")
+                        setBody(gzip("hello"))
+                    }.let { res ->
+                        res.status shouldBe HttpStatusCode.OK
+                        res.bodyAsText() shouldBe "5"
+                    }
+
+                client
+                    .post("/test") {
+                        header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                        header(HttpHeaders.ContentEncoding, "gzip")
+                        setBody(gzip("A".repeat(4096)))
+                    }.let { res ->
+                        res.status shouldBe HttpStatusCode.TooManyRequests
+                        res.bodyAsText() shouldEqualJson RESOURCE_EXHAUSTED_JSON
+                    }
+            }
+        }
+
+        test("cap holds for bodies received as text") {
+            testApplication {
+                application {
+                    install(Compression) {
+                        gzip()
+                        identity()
+                    }
+                    routing {
+                        route("/test") {
+                            connectBodyLimit(maxBytes = 64)
+                            post { call.respondText(call.receiveText()) }
+                        }
+                    }
+                }
+
+                client
+                    .post("/test") {
+                        header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                        header(HttpHeaders.ContentEncoding, "gzip")
+                        setBody(gzip("hello"))
+                    }.let { res ->
+                        res.status shouldBe HttpStatusCode.OK
+                        res.bodyAsText() shouldBe "hello"
+                    }
+
+                client
+                    .post("/test") {
+                        header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                        header(HttpHeaders.ContentEncoding, "gzip")
+                        setBody(gzip("A".repeat(4096)))
+                    }.let { res ->
+                        res.status shouldBe HttpStatusCode.TooManyRequests
+                    }
             }
         }
     }
