@@ -112,6 +112,7 @@ io.ktor:ktor-resources-jvm:3.5.1=compileClasspath,runtimeClasspath,testCompileCl
 io.ktor:ktor-resources:3.5.1=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 io.ktor:ktor-serialization-jvm:3.5.1=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 io.ktor:ktor-serialization:3.5.1=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+io.ktor:ktor-server-body-limit-jvm:3.5.1=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 io.ktor:ktor-server-call-logging-jvm:3.5.1=testCompileClasspath,testRuntimeClasspath
 io.ktor:ktor-server-call-logging:3.5.1=testCompileClasspath,testRuntimeClasspath
 io.ktor:ktor-server-cio-jvm:3.5.1=testCompileClasspath,testRuntimeClasspath
