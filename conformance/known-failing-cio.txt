@@ -38,3 +38,11 @@ Basic/**/Compression:COMPRESSION_GZIP/**/client-stream/**
 Connect to HTTP Code Mapping/**/Compression:COMPRESSION_GZIP/**/client-stream/**
 Deadline Propagation/**/Compression:COMPRESSION_GZIP/**/client-stream/**
 Errors/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+
+# `connectBodyLimit` enforces a whole-body byte cap, which equals a single
+# message for unary RPCs. Client-streaming needs a per-message receive limit
+# (and a streaming end-of-stream error frame): the whole-body cap both
+# over-rejects when individual messages are within the limit but their sum is
+# not, and surfaces the overflow as CODE_UNKNOWN instead of RESOURCE_EXHAUSTED.
+# Per-message streaming receive limits are future work.
+Server Message Size/**/client-stream/*

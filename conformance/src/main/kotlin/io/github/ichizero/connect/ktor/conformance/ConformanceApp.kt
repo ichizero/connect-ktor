@@ -14,6 +14,7 @@ import com.google.protobuf.util.JsonFormat
 import io.github.ichizero.connect.ktor.ConnectGetJsonSerializer
 import io.github.ichizero.connect.ktor.ConnectGetStrategies
 import io.github.ichizero.connect.ktor.UnaryCompressionGuard
+import io.github.ichizero.connect.ktor.connectBodyLimit
 import io.github.ichizero.connect.ktor.installConnectGetCodecs
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingJsonStrategy
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingStrategies
@@ -56,7 +57,10 @@ private class ConformanceGetJsonSerializer(registry: TypeRegistry) : ConnectGetJ
         printer.print(value as Message).toByteArray(Charsets.UTF_8)
 }
 
-internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInterface) {
+internal fun Application.conformanceModule(
+    handler: ConformanceServiceHandlerInterface,
+    messageReceiveLimit: Long = 0L,
+) {
     // Register custom JSON strategy with the full type registry for Connect GET (query-param) path.
     // Without this, google.protobuf.Any fields in responses (e.g. ConformancePayload.requests)
     // cannot be serialised to JSON because GoogleJavaJSONStrategy omits the registry from its
@@ -106,6 +110,12 @@ internal fun Application.conformanceModule(handler: ConformanceServiceHandlerInt
             // Mirror the encoders installed on Compression above: this set decides which
             // Content-Encoding values are accepted, and is surfaced in error responses.
             supportedEncodings = setOf("gzip", "identity")
+        }
+        // messageReceiveLimit == 0 means the conformance runner did not request a
+        // cap (see ServerCompatRequest.message_receive_limit, which is uint32 and
+        // uses 0 as the "unset" sentinel).
+        if (messageReceiveLimit > 0L) {
+            connectBodyLimit(maxBytes = messageReceiveLimit)
         }
         conformanceService(handler)
     }

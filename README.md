@@ -51,7 +51,7 @@ currently exercises. Anything marked ❌ is out of scope today; see the
 |  | `supports_tls_client_certs` (mTLS) | ✅ (Netty only) |
 | Trailers | `supports_trailers` (unary: `Trailer-*` HTTP headers; streaming: end-frame `metadata` field) | ✅ |
 | Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ✅ (Netty fully; CIO passes except the two `Connect with GET/.../success` cases that exercise duplicate `X-Conformance-Test` headers — same CIO upstream limitation as the `Duplicate Metadata` / `Basic` entries in `conformance/known-failing-cio.txt`) |
-| Message receive limit | `supports_message_receive_limit` | ❌ |
+| Message receive limit | `supports_message_receive_limit` | ✅ (unary) |
 
 Verified Ktor engines:
 
@@ -99,9 +99,11 @@ additional work in the library and/or protoc plugin:
   `Compression` plugin (`deflate` ships with Ktor). Once registered,
   also add those encoding names to `UnaryCompressionGuard.supportedEncodings`;
   the guard only accepts encodings listed there.
-- **`message_receive_limit` enforcement** — the conformance runner
-  passes a max body size; the server would need to enforce it before
-  parsing the body.
+- **`message_receive_limit` for client-streaming** — `connectBodyLimit`
+  caps the whole request body, which equals a single message for unary
+  RPCs. Client-streaming needs a per-message receive limit and a
+  streaming end-of-stream error frame; the `client-stream` Server Message
+  Size cases are pinned as known-failing for now.
 
 
 ## Usage
@@ -322,25 +324,14 @@ Install Ktor's `Compression` plugin alongside `UnaryCompressionGuard` to support
 gzip-encoded request and response bodies. `UnaryCompressionGuard` rejects any
 `Content-Encoding` outside its `supportedEncodings` set with
 `Code.UNIMPLEMENTED` before the route handler runs and before the body is
-parsed, and can optionally cap the post-decompression body size
-(`maxDecompressedBytes`) to defend against decompression bombs.
+parsed.
 
-> **Plugin install order matters.** Ktor runs the request-decode step of
-> `Compression` and the deserialization step of `ContentNegotiation` in the
-> same receive-pipeline `Transform` phase; their relative order is decided
-> by scope (application-scoped plugins run before route-scoped ones) and,
-> within a scope, by install order. For the `maxDecompressedBytes` cap to
-> measure the decoded bytes before they are deserialized, install:
->
-> 1. `Compression` at the application scope (outside `routing { }`),
-> 2. `UnaryCompressionGuard` inside `routing { }`,
-> 3. `ContentNegotiation` inside `routing { }`, *after* the guard.
->
-> If `ContentNegotiation` runs before the guard (e.g. installed at the
-> application scope) while `maxDecompressedBytes` is set, the guard fails
-> those requests loudly instead of silently skipping the cap. The
-> `Content-Encoding` check itself does not depend on this ordering — it runs
-> before the body is touched in any configuration.
+> **Pair it with `connectBodyLimit`.** Accepting compressed requests means a
+> small payload can expand to an arbitrarily large byte stream. The guard
+> does not bound that expansion;
+> [`connectBodyLimit`](#request-message-size-limit) enforces its cap against
+> the *decompressed* size and rejects decompression bombs with
+> `resource_exhausted`.
 >
 > **Keep `supportedEncodings` in sync with the installed encoders.** The set
 > decides which encodings the guard accepts and is surfaced in error
@@ -360,12 +351,10 @@ fun main() {
         routing {
             install(UnaryCompressionGuard) {
                 supportedEncodings = setOf("gzip", "identity")
-                // Cap the post-decompression body size to defend against gzip
-                // bombs. Choose a value larger than your largest legitimate
-                // request; the body is buffered in memory up to this limit.
-                maxDecompressedBytes = 4 * 1024 * 1024
             }
-            install(ContentNegotiation) { // <- after the guard, in the same scope
+            // Cap the decompressed body size to defend against gzip bombs.
+            connectBodyLimit(maxBytes = 4 * 1024 * 1024)
+            install(ContentNegotiation) {
                 connectJson()
             }
             elizaService(ElizaServiceHandler)
@@ -425,6 +414,54 @@ fun main() {
     }.start(wait = false)
 }
 ```
+
+### Request Message Size Limit
+
+Use `Route.connectBodyLimit(maxBytes)` to cap the inbound request message size for Connect RPCs —
+the connect-ktor counterpart of connect-go's `connect.WithReadMaxBytes(n)`. When the message
+exceeds the configured limit the server responds with a `resource_exhausted` Connect error
+(HTTP 429) instead of the default Ktor 413.
+
+Following the Connect protocol, the cap is evaluated against the **decoded** message size:
+
+- **Uncompressed requests** are capped by Ktor's built-in `RequestBodyLimit`, which counts bytes as
+  they stream in (so `Transfer-Encoding: chunked` requests carrying no `Content-Length` are capped
+  too), plus a `Content-Length` fast path that rejects before a single byte is read.
+- **Compressed requests** (a `Content-Encoding` other than `identity`) are capped against their
+  post-decompression byte count instead, so a small payload that inflates past the limit — a
+  decompression bomb — is rejected rather than silently accepted. The wire-byte cap is deliberately
+  not applied to them, because compressing can grow incompressible payloads slightly and would
+  reject legitimate requests sitting just under the limit.
+
+```kotlin
+fun main() {
+    embeddedServer(CIO, port = 8080) {
+        install(Resources)
+        routing {
+            route("/com.example.v1.MyService") {
+                connectBodyLimit(maxBytes = 4 * 1024 * 1024)
+                install(ContentNegotiation) {
+                    connectJson()
+                }
+                myService(MyServiceHandler)
+            }
+        }
+    }.start(wait = false)
+}
+```
+
+Routes outside the `connectBodyLimit` scope are not affected and continue to use the default Ktor
+body-limit behaviour.
+
+> **Note:** the decoded-size check runs in its own receive-pipeline phase, inserted after the
+> `Compression` plugin's decode and ahead of every body transformer. It therefore holds however
+> the handler receives the body (`receive<ByteArray>()`, `receiveText()`, or a
+> `ContentNegotiation` deserializer) and wherever `ContentNegotiation` is installed — no install
+> ordering is required.
+>
+> **Note:** the cap applies to the whole HTTP request body, which for unary RPCs is a single
+> message. Client-streaming RPCs need a per-message receive limit and are not covered; see the
+> [Roadmap](#connect-protocol-roadmap).
 
 ## Local development
 
