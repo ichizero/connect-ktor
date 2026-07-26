@@ -479,6 +479,15 @@ staged files. They are convenience-only — CI re-runs the same checks —
 so a commit can still be made with `LEFTHOOK=0 git commit ...` when
 needed.
 
+## Releasing
+
+Releases are automated with [release-please](https://github.com/googleapis/release-please). Every
+commit merged to `main` must follow [Conventional Commits](https://www.conventionalcommits.org/);
+release-please uses that history to keep a release pull request up to date with the next version
+and changelog. Merging the release pull request tags the release and triggers
+`.github/workflows/release.yml`, which publishes the `library` JARs to Maven Central and the
+`protoc-gen-connect-ktor` binaries via GoReleaser — the same publishing flow used for manual tags.
+
 ## Verifying release artifacts
 
 Releases for the `protoc-gen-connect-ktor` Go binaries and the `library` JARs publish supply-chain
