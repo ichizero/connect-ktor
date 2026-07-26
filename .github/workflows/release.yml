@@ -17,16 +17,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           distribution: temurin
           java-version: 21
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: jdx/mise-action@9e7f7633ff6f6d6048a9418a68d48f288f50eb14 # v4.2.3
         with:
-          go-version-file: "./protoc-gen-connect-ktor/go.mod"
-          cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
-          cache: false
+          install_args: go
       - uses: bufbuild/buf-setup-action@a47c93e0b1648d5651a065437926377d060baa99 # v1.50.0
         with:
           github_token: ${{ github.token }}
@@ -39,7 +36,7 @@ jobs:
           echo "RELEASE_VERSION=${tag:1}" >> $GITHUB_ENV
 
       - name: Build project
-        run: task build
+        run: mise run build
         env:
           ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
 
@@ -86,7 +83,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: "./protoc-gen-connect-ktor/go.mod"
