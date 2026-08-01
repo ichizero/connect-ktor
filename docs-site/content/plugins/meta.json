@@ -1,0 +1,12 @@
+{
+  "title": "Plugins",
+  "pages": [
+    "index",
+    "serialization",
+    "connect-get",
+    "body-limit",
+    "compression",
+    "protovalidate",
+    "code-generator"
+  ]
+}

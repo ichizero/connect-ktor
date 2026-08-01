@@ -1,0 +1,14 @@
+{
+  "title": "Connect-Ktor",
+  "root": true,
+  "pages": [
+    "index",
+    "introduction",
+    "getting-started",
+    "---Plugins---",
+    "plugins",
+    "---Protocol---",
+    "conformance",
+    "known-limitations"
+  ]
+}

@@ -1,0 +1,58 @@
+---
+title: Conformance
+description: How Connect-Ktor tracks the Connect protocol conformance suite.
+---
+
+# Conformance
+
+Connect-Ktor runs the official [connectrpc/conformance](https://github.com/connectrpc/conformance) suite against a dedicated server under `conformance/`.
+The matrix below is the contract: ✅ means exercised and expected to pass (aside from pinned known-failing / known-flaky cases).
+
+## Support matrix
+
+| Feature | Option | Supported |
+| --- | --- | :-: |
+| Protocol | `PROTOCOL_CONNECT` | ✅ |
+|  | `PROTOCOL_GRPC` | ❌ |
+|  | `PROTOCOL_GRPC_WEB` | ❌ |
+| HTTP version | `HTTP_VERSION_1` | ✅ |
+|  | `HTTP_VERSION_2` | ✅ (Netty only) |
+|  | `HTTP_VERSION_3` | ❌ |
+| Codec | `CODEC_PROTO` | ✅ |
+|  | `CODEC_JSON` | ✅ |
+| Compression | `COMPRESSION_IDENTITY` | ✅ |
+|  | `COMPRESSION_GZIP` | ✅ |
+|  | `BR` / `ZSTD` / `DEFLATE` / `SNAPPY` | ❌ |
+| Stream type | Unary | ✅ |
+|  | Client stream | ✅ |
+|  | Server stream | ❌ |
+|  | Half-/full-duplex bidi | ❌ |
+| TLS | TLS / mTLS | ✅ (Netty only) |
+| Trailers | Unary trailers + streaming end-frame metadata | ✅ |
+| Connect GET | Idempotent unary GET | ✅ |
+| Message receive limit | Unary | ✅ |
+
+## Engines
+
+| Engine | HTTP versions | Notes |
+| --- | --- | --- |
+| CIO | HTTP/1.1 plaintext | No HTTPS, no HTTP/2. Duplicate headers collapse upstream. |
+| Netty | HTTP/1.1 + HTTP/2 (h2c / h2), mTLS | Preferred when TLS or HTTP/2 matters. |
+
+Known-failing and known-flaky case lists are checked in as:
+
+- `conformance/known-failing-cio.txt` / `known-failing-netty.txt`
+- `conformance/known-flaky-cio.txt` / `known-flaky-netty.txt`
+
+Both engines currently fail gzip client-stream cases because per-message streaming compression is unimplemented.
+
+## Run locally
+
+```bash
+mise run conformance
+```
+
+That builds `:conformance`, installs `connectconformance`, and runs the suite once per engine using `config-<engine>.yaml` plus the known-failing / known-flaky pins.
+
+CI runs the same task on every pull request.
+When the matrix changes, update the table here and the pin files together — a green suite with a stale docs page is still a lie.

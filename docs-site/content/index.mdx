@@ -1,0 +1,44 @@
+---
+title: Connect-Ktor
+description: Connect Protocol for existing Ktor servers — gradually, beside REST.
+---
+
+# Connect-Ktor
+
+Most Ktor services already speak REST.
+Connect-Ktor does not ask them to stop.
+
+It adds the [Connect Protocol](https://connectrpc.com/docs/protocol) to the same process, so Protobuf RPCs can land next to the routes you already ship.
+Migration becomes a series of small cuts, not a rewrite.
+
+## Unofficial status
+
+Connect-Ktor is an **unofficial** community library.
+It is not published by the ConnectRPC organization.
+
+It extends [Connect-Kotlin](https://github.com/connectrpc/connect-kotlin) for Ktor servers and aims to stay compatible with the Connect protocol and its conformance suite.
+Treat it as that: useful, tested, and independent of the official Connect products.
+
+## Why teams reach for it
+
+Three properties show up again and again in real backends.
+
+- **REST coexistence.** Register Connect handlers beside ordinary Ktor routes. Keep the REST surface until each endpoint earns a Connect replacement.
+- **Connect protocol strengths, unchanged.** Binary or JSON codecs, Connect GET for idempotent unary calls, structured errors, and client-streaming with envelope framing — the protocol benefits stay intact on the server.
+- **A natural React + Kotlin/Ktor split.** Browser and Node clients can use Connect-ES; Android and JVM clients can use Connect-Kotlin; the server stays Kotlin on Ktor. One schema, three runtimes that already speak Connect.
+
+If the stack is already “React in front, Ktor in back,” Connect is often the shortest path that keeps both sides typed against the same `.proto` files.
+
+## What you get today
+
+- Unary and client-streaming Connect handlers on CIO and Netty
+- `connectJson()` / `connectProto()` ContentNegotiation codecs
+- Generated Ktor route interfaces via `protoc-gen-connect-ktor`
+- Optional protovalidate request checks, body size limits, and gzip guards
+
+Server-streaming, bidi, and gRPC/gRPC-Web are still out of scope.
+See [Known limitations](/known-limitations) for the honest matrix.
+
+## Next step
+
+[Getting started](/getting-started) walks through dependency setup, code generation, and a handler that can share a server with existing REST routes.

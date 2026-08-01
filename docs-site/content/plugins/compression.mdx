@@ -1,0 +1,46 @@
+---
+title: Compression
+description: Accept gzip Connect bodies with UnaryCompressionGuard.
+---
+
+# Compression
+
+Ktor's `Compression` plugin does the encode/decode work.
+`UnaryCompressionGuard` decides which encodings a Connect unary route will accept before the body is parsed.
+
+Unsupported `Content-Encoding` values are rejected with `Code.UNIMPLEMENTED`.
+
+## Minimal setup
+
+```kotlin
+embeddedServer(CIO, port = 8080) {
+    install(Resources)
+    install(Compression) {
+        gzip()
+        identity()
+    }
+    routing {
+        install(UnaryCompressionGuard) {
+            supportedEncodings = setOf("gzip", "identity")
+        }
+        connectBodyLimit(maxBytes = 4 * 1024 * 1024)
+        install(ContentNegotiation) {
+            connectJson()
+        }
+        elizaService(ElizaServiceHandler)
+    }
+}.start(wait = true)
+```
+
+Keep `supportedEncodings` aligned with the encoders you actually registered.
+Listing `br` without a brotli encoder only produces opaque parse failures later.
+
+## Streaming
+
+Client-streaming paths suppress Ktor compression around the envelope body.
+Per-message gzip for client-stream RPCs is still unimplemented; those conformance cases stay known-failing.
+
+## Encoding names
+
+Names are matched case-sensitively (except `identity`), matching Ktor's decoder lookup.
+`Content-Encoding: GZIP` is rejected even though some stacks treat encoding tokens as case-insensitive.

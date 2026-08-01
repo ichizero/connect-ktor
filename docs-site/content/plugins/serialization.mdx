@@ -1,0 +1,42 @@
+---
+title: Serialization
+description: Connect JSON and Protobuf codecs for Ktor ContentNegotiation.
+---
+
+# Serialization
+
+Unary Connect POST bodies go through Ktor `ContentNegotiation`.
+Connect-Ktor registers codecs that understand Connect's JSON and binary Protobuf content types via Connect-Kotlin strategies.
+
+## Install JSON
+
+```kotlin
+routing {
+    install(ContentNegotiation) {
+        connectJson()
+    }
+    elizaService(ElizaServiceHandler)
+}
+```
+
+`connectJson()` is enough for the common path.
+Pass a `TypeRegistry` when messages embed `google.protobuf.Any` and the default registry cannot resolve the type URLs.
+
+## Install Protobuf
+
+```kotlin
+install(ContentNegotiation) {
+    connectProto()
+}
+```
+
+JSON and Protobuf can coexist.
+Clients select a codec with `Content-Type` / `Accept` the way the Connect protocol already defines.
+
+## Streaming is different
+
+Client-streaming handlers do **not** use `ContentNegotiation` for the body.
+The wire format is a sequence of length-prefixed envelopes (`application/connect+json` or `application/connect+proto`).
+
+`handleClientStream` reads those frames directly and calls `suppressCompression` / `suppressDecompression` so a user-installed `Compression` plugin cannot double-encode the stream.
+For JSON responses that embed `Any`, register a registry-aware strategy with `installConnectStreamingCodecs` — see the repository README for the `ConnectStreamingJsonStrategy` pattern.

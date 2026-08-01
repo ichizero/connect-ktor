@@ -1,0 +1,42 @@
+---
+title: Body limit
+description: Cap decoded Connect request sizes with connectBodyLimit.
+---
+
+# Body limit
+
+`Route.connectBodyLimit(maxBytes)` is the connect-ktor counterpart of connect-go's `connect.WithReadMaxBytes(n)`.
+Oversized messages become a Connect `resource_exhausted` error (HTTP 429), not Ktor's default 413.
+
+## Decoded size, not wire size alone
+
+The cap is evaluated against the **decoded** message:
+
+- Uncompressed bodies are bounded as bytes arrive (including chunked requests without `Content-Length`), with a `Content-Length` fast path that rejects early.
+- Compressed bodies are bounded after decompression, so a small gzip bomb cannot inflate past the limit unnoticed.
+
+```kotlin
+routing {
+    route("/com.example.v1.MyService") {
+        connectBodyLimit(maxBytes = 4 * 1024 * 1024)
+        install(ContentNegotiation) {
+            connectJson()
+        }
+        myService(MyServiceHandler)
+    }
+}
+```
+
+Routes outside the `connectBodyLimit` scope keep ordinary Ktor body-limit behaviour.
+That is intentional: REST and Connect can disagree on overflow policy in the same application.
+
+## Pair with compression
+
+If you accept `Content-Encoding: gzip`, install `connectBodyLimit` as well.
+`UnaryCompressionGuard` does not bound expansion by itself.
+
+## Client-streaming caveat
+
+The current cap applies to the whole HTTP request body.
+For unary RPCs that equals one message.
+Per-message limits for client-streaming are not implemented yet — see [Known limitations](/known-limitations).
