@@ -1,0 +1,36 @@
+---
+title: Known limitations
+description: Gaps that are intentional today and tracked for later work.
+---
+
+# Known limitations
+
+Connect-Ktor is useful before it is complete.
+The limits below are deliberate scope choices, not silent bugs.
+
+## Protocol surface
+
+- **gRPC / gRPC-Web** — Connect only. Official Connect implementations can speak gRPC as well; see the [Connect protocol](https://connectrpc.com/docs/protocol) and language guides on [connectrpc.com](https://connectrpc.com/) when that interop is required. Here, gRPC would need length-prefixed framing and trailer-only error responses.
+- **Server-streaming and bidi** — Client streaming works via `handleClientStream` and the generator. Server and bidirectional streams need more generator branches and a streaming response writer. Bidi also needs HTTP/2. The full stream taxonomy is documented in the official protocol / language docs.
+
+## Engines
+
+- **CIO + TLS / HTTP/2** — CIO throws on HTTPS and has no HTTP/2 server support upstream. Use Netty, or terminate TLS in front of CIO.
+- **HTTP/3** — Not offered by stock Ktor transports.
+
+## Compression and limits
+
+- **Extra content encodings** — `br`, `zstd`, and `snappy` need custom Ktor `ContentEncoder`s plus matching entries in `UnaryCompressionGuard.supportedEncodings`.
+- **Client-stream gzip** — Per-message streaming compression is unimplemented; related conformance cases stay known-failing.
+- **Per-message receive limits on client streams** — `connectBodyLimit` caps the whole request body. Unary equals one message; client-stream needs a different mechanism.
+
+## Product status
+
+The project is **unofficial**.
+It is maintained outside the ConnectRPC organization, even when it tracks the same conformance suite.
+
+If a missing axis blocks your migration, check GitHub issues first — several items already have tracked work — and prefer Netty when the deployment needs TLS or HTTP/2 today.
+
+For Connect-Kotlin client behaviour, streaming APIs on other platforms, or protocol edge cases outside this matrix, use the official
+[Connect docs](https://connectrpc.com/docs/introduction) and
+[Connect-Kotlin](https://connectrpc.com/docs/kotlin/getting-started) instead of treating this site as complete.

@@ -1,0 +1,123 @@
+---
+title: Getting started
+description: Add Connect-Ktor beside an existing Ktor server and call a generated handler.
+---
+
+# Getting started
+
+The goal is a unary Connect RPC on a Ktor server that can still host REST routes.
+Prerequisites match a typical Connect-Kotlin workspace: JDK 21-friendly tooling, Gradle, and the Buf CLI.
+
+This guide is server-side only.
+If you need a Connect client first, follow the official
+[Connect-Kotlin getting started](https://connectrpc.com/docs/kotlin/getting-started)
+guide, then come back here to expose the matching Ktor handlers.
+For protocol details (codecs, errors, Connect GET), see the
+[Connect protocol](https://connectrpc.com/docs/protocol) specification.
+
+## Add the library
+
+```kotlin
+dependencies {
+    implementation("io.github.ichizero:connect-ktor:0.2.0")
+}
+```
+
+Pin to the current release on [Maven Central](https://central.sonatype.com/artifact/io.github.ichizero/connect-ktor).
+
+## Install the generator
+
+On macOS or Linux:
+
+```bash
+brew install ichizero/tap/protoc-gen-connect-ktor
+```
+
+Or download a binary from [GitHub Releases](https://github.com/ichizero/connect-ktor/releases) and put it on `PATH`.
+
+## Generate handlers
+
+Point Buf at the local plugin alongside the usual Java/Kotlin and Connect-Kotlin plugins:
+
+```yaml
+version: v2
+clean: true
+managed:
+    enabled: true
+plugins:
+    - remote: buf.build/protocolbuffers/java
+      out: path/to/code
+    - remote: buf.build/protocolbuffers/kotlin
+      out: path/to/code
+    - remote: buf.build/connectrpc/kotlin
+      out: path/to/code
+    - local: protoc-gen-connect-ktor
+      out: path/to/code
+```
+
+```bash
+buf generate
+```
+
+For a service like Eliza's `Say` RPC, the plugin emits a handler interface and a `Route` extension that wires `handle` / `handleClientStream`.
+
+## Implement the handler
+
+```kotlin
+object ElizaServiceHandler : ElizaServiceHandlerInterface {
+    override suspend fun say(
+        request: SayRequest,
+        call: ApplicationCall,
+    ): ResponseMessage<SayResponse> = ResponseMessage.Success(
+        sayResponse { sentence = request.sentence },
+        emptyMap(),
+        emptyMap(),
+    )
+}
+```
+
+Unary methods take a single request.
+Client-streaming methods take a cold `Flow<Req>` and still return one `ResponseMessage`.
+
+## Register beside REST
+
+```kotlin
+fun main() {
+    embeddedServer(CIO, port = 8080) {
+        install(Resources)
+        routing {
+            get("/health") {
+                call.respondText("ok")
+            }
+            install(ContentNegotiation) {
+                connectJson()
+            }
+            elizaService(ElizaServiceHandler)
+        }
+    }.start(wait = true)
+}
+```
+
+`/health` stays ordinary Ktor.
+`ElizaService/Say` becomes a Connect procedure on the same application.
+That coexistence is the migration model: move RPCs when ready, leave the rest alone.
+
+## Call it from a Connect client
+
+Any Connect client that targets your host works.
+On the JVM, use the official
+[Connect-Kotlin](https://connectrpc.com/docs/kotlin/getting-started) client;
+from React or other TypeScript apps, use
+[Connect-ES](https://connectrpc.com/docs/web/getting-started).
+Buf Studio is fine for ad-hoc checks.
+
+Point the client at `http://localhost:8080` (or your deployed base URL) and invoke `Say` as usual.
+Client configuration details live in those official guides, not here.
+
+## Where to go next
+
+- [Code generator](/code-generator) for `protoc-gen-connect-ktor` details
+- [Plugins](/plugins) for Connect GET, body limits, compression, and protovalidate
+- [Conformance](/conformance) for the support matrix and how CI runs the suite
+- [Known limitations](/known-limitations) before you promise streaming shapes the library does not implement yet
+- [Connect protocol](https://connectrpc.com/docs/protocol) when you need the wire-level rules behind those plugins

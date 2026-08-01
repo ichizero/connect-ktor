@@ -1,116 +1,65 @@
 # Connect-Ktor
 
+Documentation: https://ichizero.github.io/connect-ktor/
+
 [![Maven Central Version](https://img.shields.io/maven-central/v/io.github.ichizero/connect-ktor)](https://central.sonatype.com/artifact/io.github.ichizero/connect-ktor)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![CI](https://github.com/ichizero/connect-ktor/actions/workflows/ci.yml/badge.svg)
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/ichizero/connect-ktor?utm_source=oss&utm_medium=github&utm_campaign=ichizero%2Fconnect-ktor&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ichizero/connect-ktor/badge)](https://scorecard.dev/viewer/?uri=github.com/ichizero/connect-ktor)
 
-Connect-Ktor is a library developed as an extension of
-[Connect-Kotlin](https://github.com/connectrpc/connect-kotlin)
-for [Ktor](https://github.com/ktorio/ktor) servers.
-It aims to gradually introduce the Connect Protocol into existing Ktor REST servers.
+Connect-Ktor extends [Connect-Kotlin](https://github.com/connectrpc/connect-kotlin)
+for [Ktor](https://github.com/ktorio/ktor) servers so you can introduce the
+[Connect Protocol](https://connectrpc.com/docs/protocol) beside existing REST
+routes.
+
+It is an **unofficial** community library (not published by the ConnectRPC
+organization). For Connect itself and Connect-Kotlin clients, prefer the official
+[connectrpc.com](https://connectrpc.com/) docs.
 
 ## Features
 
-- connect-ktor
-  - Serialize/Deserialize Protocol Buffers JSON messages with Connect-Kotlin.
-  - Client-streaming RPCs (`stream Req -> Res`) with envelope framing
-    (`application/connect+proto` / `application/connect+json`).
-  - Request validation support with [protovalidate](https://github.com/bufbuild/protovalidate).
-- protoc-gen-connect-ktor
-  - Generate Ktor route handler interfaces from Protocol Buffers service definitions,
-    including client-streaming handlers that receive a `Flow<Req>`.
+- **connect-ktor** — Protobuf JSON/binary codecs via Connect-Kotlin, client-streaming
+  RPCs with envelope framing, optional [protovalidate](https://github.com/bufbuild/protovalidate)
+- **protoc-gen-connect-ktor** — generates Ktor route handler interfaces (unary +
+  client-streaming `Flow<Req>`)
 
-## Connect Protocol support matrix
+Plugins (Connect GET, body limits, compression guards, and more), engine notes,
+and longer guides live in the [documentation site](https://ichizero.github.io/connect-ktor/).
 
-The following matrix summarises which axes of the [Connect protocol
-conformance suite](https://github.com/connectrpc/conformance) connect-ktor
-currently exercises. Anything marked ❌ is out of scope today; see the
-[Roadmap](#connect-protocol-roadmap) section below for the reasons.
+## Conformance
 
-| Feature | Option | Supported |
-|---|---|:-:|
-| Protocol | `PROTOCOL_CONNECT` | ✅ |
-|  | `PROTOCOL_GRPC` | ❌ |
-|  | `PROTOCOL_GRPC_WEB` | ❌ |
-| HTTP version | `HTTP_VERSION_1` (HTTP/1.1) | ✅ |
-|  | `HTTP_VERSION_2` (HTTP/2 / h2c) | ✅ (Netty only) |
-|  | `HTTP_VERSION_3` (HTTP/3 over QUIC) | ❌ |
-| Codec | `CODEC_PROTO` (`application/proto`) | ✅ |
-|  | `CODEC_JSON` (`application/json`) | ✅ |
-| Compression | `COMPRESSION_IDENTITY` | ✅ |
-|  | `COMPRESSION_GZIP` | ✅ |
-|  | `BR` / `ZSTD` / `DEFLATE` / `SNAPPY` | ❌ |
-| Stream type | `STREAM_TYPE_UNARY` | ✅ |
-|  | `STREAM_TYPE_CLIENT_STREAM` | ✅ |
-|  | `STREAM_TYPE_SERVER_STREAM` | ❌ |
-|  | `STREAM_TYPE_HALF_DUPLEX_BIDI_STREAM` | ❌ |
-|  | `STREAM_TYPE_FULL_DUPLEX_BIDI_STREAM` | ❌ |
-| TLS | `supports_tls` | ✅ (Netty only) |
-|  | `supports_tls_client_certs` (mTLS) | ✅ (Netty only) |
-| Trailers | `supports_trailers` (unary: `Trailer-*` HTTP headers; streaming: end-frame `metadata` field) | ✅ |
-| Connect GET | `supports_connect_get` (idempotent unary via HTTP GET) | ✅ (Netty fully; CIO passes except the two `Connect with GET/.../success` cases that exercise duplicate `X-Conformance-Test` headers — same CIO upstream limitation as the `Duplicate Metadata` / `Basic` entries in `conformance/known-failing-cio.txt`) |
-| Message receive limit | `supports_message_receive_limit` | ✅ (unary) |
+Connect-Ktor runs the official
+[connectrpc/conformance](https://github.com/connectrpc/conformance) suite.
+Summary (details and footnotes:
+[docs](https://ichizero.github.io/connect-ktor/conformance/)):
 
-Verified Ktor engines:
+| Feature               | Option                       | CIO  | Netty |
+| --------------------- | ---------------------------- | :--: | :---: |
+| Protocol              | Connect                      |  ✅  |  ✅   |
+|                       | gRPC / gRPC-Web              |  ❌  |  ❌   |
+| HTTP                  | 1.1                          |  ✅  |  ✅   |
+|                       | 2                            |  ❌  |  ✅   |
+|                       | 3                            |  ❌  |  ❌   |
+| Codec                 | Proto / JSON                 |  ✅  |  ✅   |
+| Compression           | identity / gzip              |  ✅  |  ✅   |
+|                       | br / zstd / deflate / snappy |  ❌  |  ❌   |
+| Streams               | unary / client-stream        |  ✅  |  ✅   |
+|                       | server / bidi                |  ❌  |  ❌   |
+| TLS / mTLS            |                              |  ❌  |  ✅   |
+| Trailers              |                              |  ✅  |  ✅   |
+| Connect GET           |                              | ✅\* |  ✅   |
+| Message receive limit | unary                        |  ✅  |  ✅   |
 
-| Engine | HTTP versions | Notes |
-|---|---|---|
-| `io.ktor.server.cio.CIO` | HTTP/1.1 (plaintext only) | CIO upstream does not implement HTTPS (`UnsupportedOperationException: CIO Engine does not currently support HTTPS`), and has no HTTP/2 server support. Known-failing cases, pinned in `conformance/known-failing-cio.txt`, fall into two buckets: CIO collapses duplicate request headers into one (including the two `Connect with GET/.../success` cases), and gzip `client-stream` RPCs are rejected because per-message streaming compression is unimplemented (see Roadmap). |
-| `io.ktor.server.netty.Netty` | HTTP/1.1 + HTTP/2 (h2c & h2 over TLS), plus mTLS | The conformance bootstrap turns on `enableHttp2` + `enableH2c` for the plaintext connector and an `sslConnector` driven by the certs supplied in `ServerCompatRequest.server_creds` (plus `client_tls_cert` for mTLS). ALPN negotiates h2 over TLS automatically. The only known-failing cases, pinned in `conformance/known-failing-netty.txt`, are gzip `client-stream` RPCs, which are rejected because per-message streaming compression is unimplemented (see Roadmap). |
-
-Run the suite locally with:
+\* CIO Connect GET fails cases that rely on duplicate request headers (upstream
+CIO limitation). Both engines currently fail gzip client-stream cases (per-message
+streaming compression unimplemented).
 
 ```bash
 mise run conformance
 ```
 
-which builds the `:conformance` subproject, installs
-`connectconformance`, and runs the suite once per engine using the
-`config-<engine>.yaml`, `known-failing-<engine>.txt`, and
-`known-flaky-<engine>.txt` files in `conformance/`. (The gzip `client-stream`
-`Timeouts` cases race the server's `unimplemented` rejection against the
-deadline, so they are tracked as flaky rather than known-failing.)
-
-### Connect protocol roadmap
-
-These are intentionally outside the current matrix and would require
-additional work in the library and/or protoc plugin:
-
-- **Server-streaming and bidi-streaming RPCs** — client streaming is
-  supported today via `handleClientStream` and the matching generator
-  output. Server streaming (`Req -> stream Res`) and bidirectional
-  streaming require additional generator branches and a streaming
-  response writer; the envelope framing layer (`io.github.ichizero.connect.ktor.streaming`)
-  is already shaped to be reused. Bidi additionally needs HTTP/2.
-- **gRPC / gRPC-Web** — connect-ktor speaks Connect only. Supporting
-  gRPC additionally requires Length-Prefixed-Message framing and a
-  trailer-only error response path.
-- **HTTP/2 (CIO) and HTTP/3** — the CIO engine has no HTTP/2 server
-  support upstream; HTTP/3 needs QUIC plus TLS, which Ktor does not
-  ship out of the box.
-- **TLS / mTLS on CIO** — CIO upstream throws
-  `UnsupportedOperationException` for HTTPS. Use Netty if you need
-  TLS termination at the Ktor layer; otherwise terminate TLS in
-  front of CIO.
-- **Additional compression algorithms** — brotli (`br`), zstd, and
-  snappy require an external `ContentEncoder` registered with Ktor's
-  `Compression` plugin (`deflate` ships with Ktor). Once registered,
-  also add those encoding names to `UnaryCompressionGuard.supportedEncodings`;
-  the guard only accepts encodings listed there.
-- **`message_receive_limit` for client-streaming** — `connectBodyLimit`
-  caps the whole request body, which equals a single message for unary
-  RPCs. Client-streaming needs a per-message receive limit and a
-  streaming end-of-stream error frame; the `client-stream` Server Message
-  Size cases are pinned as known-failing for now.
-
-
-## Usage
-
-### Add dependencies
-
-Add the conenct-ktor library to your build.gradle.kts.
+## Quick start
 
 ```kotlin
 dependencies {
@@ -118,74 +67,27 @@ dependencies {
 }
 ```
 
-### Generation
-
-#### 1. Setup protoc-gen-connect-ktor
-
-On Linux or macOS, install the plugin with [Homebrew](https://brew.sh/).
-
-```bash
-brew install ichizero/tap/protoc-gen-connect-ktor
-```
-
-Alternatively, you can download the plugin executable file from
-[releases](https://github.com/ichizero/connect-ktor/releases)
-and place it in your PATH.
-
-#### 2. Add plugins to your buf.gen.yaml
+Install the generator (`brew install ichizero/tap/protoc-gen-connect-ktor` or a
+[release](https://github.com/ichizero/connect-ktor/releases) binary), then generate:
 
 ```yaml
-version: v2
-clean: true
-managed:
-  enabled: true
+# buf.gen.yaml (excerpt)
 plugins:
-  - remote: buf.build/protocolbuffers/java
-    out: path/to/code
-  - remote: buf.build/protocolbuffers/kotlin
-    out: path/to/code
-  - remote: buf.build/connectrpc/kotlin
-    out: path/to/code
-  - local: protoc-gen-connect-ktor
-    out: path/to/code
+    - remote: buf.build/protocolbuffers/java
+      out: path/to/code
+    - remote: buf.build/protocolbuffers/kotlin
+      out: path/to/code
+    - remote: buf.build/connectrpc/kotlin
+      out: path/to/code
+    - local: protoc-gen-connect-ktor
+      out: path/to/code
 ```
-
-#### 3. Generate the Ktor route handler interfaces
 
 ```bash
 buf generate
 ```
 
-Generated handler interface is like below. Unary RPCs receive a single
-request; client-streaming RPCs (declared with `rpc X(stream Req) returns (Res)`)
-receive a cold `Flow<Req>` instead:
-
-```kotlin
-public interface ElizaServiceHandlerInterface {
-    public suspend fun say(request: SayRequest, call: ApplicationCall): ResponseMessage<SayResponse>
-
-    public suspend fun upload(
-        requests: Flow<UploadRequest>,
-        call: ApplicationCall,
-    ): ResponseMessage<UploadResponse>
-
-    public object Procedures {
-        @Resource("/connectrpc.eliza.v1.ElizaService/Say")
-        public class Say
-        @Resource("/connectrpc.eliza.v1.ElizaService/Upload")
-        public class Upload
-    }
-}
-
-public fun Route.elizaService(handler: ElizaServiceHandlerInterface) {
-    post<ElizaServiceHandlerInterface.Procedures.Say, SayRequest>(handle(handler::say))
-    post<ElizaServiceHandlerInterface.Procedures.Upload>(handleClientStream(handler::upload))
-}
-```
-
-### Implementation
-
-#### 1. Implement the generated handler interface
+Implement the generated handler and register it beside REST:
 
 ```kotlin
 object ElizaServiceHandler : ElizaServiceHandlerInterface {
@@ -197,306 +99,51 @@ object ElizaServiceHandler : ElizaServiceHandlerInterface {
         emptyMap(),
         emptyMap(),
     )
-
-    // Client-streaming RPC: collect the entire request stream, then return a
-    // single response. Throwing a ConnectException (or returning
-    // ResponseMessage.Failure) emits an end-stream frame with `error`; HTTP
-    // status stays 200 per the Connect streaming protocol.
-    override suspend fun upload(
-        requests: Flow<UploadRequest>,
-        call: ApplicationCall,
-    ): ResponseMessage<UploadResponse> {
-        val totalChars = requests.fold(0L) { acc, r -> acc + r.chunk.length }
-        return ResponseMessage.Success(
-            uploadResponse { this.totalChars = totalChars },
-            emptyMap(),
-            emptyMap(),
-        )
-    }
 }
-```
 
-#### 2. Register the handler in the Ktor server
-
-```kotlin
 fun main() {
     embeddedServer(CIO, port = 8080) {
         install(Resources)
         routing {
+            get("/health") { call.respondText("ok") }
             install(ContentNegotiation) {
                 connectJson()
             }
             elizaService(ElizaServiceHandler)
         }
-    }.start(wait = false)
+    }.start(wait = true)
 }
 ```
 
-> Note for client-streaming endpoints: the `handleClientStream` runtime
-> bypasses Ktor `ContentNegotiation` (the body is a sequence of envelope
-> frames, not a single message) and unconditionally calls
-> `call.suppressCompression()` / `call.suppressDecompression()` so that
-> a user-installed `Compression` plugin cannot double-encode the
-> length-prefixed body. No extra wiring is required for the typical
-> case. If your streaming responses embed `google.protobuf.Any` whose
-> concrete types must round-trip through JSON, register a
-> registry-aware JSON strategy at the application level using
-> `ConnectStreamingJsonStrategy`. The stock
-> `GoogleJavaJSONStrategy(typeRegistry)` only forwards the registry to
-> the parser, not the printer, so encoding a response that contains
-> `Any` would fail with `Cannot find type for url`.
->
-> ```kotlin
-> install(Resources)
-> installConnectStreamingCodecs(
->     ConnectStreamingStrategies(
->         proto = GoogleJavaProtobufStrategy(),
->         json = ConnectStreamingJsonStrategy(typeRegistry),
->     ),
-> )
-> ```
-
-#### 3. (Connect GET) Keep POST and GET codecs in sync
-
-The Connect GET path (idempotent unary RPCs annotated with
-`option idempotency_level = NO_SIDE_EFFECTS;`) does not go through
-`ContentNegotiation` — there is no request body to negotiate on — so it
-resolves its codecs via `installConnectGetCodecs` instead. With the defaults
-(`connectJson()` and no `installConnectGetCodecs`) nothing extra is needed.
-However, if you pass a custom `TypeRegistry` to `connectJson(...)` — for
-example because your messages contain `google.protobuf.Any` fields — you must
-register the same registry for the GET path as well; forgetting this makes GET
-requests fail at runtime when (de)serialising those `Any` fields:
-
-```kotlin
-fun main() {
-    val typeRegistry = TypeRegistry.newBuilder()
-        .add(SayRequest.getDescriptor())
-        .build()
-
-    embeddedServer(CIO, port = 8080) {
-        install(Resources)
-        // GET path: query-parameter decoding + manual response serialisation.
-        installConnectGetCodecs(
-            ConnectGetStrategies(
-                proto = GoogleJavaProtobufStrategy(),
-                // `json` covers request *deserialisation* (and response serialisation when no
-                // `jsonSerializer` is set). See the note below if responses contain `Any`.
-                json = GoogleJavaJSONStrategy(typeRegistry),
-            ),
-        )
-        routing {
-            install(ContentNegotiation) {
-                // POST path: body-based content negotiation.
-                connectJson(typeRegistry)
-            }
-            elizaService(ElizaServiceHandler)
-        }
-    }.start(wait = false)
-}
-```
-
-> Note: `GoogleJavaJSONStrategy(typeRegistry)` only forwards the registry to its
-> `JsonFormat.parser` (request decoding), not to its `JsonFormat.printer`
-> (response encoding). So the `json` strategy above is enough to *read* GET
-> requests whose `message` embeds `google.protobuf.Any`, but a JSON *response*
-> that contains `Any` would still fail to serialise with `Cannot find type for
-> url`. When your responses embed `Any`, also pass a `jsonSerializer` — a
-> `ConnectGetJsonSerializer` backed by `JsonFormat.printer().usingTypeRegistry(typeRegistry)`:
->
-> ```kotlin
-> installConnectGetCodecs(
->     ConnectGetStrategies(
->         proto = GoogleJavaProtobufStrategy(),
->         json = GoogleJavaJSONStrategy(typeRegistry),
->         jsonSerializer = object : ConnectGetJsonSerializer {
->             private val printer = JsonFormat.printer().usingTypeRegistry(typeRegistry)
->             override fun <T : Any> serialize(value: T, clazz: KClass<T>): ByteArray =
->                 printer.print(value as Message).toByteArray(Charsets.UTF_8)
->         },
->     ),
-> )
-> ```
-
-#### 4. (Optional) Enable request/response compression
-
-Install Ktor's `Compression` plugin alongside `UnaryCompressionGuard` to support
-gzip-encoded request and response bodies. `UnaryCompressionGuard` rejects any
-`Content-Encoding` outside its `supportedEncodings` set with
-`Code.UNIMPLEMENTED` before the route handler runs and before the body is
-parsed.
-
-> **Pair it with `connectBodyLimit`.** Accepting compressed requests means a
-> small payload can expand to an arbitrarily large byte stream. The guard
-> does not bound that expansion;
-> [`connectBodyLimit`](#request-message-size-limit) enforces its cap against
-> the *decompressed* size and rejects decompression bombs with
-> `resource_exhausted`.
->
-> **Keep `supportedEncodings` in sync with the installed encoders.** The set
-> decides which encodings the guard accepts and is surfaced in error
-> messages (per the Connect spec's recommendation), but the actual decoding
-> is done by the encoders registered on `Compression`. Listing an encoding
-> without a matching encoder makes compressed bodies reach deserialization
-> undecoded and fail with an opaque parse error.
-
-```kotlin
-fun main() {
-    embeddedServer(CIO, port = 8080) {
-        install(Resources)
-        install(Compression) {       // <- application scope (outside `routing { }`)
-            gzip()
-            identity()
-        }
-        routing {
-            install(UnaryCompressionGuard) {
-                supportedEncodings = setOf("gzip", "identity")
-            }
-            // Cap the decompressed body size to defend against gzip bombs.
-            connectBodyLimit(maxBytes = 4 * 1024 * 1024)
-            install(ContentNegotiation) {
-                connectJson()
-            }
-            elizaService(ElizaServiceHandler)
-        }
-    }.start(wait = false)
-}
-```
-
-> **Note:** Ktor bundles `gzip` and `deflate` encoders; brotli (`br`), zstd,
-> and snappy require a custom `ContentEncoder` registered with the
-> `Compression` plugin. Add every registered encoder name to
-> `supportedEncodings` so the guard accepts it.
->
-> **Note:** encoding names are matched case-sensitively (except `identity`)
-> because Ktor's `Compression` plugin looks decoders up case-sensitively: a
-> request sending `Content-Encoding: GZIP` is rejected with
-> `Code.UNIMPLEMENTED` since Ktor would not decode it. Content-coding values
-> are lowercase in practice.
-
-### Request Validation with protovalidate
-
-The plugin named ProtoRequestValidation is provided to validate the request message with protovalidate.
-If the request message is invalid, the server will respond with a 400 Bad Request status code with details.
-
-```protobuf
-syntax = "proto3";
-
-package stricteliza.v1;
-
-import "buf/validate/validate.proto";
-
-message SayRequest {
-    string sentence = 1 [(buf.validate.field).string.max_len = 100];
-}
-```
-
-```kotlin
-fun main() {
-    embeddedServer(CIO, port = 8080) {
-        install(Resources)
-        install(StatusPages) {
-            exception<ProtoRequestValidationException> { call, cause ->
-                call.respondBytes(
-                    bytes = cause.toErrorJsonBytes(),
-                    status = HttpStatusCode.BadRequest,
-                    contentType = ContentType.Application.Json,
-                )
-            }
-        }
-        routing {
-            install(ContentNegotiation) {
-                connectJson()
-            }
-            install(ProtoRequestValidation)
-            strictElizaService(StrictElizaServiceHandler)
-        }
-    }.start(wait = false)
-}
-```
-
-### Request Message Size Limit
-
-Use `Route.connectBodyLimit(maxBytes)` to cap the inbound request message size for Connect RPCs —
-the connect-ktor counterpart of connect-go's `connect.WithReadMaxBytes(n)`. When the message
-exceeds the configured limit the server responds with a `resource_exhausted` Connect error
-(HTTP 429) instead of the default Ktor 413.
-
-Following the Connect protocol, the cap is evaluated against the **decoded** message size:
-
-- **Uncompressed requests** are capped by Ktor's built-in `RequestBodyLimit`, which counts bytes as
-  they stream in (so `Transfer-Encoding: chunked` requests carrying no `Content-Length` are capped
-  too), plus a `Content-Length` fast path that rejects before a single byte is read.
-- **Compressed requests** (a `Content-Encoding` other than `identity`) are capped against their
-  post-decompression byte count instead, so a small payload that inflates past the limit — a
-  decompression bomb — is rejected rather than silently accepted. The wire-byte cap is deliberately
-  not applied to them, because compressing can grow incompressible payloads slightly and would
-  reject legitimate requests sitting just under the limit.
-
-```kotlin
-fun main() {
-    embeddedServer(CIO, port = 8080) {
-        install(Resources)
-        routing {
-            route("/com.example.v1.MyService") {
-                connectBodyLimit(maxBytes = 4 * 1024 * 1024)
-                install(ContentNegotiation) {
-                    connectJson()
-                }
-                myService(MyServiceHandler)
-            }
-        }
-    }.start(wait = false)
-}
-```
-
-Routes outside the `connectBodyLimit` scope are not affected and continue to use the default Ktor
-body-limit behaviour.
-
-> **Note:** the decoded-size check runs in its own receive-pipeline phase, inserted after the
-> `Compression` plugin's decode and ahead of every body transformer. It therefore holds however
-> the handler receives the body (`receive<ByteArray>()`, `receiveText()`, or a
-> `ContentNegotiation` deserializer) and wherever `ContentNegotiation` is installed — no install
-> ordering is required.
->
-> **Note:** the cap applies to the whole HTTP request body, which for unary RPCs is a single
-> message. Client-streaming RPCs need a per-message receive limit and are not covered; see the
-> [Roadmap](#connect-protocol-roadmap).
+Full walkthrough: [Getting started](https://ichizero.github.io/connect-ktor/getting-started/).
 
 ## Local development
 
-This repository uses [mise](https://mise.jdx.dev/) to manage both local
-tooling (`go`, `golangci-lint`, `lefthook`, `buf`) and the task runner
-(`mise.toml`). After [installing mise](https://mise.jdx.dev/getting-started.html),
-set up the repo once per clone:
+This repository uses [mise](https://mise.jdx.dev/) for tooling and tasks, plus
+[lefthook](https://github.com/evilmartians/lefthook) for pre-commit hooks.
 
 ```bash
 mise install
 mise exec -- lefthook install
+mise tasks ls   # build, test, lint, generate, conformance, …
 ```
 
-`mise install` pins the tool versions declared in `mise.toml`, and
-`lefthook install` wires the [lefthook](https://github.com/evilmartians/lefthook)
-(`lefthook.yml`) quality gates into `pre-commit`.
+Docs site and formatting from the repo root (`docs-site` is an alias for
+`pnpm --filter=docs-site`):
 
-The hooks run Spotless (ktlint), detekt, `go vet`, and golangci-lint on
-staged files. They are convenience-only — CI re-runs the same checks —
-so a commit can still be made with `LEFTHOOK=0 git commit ...` when
-needed.
-
-Run `mise tasks ls` to see the available tasks (`mise run build`, `mise run
-test`, `mise run lint`, `mise run generate`, `mise run conformance`, etc.).
+```bash
+pnpm install
+pnpm docs-site dev      # local preview
+pnpm docs-site build    # static export
+pnpm docs-site lint     # typecheck (lint → lint:type)
+pnpm lint:format        # format check (oxfmt --check)
+pnpm lint-fix          # write-format (lint-fix → lint-fix:format)
+```
 
 ## Verifying release artifacts
 
-Releases for the `protoc-gen-connect-ktor` Go binaries and the `library` JARs publish supply-chain
-metadata so consumers can verify provenance and integrity.
-
-### Verify the protoc-gen-connect-ktor archive signature with cosign
-
-Each release archive ships with a sigstore bundle (`*.sigstore.json`) produced by
-[cosign](https://github.com/sigstore/cosign) keyless signing via GitHub OIDC. The bundle
-embeds the signature, certificate, and transparency-log inclusion proof:
+Release archives for `protoc-gen-connect-ktor` ship cosign sigstore bundles and
+SLSA provenance. See the release notes and:
 
 ```sh
 cosign verify-blob \
@@ -505,16 +152,8 @@ cosign verify-blob \
   --certificate-identity-regexp "^https://github.com/ichizero/connect-ktor/\\.github/workflows/release\\.yml@refs/tags/v.*$" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   connect-ktor_Linux_x86_64.tar.gz
-```
 
-### Verify SLSA build provenance
-
-Every release archive (Go binaries and library JARs) is published with a SLSA build provenance
-attestation. Verify it with the GitHub CLI:
-
-```sh
-gh attestation verify connect-ktor_Linux_x86_64.tar.gz \
-  --repo ichizero/connect-ktor
+gh attestation verify connect-ktor_Linux_x86_64.tar.gz --repo ichizero/connect-ktor
 ```
 
 ## License
@@ -523,8 +162,5 @@ Offered under the [Apache 2 license](https://github.com/ichizero/connect-ktor/bl
 
 ## Acknowledgements
 
-I'm very grateful for the [Connect Protocol](https://github.com/connectrpc/connect-go),
-[Connect-Kotlin](https://github.com/connectrpc/connect-kotlin) and its authors.
-Their pioneering work and contributions to the open-source community made the development of Connect-Ktor possible.
-
-I encourage you to try Connect-Ktor and experience a new level of communication with your Ktor server!
+Thanks to the authors of the [Connect Protocol](https://github.com/connectrpc/connect-go)
+and [Connect-Kotlin](https://github.com/connectrpc/connect-kotlin).

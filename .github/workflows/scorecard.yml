@@ -5,7 +5,7 @@ on:
       - main
   # Weekly run at 09:00 UTC on Friday (18:00 JST Friday)
   schedule:
-    - cron: '0 9 * * 5'
+    - cron: "0 9 * * 5"
 
 jobs:
   analysis:

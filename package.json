@@ -1,0 +1,14 @@
+{
+  "name": "connect-ktor",
+  "private": true,
+  "scripts": {
+    "docs-site": "pnpm --filter=docs-site",
+    "lint:format": "oxfmt --check",
+    "lint-fix": "pnpm run lint-fix:format",
+    "lint-fix:format": "oxfmt"
+  },
+  "devDependencies": {
+    "oxfmt": "catalog:"
+  },
+  "packageManager": "pnpm@11.18.0"
+}

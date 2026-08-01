@@ -7,10 +7,10 @@ is fixed, the fix ships in the next patch release; older releases are not
 back-patched. Users are expected to upgrade to the latest release to pick
 up security fixes.
 
-| Version         | Supported          |
-| --------------- | ------------------ |
-| Latest release  | :white_check_mark: |
-| Older releases  | :x:                |
+| Version        | Supported          |
+| -------------- | ------------------ |
+| Latest release | :white_check_mark: |
+| Older releases | :x:                |
 
 ## Reporting a Vulnerability
 

@@ -1,0 +1,50 @@
+---
+title: Protovalidate
+description: Validate Connect request messages with Buf protovalidate rules.
+---
+
+# Protovalidate
+
+`ProtoRequestValidation` runs [protovalidate](https://github.com/bufbuild/protovalidate) against inbound request messages.
+Invalid requests become HTTP 400 responses with Connect-shaped error details.
+
+## Annotate the schema
+
+```protobuf
+syntax = "proto3";
+
+package stricteliza.v1;
+
+import "buf/validate/validate.proto";
+
+message SayRequest {
+    string sentence = 1 [(buf.validate.field).string.max_len = 100];
+}
+```
+
+## Install the plugin
+
+```kotlin
+embeddedServer(CIO, port = 8080) {
+    install(Resources)
+    install(StatusPages) {
+        exception<ProtoRequestValidationException> { call, cause ->
+            call.respondBytes(
+                bytes = cause.toErrorJsonBytes(),
+                status = HttpStatusCode.BadRequest,
+                contentType = ContentType.Application.Json,
+            )
+        }
+    }
+    routing {
+        install(ContentNegotiation) {
+            connectJson()
+        }
+        install(ProtoRequestValidation)
+        strictElizaService(StrictElizaServiceHandler)
+    }
+}.start(wait = true)
+```
+
+Wire `StatusPages` (or an equivalent handler) so validation failures surface as Connect JSON errors instead of an uncaught exception page.
+Validation rules stay in the `.proto` file — the server only enforces them.

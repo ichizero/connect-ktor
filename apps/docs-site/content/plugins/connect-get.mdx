@@ -1,0 +1,67 @@
+---
+title: Connect GET
+description: Serve idempotent unary RPCs over HTTP GET.
+---
+
+# Connect GET
+
+Idempotent unary RPCs — those annotated with `option idempotency_level = NO_SIDE_EFFECTS;` — may be issued as HTTP GET.
+There is no request body to negotiate, so Connect GET does not go through `ContentNegotiation`.
+
+## Default path
+
+With stock `connectJson()` and no custom `TypeRegistry`, nothing extra is required.
+The GET codec stack resolves through defaults that match the POST JSON path.
+
+## Custom TypeRegistry
+
+If POST uses a custom registry, GET must see the same one or `Any` fields fail at runtime:
+
+```kotlin
+val typeRegistry = TypeRegistry.newBuilder()
+    .add(SayRequest.getDescriptor())
+    .build()
+
+embeddedServer(CIO, port = 8080) {
+    install(Resources)
+    installConnectGetCodecs(
+        ConnectGetStrategies(
+            proto = GoogleJavaProtobufStrategy(),
+            // Covers request deserialisation (and response serialisation when
+            // jsonSerializer is unset). See below if responses embed Any.
+            json = GoogleJavaJSONStrategy(typeRegistry),
+        ),
+    )
+    routing {
+        install(ContentNegotiation) {
+            connectJson(typeRegistry)
+        }
+        elizaService(ElizaServiceHandler)
+    }
+}.start(wait = true)
+```
+
+`GoogleJavaJSONStrategy(typeRegistry)` forwards the registry to the parser, not the printer.
+When **responses** also embed `Any`, pass a `jsonSerializer` backed by
+`JsonFormat.printer().usingTypeRegistry(typeRegistry)`:
+
+```kotlin
+installConnectGetCodecs(
+    ConnectGetStrategies(
+        proto = GoogleJavaProtobufStrategy(),
+        json = GoogleJavaJSONStrategy(typeRegistry),
+        jsonSerializer = object : ConnectGetJsonSerializer {
+            private val printer = JsonFormat.printer().usingTypeRegistry(typeRegistry)
+
+            override fun <T : Any> serialize(value: T, clazz: KClass<T>): ByteArray =
+                printer.print(value as Message).toByteArray(Charsets.UTF_8)
+        },
+    ),
+)
+```
+
+## Engine notes
+
+Netty covers the Connect GET conformance cases fully.
+CIO passes except cases that rely on duplicate request headers, which CIO collapses upstream.
+Those pins live in `conformance/known-failing-cio.txt`.
