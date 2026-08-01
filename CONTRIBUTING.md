@@ -16,7 +16,8 @@ pnpm install
 ```
 
 If hooks are missing after a worktree create (or you skipped install), run
-`mise run setup` (or `mise exec -- lefthook install`).
+`mise run setup`. That clears a stale local/worktree `core.hooksPath` and
+reinstalls hooks without touching global Git config.
 
 ## Development
 
@@ -41,8 +42,9 @@ pnpm lint-fix          # oxfmt write
 ```
 
 Pre-commit hooks (lefthook) run Spotless/detekt, golangci-lint, and oxfmt (write-format
-on staged JS/TS/Markdown/YAML/JSON/CSS/etc.). `mise install` wires hooks via the
-`postinstall` hook (`mise run setup` is the same command). Skip locally with
+on staged JS/TS/Markdown/YAML/JSON/CSS/etc.). `mise install` wires hooks via a
+non-destructive `postinstall` (`lefthook install`). Use `mise run setup` when a
+stale local/worktree `core.hooksPath` blocks install. Skip locally with
 `LEFTHOOK=0 git commit` if needed; CI still enforces the same checks.
 
 ## Changelog entries (required for releasable changes)
@@ -145,14 +147,16 @@ On each `pull_request` (opened / synchronize / reopened), `.github/workflows/teg
 runs the official Tegami CLI commands:
 
 1. `pnpm tegami pr preview --artifact tegami-pr-preview.md`
-2. `pnpm tegami pr comment tegami-pr-preview.md`
+2. `pnpm tegami pr comment tegami-pr-preview.md` (same-repo PRs only)
 
 Official docs suggest splitting generate vs comment into two workflows via
 `workflow_run`. This repo posts the comment in the same `pull_request` job instead:
 `workflow_run` was removed after zizmor flagged it, while still using the same
 `--artifact` + `pr comment` CLI surface. The job stays on `pull_request` (not
 `pull_request_target`) with `contents: read` plus `pull-requests: write` only for
-commenting. See [Tegami CI / PR preview](https://tegami.fuma-nama.dev/ci#pull-request-preview).
+commenting. Fork PRs still generate the preview artifact, but skip the comment
+step because GitHub keeps `GITHUB_TOKEN` read-only for `pull_request` workflows
+from forks. See [Tegami CI / PR preview](https://tegami.fuma-nama.dev/ci#pull-request-preview).
 
 ## Commit and PR titles
 
