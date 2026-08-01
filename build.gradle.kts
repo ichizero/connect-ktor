@@ -25,7 +25,7 @@ buildscript {
 val versionFromFile =
     rootProject.file("VERSION").takeIf { it.exists() }?.readText()?.trim().orEmpty()
 val releaseVersion =
-    project.findProperty("releaseVersion") as String?
+    (project.findProperty("releaseVersion") as String?)?.takeIf { it.isNotBlank() }
         ?: versionFromFile.takeIf { it.isNotEmpty() }
         ?: error("Set -PreleaseVersion or provide a VERSION file")
 
