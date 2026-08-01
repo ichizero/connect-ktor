@@ -38,7 +38,9 @@ pnpm lint:format        # oxfmt check
 pnpm lint-fix          # oxfmt write
 ```
 
-Pre-commit hooks (lefthook) run Spotless/detekt and golangci-lint. Skip locally with
+Pre-commit hooks (lefthook) run Spotless/detekt, golangci-lint, and oxfmt (write-format
+on staged JS/TS/Markdown/YAML/JSON/CSS/etc.). After cloning or creating a worktree, run
+`mise exec -- lefthook install` so hooks are wired up. Skip locally with
 `LEFTHOOK=0 git commit` if needed; CI still enforces the same checks.
 
 ## Changelog entries (required for releasable changes)

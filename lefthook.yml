@@ -1,9 +1,9 @@
 # lefthook configuration for connect-ktor.
 #
-# Install lefthook locally and enable the hooks:
+# Install lefthook locally and enable the hooks (required after clone /
+# new worktree; mise pins the lefthook version):
 #
-#     brew install lefthook
-#     lefthook install
+#     mise exec -- lefthook install
 #
 # The pre-commit pipeline runs fast local quality gates. CI re-runs the
 # same checks, so these hooks are convenience-only and can be skipped
@@ -30,3 +30,11 @@ pre-commit:
         else
           echo "golangci-lint not installed locally; skipping (CI will run it)."
         fi
+
+    # JS/TS/docs/config: write-format staged files with oxfmt (same
+    # tool as `pnpm lint:format` / `pnpm lint-fix` in CI).
+    # stage_fixed re-adds files after oxfmt rewrites them.
+    oxfmt:
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,json,jsonc,json5,css,scss,less,md,mdx,yml,yaml,html,vue,svelte,toml,graphql,gql}"
+      run: pnpm exec oxfmt {staged_files}
+      stage_fixed: true
