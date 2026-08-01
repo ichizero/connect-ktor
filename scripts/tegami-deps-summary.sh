@@ -80,7 +80,7 @@ normalize_deps_line() {
   line="${line//$'\r'/}"
   line="${line#"${line%%[![:space:]]*}"}"
   case "$line" in
-    '*'*) line="$line" ;;
+    '*'*) ;;
     '-'*) line="* ${line#- }" ;;
     *) line="* $line" ;;
   esac
