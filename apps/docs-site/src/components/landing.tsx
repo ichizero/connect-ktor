@@ -45,9 +45,19 @@ const startHere = [
         href: "/getting-started",
     },
     {
+        title: "Docs",
+        description: "Introduction, getting started, plugins, and conformance notes.",
+        href: "/introduction",
+    },
+    {
         title: "Plugins",
         description: "Serialization, Connect GET, limits, compression, protovalidate.",
         href: "/plugins",
+    },
+    {
+        title: "Code generator",
+        description: "protoc-gen-connect-ktor route interfaces from .proto services.",
+        href: "/code-generator",
     },
     {
         title: "Known limitations",

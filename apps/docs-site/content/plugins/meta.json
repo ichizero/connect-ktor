@@ -1,4 +1,5 @@
 {
   "title": "Plugins",
-  "pages": ["index", "serialization", "connect-get", "body-limit", "compression", "protovalidate", "code-generator"]
+  "defaultOpen": true,
+  "pages": ["serialization", "connect-get", "body-limit", "compression", "protovalidate"]
 }

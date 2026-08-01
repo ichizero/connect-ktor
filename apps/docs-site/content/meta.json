@@ -4,7 +4,7 @@
   "pages": [
     "introduction",
     "getting-started",
-    "---Plugins---",
+    "code-generator",
     "plugins",
     "---Protocol---",
     "conformance",

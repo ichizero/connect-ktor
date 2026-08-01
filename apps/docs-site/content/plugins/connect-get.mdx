@@ -27,6 +27,8 @@ embeddedServer(CIO, port = 8080) {
     installConnectGetCodecs(
         ConnectGetStrategies(
             proto = GoogleJavaProtobufStrategy(),
+            // Covers request deserialisation (and response serialisation when
+            // jsonSerializer is unset). See below if responses embed Any.
             json = GoogleJavaJSONStrategy(typeRegistry),
         ),
     )
@@ -40,7 +42,23 @@ embeddedServer(CIO, port = 8080) {
 ```
 
 `GoogleJavaJSONStrategy(typeRegistry)` forwards the registry to the parser, not the printer.
-When **responses** also embed `Any`, supply a `jsonSerializer` backed by `JsonFormat.printer().usingTypeRegistry(typeRegistry)` — the README shows a complete `ConnectGetJsonSerializer` example.
+When **responses** also embed `Any`, pass a `jsonSerializer` backed by
+`JsonFormat.printer().usingTypeRegistry(typeRegistry)`:
+
+```kotlin
+installConnectGetCodecs(
+    ConnectGetStrategies(
+        proto = GoogleJavaProtobufStrategy(),
+        json = GoogleJavaJSONStrategy(typeRegistry),
+        jsonSerializer = object : ConnectGetJsonSerializer {
+            private val printer = JsonFormat.printer().usingTypeRegistry(typeRegistry)
+
+            override fun <T : Any> serialize(value: T, clazz: KClass<T>): ByteArray =
+                printer.print(value as Message).toByteArray(Charsets.UTF_8)
+        },
+    ),
+)
+```
 
 ## Engine notes
 

@@ -56,13 +56,9 @@ export default defineConfig({
                     title: "Connect-Ktor",
                 },
                 githubUrl: "https://github.com/ichizero/connect-ktor",
-                links: [
-                    {
-                        text: "Docs",
-                        url: "/introduction",
-                        active: "nested-url",
-                    },
-                ],
+                // Keep docs entry points on the home landing; a top-nav "Docs"
+                // link with nested-url active doubles with Introduction in the sidebar.
+                links: [],
             };
         },
     })
