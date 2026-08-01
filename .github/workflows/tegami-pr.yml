@@ -33,9 +33,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Release preview
-        run: pnpm tegami pr preview --artifact tegami-pr-preview.md
+        run: pnpm release pr preview --artifact tegami-pr-preview.md
 
       - name: Post preview comment
-        run: pnpm tegami pr comment tegami-pr-preview.md
+        run: pnpm release pr comment tegami-pr-preview.md
         env:
           GITHUB_TOKEN: ${{ github.token }}
