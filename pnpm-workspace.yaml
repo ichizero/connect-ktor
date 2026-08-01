@@ -35,5 +35,3 @@ catalog:
   typescript: 7.0.2
   waku: 1.0.0-beta.8
 
-minimumReleaseAgeExclude:
-  - tegami@1.2.8
