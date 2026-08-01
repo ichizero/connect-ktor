@@ -42,7 +42,10 @@ jobs:
       - name: Release preview
         run: pnpm tegami pr preview --artifact tegami-pr-preview.md
 
+      # Fork PRs get a read-only GITHUB_TOKEN on pull_request, so commenting
+      # would fail. Preview generation above still runs for contributors.
       - name: Post preview comment
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         run: pnpm tegami pr comment tegami-pr-preview.md
         env:
           GITHUB_TOKEN: ${{ github.token }}
