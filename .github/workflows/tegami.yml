@@ -39,7 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Version & publish
-        run: pnpm release ci
+        run: pnpm tegami ci
         env:
           GITHUB_TOKEN: ${{ github.token }}
           CI: true

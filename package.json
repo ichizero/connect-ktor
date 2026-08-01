@@ -6,7 +6,7 @@
     "lint:format": "oxfmt --check",
     "lint-fix": "pnpm run lint-fix:format",
     "lint-fix:format": "oxfmt",
-    "release": "node scripts/tegami.mts"
+    "tegami": "node scripts/tegami.mts"
   },
   "devDependencies": {
     "@fumapress/tegami": "catalog:",
