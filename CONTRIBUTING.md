@@ -11,10 +11,12 @@ library, the Go code generator, and the docs site.
 - Go (for `protoc-gen-connect-ktor`; version pinned in `mise.toml`)
 
 ```bash
-mise install
-mise exec -- lefthook install
+mise install   # installs tools and runs lefthook install via postinstall
 pnpm install
 ```
+
+If hooks are missing after a worktree create (or you skipped install), run
+`mise run setup` (or `mise exec -- lefthook install`).
 
 ## Development
 
@@ -39,8 +41,8 @@ pnpm lint-fix          # oxfmt write
 ```
 
 Pre-commit hooks (lefthook) run Spotless/detekt, golangci-lint, and oxfmt (write-format
-on staged JS/TS/Markdown/YAML/JSON/CSS/etc.). After cloning or creating a worktree, run
-`mise exec -- lefthook install` so hooks are wired up. Skip locally with
+on staged JS/TS/Markdown/YAML/JSON/CSS/etc.). `mise install` wires hooks via the
+`postinstall` hook (`mise run setup` is the same command). Skip locally with
 `LEFTHOOK=0 git commit` if needed; CI still enforces the same checks.
 
 ## Changelog entries (required for releasable changes)
