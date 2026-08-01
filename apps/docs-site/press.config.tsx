@@ -62,11 +62,18 @@ export default defineConfig({
                     title: "Connect-Ktor",
                 },
                 githubUrl: "https://github.com/ichizero/connect-ktor",
-                // Keep docs entry points on the home landing; expose Changelog only.
+                // Header-only: Docs/Changelog stay out of the left sidebar page tree.
+                // Sidebar Changelog order is controlled by content/meta.json.
                 links: [
+                    {
+                        text: "Docs",
+                        url: "/introduction",
+                        on: "nav",
+                    },
                     {
                         text: "Changelog",
                         url: "/changelog",
+                        on: "nav",
                     },
                 ],
             };
