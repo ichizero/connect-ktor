@@ -78,6 +78,8 @@ Rules:
 - YAML frontmatter must include `packages`
 - Body needs at least one `#` / `##` / `###` heading
 - Write notes for end users (not internal refactor chatter)
+- Link related PRs as `[PR #N](https://github.com/ichizero/connect-ktor/pull/N)`
+  (same style as published changelog MDX)
 - Package name in this repo is `connect-ktor` (Gradle package; see `scripts/tegami.mts`)
 - Do not edit `VERSION`, `.tegami/publish-lock.yaml`, or published
   `apps/docs-site/changelog/*.mdx` for routine PR work
@@ -86,13 +88,25 @@ Rules:
   (`io.github.ichizero:connect-ktor:<version>`) are rewritten automatically
   when Tegami applies a version bump; do not hand-edit them for releases
 
-Bump hints (explicit style):
+### Bump types (not change categories)
 
-| Value   | When                                                       |
-| ------- | ---------------------------------------------------------- |
-| `major` | Breaking API / behavior                                    |
-| `minor` | User-facing feature (`##` heading in implicit style)       |
-| `patch` | Fix or small improvement (`###` heading in implicit style) |
+Tegami does **not** define changelog type categories like Changesets' grouped
+sections (Features / Fixes / …). Frontmatter only carries **semver bump** intent
+(`major` | `minor` | `patch`), plus optional `replay` for re-emitting notes.
+The body is freeform Markdown; headings are content, not a typed taxonomy.
+
+This repo uses **explicit** style (`packages.connect-ktor: <bump>`). Prefer:
+
+| Frontmatter bump | Typical body heading | When |
+| ---------------- | -------------------- | ---- |
+| `major`          | `# …` or `### Breaking` under a feature note | Breaking API / behavior |
+| `minor`          | `## …`               | User-facing feature |
+| `patch`          | `### …`              | Fix or small improvement |
+
+Optional freeform subsections (for example `### Breaking`, `### Dependencies`)
+are fine; Tegami does not enforce or group them. For comparison, Changesets also
+uses `major` / `minor` / `patch` in frontmatter, but tooling often aggregates
+entries under Features / Fixes headings — Tegami has no equivalent grouping.
 
 Skip a Tegami entry only for docs-only, CI-only, or otherwise non-releasable changes.
 
@@ -100,7 +114,8 @@ Skip a Tegami entry only for docs-only, CI-only, or otherwise non-releasable cha
 
 Dependabot bumps that should ship as a patch release still need a Tegami entry.
 Create `.tegami/YYYY-MM-DD-deps.md` with `packages.connect-ktor: patch` and a
-`### Dependencies` body. Keep the bullet style identical to GitHub Release notes:
+`### Dependencies` body. Keep the bump text in GitHub Release note style, but
+shorten PR refs to `[PR #N](...)`:
 
 ```md
 ---
@@ -110,7 +125,7 @@ packages:
 
 ### Dependencies
 
-- chore(deps): Bump ktor from 3.5.0 to 3.5.1 by @dependabot[bot] in https://github.com/ichizero/connect-ktor/pull/231
+- chore(deps): Bump ktor from 3.5.0 to 3.5.1 by @dependabot[bot] in [PR #231](https://github.com/ichizero/connect-ktor/pull/231)
 ```
 
 Generate the bullets (since the latest `v*` tag by default):
