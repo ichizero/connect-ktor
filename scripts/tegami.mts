@@ -1,6 +1,6 @@
 import { fumapressPlugin } from "@fumapress/tegami/tegami";
 import { tegami } from "tegami";
-import { runCli } from "tegami/cli";
+import { createCli } from "tegami/cli";
 import { github } from "tegami/plugins/github";
 import { gradleVersionPlugin } from "./gradle-tegami-plugin.mts";
 
@@ -26,4 +26,4 @@ const paper = tegami({
     },
 });
 
-await runCli(paper);
+await createCli(paper).parseAsync();
