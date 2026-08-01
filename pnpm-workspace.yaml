@@ -31,7 +31,7 @@ catalog:
   react-dom: 19.2.8
   react-server-dom-webpack: 19.2.8
   tailwindcss: 4.3.3
-  tegami: 1.2.8
+  tegami: 1.2.7
   typescript: 7.0.2
   waku: 1.0.0-beta.8
 

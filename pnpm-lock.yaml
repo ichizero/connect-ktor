@@ -58,8 +58,8 @@ catalogs:
       specifier: 4.3.3
       version: 4.3.3
     tegami:
-      specifier: 1.2.8
-      version: 1.2.8
+      specifier: 1.2.7
+      version: 1.2.7
     typescript:
       specifier: 7.0.2
       version: 7.0.2
@@ -73,19 +73,22 @@ importers:
     devDependencies:
       '@fumapress/tegami':
         specifier: 'catalog:'
-        version: 0.7.3(5a7a7563ac7563c7c53ecc52a30c4c2d)
+        version: 0.7.3(616d5c6ca9c3909de5a57d6c904f42ac)
       oxfmt:
         specifier: 'catalog:'
         version: 0.61.0
       tegami:
         specifier: 'catalog:'
-        version: 1.2.8
+        version: 1.2.7
 
   apps/docs-site:
     dependencies:
       '@base-ui/react':
         specifier: 'catalog:'
         version: 1.6.0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@fumapress/tegami':
+        specifier: 'catalog:'
+        version: 0.7.3(9c899bfbca3601fd29f7dcb582458fe7)
       fumadocs-core:
         specifier: 'catalog:'
         version: 16.14.0(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.2.18)(flexsearch@0.8.212)(lucide-react@1.26.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@8.1.1)(waku@1.0.0-beta.8(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(react-dom@19.2.8(react@19.2.8))(react-server-dom-webpack@19.2.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.109.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)))(react@19.2.8)(terser@5.49.0)(yaml@2.9.0))(zod@4.4.3)
@@ -110,6 +113,9 @@ importers:
       react-server-dom-webpack:
         specifier: 'catalog:'
         version: 19.2.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.109.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
+      tegami:
+        specifier: 'catalog:'
+        version: 1.2.7
       waku:
         specifier: 'catalog:'
         version: 1.0.0-beta.8(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(react-dom@19.2.8(react@19.2.8))(react-server-dom-webpack@19.2.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.109.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)))(react@19.2.8)(terser@5.49.0)(yaml@2.9.0)
@@ -2696,8 +2702,8 @@ packages:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
     engines: {node: '>=6'}
 
-  tegami@1.2.8:
-    resolution: {integrity: sha512-Hspu5bfY58TtCJc1/bconq9IaGI18U21lWkxW3jO5WfXf/NiKWtRonBI2kUHui1xt5aFwEmMtc4+kWvH1v+9dA==}
+  tegami@1.2.7:
+    resolution: {integrity: sha512-8zF7G6btfIhVwPGHByAJVSJ3nQGsCk+5W5HBRDbkm8K5O4tSoDcBqoSOyzvF84jcBbC8Dj5sBYzBFeIke3CXnw==}
 
   terser@5.49.0:
     resolution: {integrity: sha512-SNiDnXyHSrxVcIOtVbULzcTmniUiwcV7Nwdyj1twVubeTmbjoa8p69KKDpfkdoOavuM4/GRm1+ykI8qqnavHoA==}
@@ -3104,7 +3110,7 @@ snapshots:
     optionalDependencies:
       tailwindcss: 4.3.3
 
-  '@fumapress/tegami@0.7.3(5a7a7563ac7563c7c53ecc52a30c4c2d)':
+  '@fumapress/tegami@0.7.3(616d5c6ca9c3909de5a57d6c904f42ac)':
     dependencies:
       '@base-ui/react': 1.6.0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       cnfast: 0.0.8
@@ -3115,7 +3121,26 @@ snapshots:
       lucide-react: 1.28.0(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
-      tegami: 1.2.8
+      tegami: 1.2.7
+      zod: 4.4.3
+    optionalDependencies:
+      '@types/react': 19.2.18
+    transitivePeerDependencies:
+      - '@date-fns/tz'
+      - date-fns
+
+  '@fumapress/tegami@0.7.3(9c899bfbca3601fd29f7dcb582458fe7)':
+    dependencies:
+      '@base-ui/react': 1.6.0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      cnfast: 0.0.8
+      fumadocs-core: 16.14.0(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.2.18)(flexsearch@0.8.212)(lucide-react@1.26.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@8.1.1)(waku@1.0.0-beta.8(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(react-dom@19.2.8(react@19.2.8))(react-server-dom-webpack@19.2.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.109.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)))(react@19.2.8)(terser@5.49.0)(yaml@2.9.0))(zod@4.4.3)
+      fumadocs-ui: '@fumadocs/base-ui@16.14.0(@types/mdx@2.0.14)(@types/react@19.2.18)(fumadocs-core@16.14.0(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.2.18)(flexsearch@0.8.212)(lucide-react@1.26.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@8.1.1)(waku@1.0.0-beta.8(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(react-dom@19.2.8(react@19.2.8))(react-server-dom-webpack@19.2.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(webpack@5.109.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)))(react@19.2.8)(terser@5.49.0)(yaml@2.9.0))(zod@4.4.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3)(takumi-js@2.5.4(csstype@3.2.3)(react@19.2.8))'
+      fumapress: 0.7.3(ad27a48c188f19aed46e1966af534d06)
+      js-yaml: 5.2.2
+      lucide-react: 1.28.0(react@19.2.8)
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+      tegami: 1.2.7
       zod: 4.4.3
     optionalDependencies:
       '@types/react': 19.2.18
@@ -5615,7 +5640,7 @@ snapshots:
 
   tapable@2.3.3: {}
 
-  tegami@1.2.8:
+  tegami@1.2.7:
     dependencies:
       '@clack/prompts': 1.7.0
       '@rainbowatcher/toml-edit-js': 0.6.5
