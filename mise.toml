@@ -30,6 +30,22 @@ description = "Run the connectrpc conformance suite against the connect-ktor ser
 depends = ["build"]
 run = [{ task = "conformance:run" }]
 
+[tasks."docs-site:build"]
+description = "Build the Fumapress documentation site (static export)."
+dir = "{{config_root}}/docs-site"
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+npm ci
+npm run build
+touch dist/public/.nojekyll
+'''
+
+[tasks."docs-site:types"]
+description = "Typecheck the Fumapress documentation site."
+dir = "{{config_root}}/docs-site"
+run = "npm run types:check"
+
 [tasks."library:mod"]
 dir = "{{config_root}}/library"
 run = "buf dep update"

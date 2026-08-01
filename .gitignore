@@ -197,3 +197,10 @@ go.work.sum
 dist/
 # Conformance runner scratch dir (connectconformance binary, etc.)
 .tmp/
+
+# Fumapress docs site
+docs-site/node_modules/
+docs-site/.source/
+docs-site/dist/
+docs-site/src/pages.gen.ts
+
