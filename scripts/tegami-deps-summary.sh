@@ -3,7 +3,7 @@
 #
 # Output keeps the bump text from release notes, with PR refs shortened like
 # feature changelog entries, e.g.:
-#   ### Dependencies
+#   ## Dependencies
 #
 #   * chore(deps): Bump ktor from 3.5.0 to 3.5.1 by @dependabot[bot] in [PR #231](https://github.com/ichizero/connect-ktor/pull/231)
 #
@@ -26,7 +26,7 @@ SINCE=""
 UNTIL="HEAD"
 FROM_RELEASE=""
 BACKFILL=0
-HEADING="### Dependencies"
+HEADING="## Dependencies"
 
 usage() {
   cat <<'EOF'
@@ -39,7 +39,7 @@ Options:
   --since TAG         Start tag (exclusive). Default: latest git tag matching v*.
   --until REF         End ref (inclusive for tags / tip). Default: HEAD.
   --from-release TAG  Print deps bullets from that GitHub Release body only.
-  --backfill          For every v* release, insert/update ### Dependencies in
+  --backfill          For every v* release, insert/update ## Dependencies in
                       apps/docs-site/changelog/*.mdx (create missing deps-only files).
   -h, --help          Show this help.
 
@@ -190,10 +190,10 @@ deps_from_git_range() {
 }
 
 strip_deps_section() {
-  # Remove an existing ### Dependencies section (until next heading or EOF).
+  # Remove an existing ## / ### Dependencies section (until next heading or EOF).
   awk '
     BEGIN { skip=0 }
-    /^### Dependencies[[:space:]]*$/ { skip=1; next }
+    /^#{2,3} Dependencies[[:space:]]*$/ { skip=1; next }
     /^#{1,3}[[:space:]]/ && skip { skip=0 }
     !skip { print }
   '
