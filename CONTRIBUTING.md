@@ -96,6 +96,37 @@ Bump hints (explicit style):
 
 Skip a Tegami entry only for docs-only, CI-only, or otherwise non-releasable changes.
 
+### Dependency-only releases
+
+Dependabot bumps that should ship as a patch release still need a Tegami entry.
+Create `.tegami/YYYY-MM-DD-deps.md` with `packages.connect-ktor: patch` and a
+`### Dependencies` body. Keep the bullet style identical to GitHub Release notes:
+
+```md
+---
+packages:
+    connect-ktor: patch
+---
+
+### Dependencies
+
+- chore(deps): Bump ktor from 3.5.0 to 3.5.1 by @dependabot[bot] in https://github.com/ichizero/connect-ktor/pull/231
+```
+
+Generate the bullets (since the latest `v*` tag by default):
+
+```bash
+pnpm tegami:deps-summary
+# or
+./scripts/tegami-deps-summary.sh
+./scripts/tegami-deps-summary.sh --since v0.2.0
+./scripts/tegami-deps-summary.sh --from-release v0.1.10   # extract from a past release
+```
+
+Paste the script output into the Tegami entry, then open the usual version PR
+path (`pnpm tegami` / CI). Do not hand-edit published
+`apps/docs-site/changelog/*.mdx` for routine deps work.
+
 ## Commit and PR titles
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/) for both:
