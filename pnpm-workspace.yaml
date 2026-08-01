@@ -15,6 +15,7 @@ allowBuilds:
 
 catalog:
   "@base-ui/react": 1.6.0
+  "@fumapress/tegami": 0.7.3
   "@tailwindcss/vite": 4.3.3
   "@types/mdx": 2.0.14
   "@types/node": 26.1.2
@@ -30,5 +31,9 @@ catalog:
   react-dom: 19.2.8
   react-server-dom-webpack: 19.2.8
   tailwindcss: 4.3.3
+  tegami: 1.2.8
   typescript: 7.0.2
   waku: 1.0.0-beta.8
+
+minimumReleaseAgeExclude:
+  - tegami@1.2.8

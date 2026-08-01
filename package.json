@@ -5,10 +5,13 @@
     "docs-site": "pnpm --filter=docs-site",
     "lint:format": "oxfmt --check",
     "lint-fix": "pnpm run lint-fix:format",
-    "lint-fix:format": "oxfmt"
+    "lint-fix:format": "oxfmt",
+    "tegami": "node scripts/tegami.mts"
   },
   "devDependencies": {
-    "oxfmt": "catalog:"
+    "@fumapress/tegami": "catalog:",
+    "oxfmt": "catalog:",
+    "tegami": "catalog:"
   },
   "packageManager": "pnpm@11.18.0"
 }
