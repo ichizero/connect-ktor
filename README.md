@@ -123,9 +123,8 @@ This repository uses [mise](https://mise.jdx.dev/) for tooling and tasks, plus
 [lefthook](https://github.com/evilmartians/lefthook) for pre-commit hooks.
 
 ```bash
-mise install
-mise exec -- lefthook install
-mise tasks ls   # build, test, lint, generate, conformance, …
+mise install    # tools + lefthook install (mise postinstall)
+mise tasks ls   # build, test, lint, generate, conformance, setup, …
 ```
 
 Docs site and formatting from the repo root (`docs-site` is an alias for

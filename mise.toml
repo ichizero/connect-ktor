@@ -4,6 +4,24 @@ golangci-lint = "2.12.2"
 lefthook = "2.1.10"
 buf = "1.72.0"
 
+# Wire git hooks after tools are on PATH (including no-op `mise install`).
+# Keep this non-destructive: lefthook's --reset-hooks-path also unsets a
+# global core.hooksPath, so automatic install must not use it.
+[hooks]
+postinstall = "lefthook install"
+
+# Explicit recovery for stale local/worktree core.hooksPath (does not touch
+# global Git config). Prefer this over bare `lefthook install` in worktrees.
+[tasks.setup]
+description = "Wire lefthook git hooks; clears stale local/worktree hooksPath."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+git config --unset-all --local core.hooksPath 2>/dev/null || true
+git config --unset-all --worktree core.hooksPath 2>/dev/null || true
+lefthook install
+'''
+
 [tasks.lint]
 run = ["./gradlew spotlessCheck detekt", { task = "plugin:lint" }]
 

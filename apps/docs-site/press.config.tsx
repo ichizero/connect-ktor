@@ -1,3 +1,4 @@
+import { changelogPlugin } from "@fumapress/tegami";
 import { defineConfig } from "fumapress";
 import { fumadocsMdx } from "fumapress/adapters/mdx";
 import { createDocsLayoutPage } from "fumapress/layouts/docs";
@@ -5,12 +6,17 @@ import { createHomeLayoutPage } from "fumapress/layouts/home";
 import { createLayoutSwitch } from "fumapress/layouts/switch";
 import { flexsearchPlugin } from "fumapress/plugins/flexsearch";
 import { llmsPlugin } from "fumapress/plugins/llms.txt";
-import { docs } from "./.source/server";
+import { changelog, docs } from "./.source/server";
 import { LandingPage } from "./src/components/landing";
 
 export default defineConfig({
     mode: "static",
-    content: docs.toFumadocsSource(),
+    content: {
+        docs: docs.toFumadocsSource(),
+        changelog: changelog.toFumadocsSource({
+            baseDir: "changelog",
+        }),
+    },
     site: {
         name: "Connect-Ktor",
         baseUrl: import.meta.env.DEV ? "http://localhost:3000" : "https://ichizero.github.io/connect-ktor",
@@ -56,11 +62,22 @@ export default defineConfig({
                     title: "Connect-Ktor",
                 },
                 githubUrl: "https://github.com/ichizero/connect-ktor",
-                // Keep docs entry points on the home landing; a top-nav "Docs"
-                // link with nested-url active doubles with Introduction in the sidebar.
-                links: [],
+                // Header-only: Docs/Changelog stay out of the left sidebar page tree.
+                // Sidebar Changelog order is controlled by content/meta.json.
+                links: [
+                    {
+                        text: "Docs",
+                        url: "/introduction",
+                        on: "nav",
+                    },
+                    {
+                        text: "Changelog",
+                        url: "/changelog",
+                        on: "nav",
+                    },
+                ],
             };
         },
     })
-    .plugins(flexsearchPlugin(), llmsPlugin())
+    .plugins(flexsearchPlugin(), llmsPlugin(), changelogPlugin())
     .adapters(fumadocsMdx());
