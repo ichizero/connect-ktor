@@ -11,6 +11,9 @@ jobs:
   preview:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -32,7 +35,7 @@ jobs:
       - name: Release preview
         run: pnpm tegami pr preview --artifact tegami-pr-preview.md
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: tegami-pr-preview
-          path: tegami-pr-preview.md
+      - name: Post preview comment
+        run: pnpm tegami pr comment tegami-pr-preview.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
