@@ -1,8 +1,12 @@
 import { defineConfig } from "fumapress";
 import { fumadocsMdx } from "fumapress/adapters/mdx";
+import { createDocsLayoutPage } from "fumapress/layouts/docs";
+import { createHomeLayoutPage } from "fumapress/layouts/home";
+import { createLayoutSwitch } from "fumapress/layouts/switch";
 import { flexsearchPlugin } from "fumapress/plugins/flexsearch";
 import { llmsPlugin } from "fumapress/plugins/llms.txt";
 import { docs } from "./.source/server";
+import { LandingPage } from "./src/components/landing";
 
 export default defineConfig({
   mode: "static",
@@ -37,5 +41,39 @@ export default defineConfig({
     },
   },
 })
+  .layouts({
+    page: createLayoutSwitch(
+      (page) => (page.slugs.length === 0 ? "home" : "docs"),
+      {
+        home: createHomeLayoutPage({
+          render() {
+            return {
+              body: (
+                <div data-landing="">
+                  <LandingPage />
+                </div>
+              ),
+            };
+          },
+        }),
+        docs: createDocsLayoutPage(),
+      },
+    ),
+    defaultProps() {
+      return {
+        nav: {
+          title: "Connect-Ktor",
+        },
+        githubUrl: "https://github.com/ichizero/connect-ktor",
+        links: [
+          {
+            text: "Docs",
+            url: "/introduction",
+            active: "nested-url",
+          },
+        ],
+      };
+    },
+  })
   .plugins(flexsearchPlugin(), llmsPlugin())
   .adapters(fumadocsMdx());

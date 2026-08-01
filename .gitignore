@@ -204,3 +204,7 @@ docs-site/.source/
 docs-site/dist/
 docs-site/src/pages.gen.ts
 
+
+# Local browser/debug artifacts
+.playwright-mcp/
+/*.png

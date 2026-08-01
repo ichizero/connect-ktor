@@ -8,6 +8,16 @@ description: What Connect-Ktor is, who it is for, and how it relates to Connect-
 Connect-Kotlin already gives JVM and Android clients a typed Connect client.
 Connect-Ktor answers the other half of that sentence: a Ktor server that can accept those calls without abandoning the REST routes already in production.
 
+It is an **unofficial** community library — useful and conformance-tested, but not a ConnectRPC organization product.
+
+These pages cover the Ktor server side.
+For Connect itself, Connect-Kotlin clients, or the protocol rules, prefer the official material:
+
+- [Connect](https://connectrpc.com/) — product overview
+- [Connect protocol](https://connectrpc.com/docs/protocol) — wire format and semantics
+- [Connect-Kotlin getting started](https://connectrpc.com/docs/kotlin/getting-started) — official JVM / Android clients
+- [Connect-ES](https://connectrpc.com/docs/web/getting-started) — TypeScript / React clients when the front end is also on Connect
+
 ## The gap it fills
 
 Connect has strong client libraries and a clear protocol story.
@@ -21,10 +31,24 @@ Unary calls look like POST (or GET when idempotent).
 JSON and binary Protobuf both work.
 That is why it fits an existing Ktor app: you add handlers, you do not replace the transport stack.
 
+## What you get today
+
+- Unary and client-streaming Connect handlers on CIO and Netty
+- `connectJson()` / `connectProto()` ContentNegotiation codecs
+- Generated Ktor route interfaces via `protoc-gen-connect-ktor`
+- Optional protovalidate request checks, body size limits, and gzip guards
+
+Server-streaming, bidi, and gRPC/gRPC-Web are still out of scope.
+See [Known limitations](/known-limitations) for the honest matrix, and [Conformance](/conformance) for what the suite actually exercises.
+
 ## Relationship to Connect-Kotlin
 
 Connect-Ktor reuses Connect-Kotlin types and serialization strategies on the server.
 Handlers return `ResponseMessage`, throw `ConnectException`, and speak the same error model clients already expect.
+
+Client APIs, interceptors, transports, and Android setup belong in the official
+[Connect-Kotlin docs](https://connectrpc.com/docs/kotlin/getting-started) and the
+[connect-kotlin](https://github.com/connectrpc/connect-kotlin) repository — this site does not restate them.
 
 Code generation is split on purpose:
 
@@ -41,7 +65,7 @@ A React app on Connect-ES and a Ktor service on Connect-Ktor can share one Buf m
 - Services that need Connect conformance for unary and client-streaming today, and can wait on server/bidi streaming
 
 It is a poor fit if you need gRPC wire compatibility or full-duplex streams on day one.
-Those limits are documented under [Known limitations](/known-limitations), not hidden behind a feature checklist.
+Those limits stay under [Known limitations](/known-limitations), not hidden behind a feature checklist.
 
 ## Design stance
 
@@ -50,3 +74,5 @@ A single `embeddedServer` can expose `/api/v1/...` REST routes and `/package.Ser
 
 Prefer protocol honesty over completeness theater.
 Unsupported axes stay ❌ in the matrix until the implementation and the conformance pins agree.
+
+When the mental model clicks, [Getting started](/getting-started) is the shortest path to a handler running beside REST.

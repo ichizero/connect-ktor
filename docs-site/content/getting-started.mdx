@@ -8,6 +8,13 @@ description: Add Connect-Ktor beside an existing Ktor server and call a generate
 The goal is a unary Connect RPC on a Ktor server that can still host REST routes.
 Prerequisites match a typical Connect-Kotlin workspace: JDK 21-friendly tooling, Gradle, and the Buf CLI.
 
+This guide is server-side only.
+If you need a Connect client first, follow the official
+[Connect-Kotlin getting started](https://connectrpc.com/docs/kotlin/getting-started)
+guide, then come back here to expose the matching Ktor handlers.
+For protocol details (codecs, errors, Connect GET), see the
+[Connect protocol](https://connectrpc.com/docs/protocol) specification.
+
 ## Add the library
 
 ```kotlin
@@ -97,11 +104,19 @@ That coexistence is the migration model: move RPCs when ready, leave the rest al
 
 ## Call it from a Connect client
 
-Any Connect client that targets your host works — Connect-Kotlin on the JVM, Connect-ES from React, or the Buf Studio UI for ad-hoc checks.
+Any Connect client that targets your host works.
+On the JVM, use the official
+[Connect-Kotlin](https://connectrpc.com/docs/kotlin/getting-started) client;
+from React or other TypeScript apps, use
+[Connect-ES](https://connectrpc.com/docs/web/getting-started).
+Buf Studio is fine for ad-hoc checks.
+
 Point the client at `http://localhost:8080` (or your deployed base URL) and invoke `Say` as usual.
+Client configuration details live in those official guides, not here.
 
 ## Where to go next
 
 - [Plugins](/plugins) for Connect GET, body limits, compression, and protovalidate
 - [Conformance](/conformance) for the support matrix and how CI runs the suite
 - [Known limitations](/known-limitations) before you promise streaming shapes the library does not implement yet
+- [Connect protocol](https://connectrpc.com/docs/protocol) when you need the wire-level rules behind those plugins

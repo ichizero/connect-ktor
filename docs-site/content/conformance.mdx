@@ -8,43 +8,53 @@ description: How Connect-Ktor tracks the Connect protocol conformance suite.
 Connect-Ktor runs the official [connectrpc/conformance](https://github.com/connectrpc/conformance) suite against a dedicated server under `conformance/`.
 The matrix below is the contract: ✅ means exercised and expected to pass (aside from pinned known-failing / known-flaky cases).
 
+What each axis *means* is defined by the
+[Connect protocol](https://connectrpc.com/docs/protocol) and the conformance
+project — this page only records how far connect-ktor implements them.
+
 ## Support matrix
 
-| Feature | Option | Supported |
-| --- | --- | :-: |
-| Protocol | `PROTOCOL_CONNECT` | ✅ |
-|  | `PROTOCOL_GRPC` | ❌ |
-|  | `PROTOCOL_GRPC_WEB` | ❌ |
-| HTTP version | `HTTP_VERSION_1` | ✅ |
-|  | `HTTP_VERSION_2` | ✅ (Netty only) |
-|  | `HTTP_VERSION_3` | ❌ |
-| Codec | `CODEC_PROTO` | ✅ |
-|  | `CODEC_JSON` | ✅ |
-| Compression | `COMPRESSION_IDENTITY` | ✅ |
-|  | `COMPRESSION_GZIP` | ✅ |
-|  | `BR` / `ZSTD` / `DEFLATE` / `SNAPPY` | ❌ |
-| Stream type | Unary | ✅ |
-|  | Client stream | ✅ |
-|  | Server stream | ❌ |
-|  | Half-/full-duplex bidi | ❌ |
-| TLS | TLS / mTLS | ✅ (Netty only) |
-| Trailers | Unary trailers + streaming end-frame metadata | ✅ |
-| Connect GET | Idempotent unary GET | ✅ |
-| Message receive limit | Unary | ✅ |
+| Feature | Option | CIO | Netty |
+| --- | --- | :-: | :-: |
+| Protocol | `PROTOCOL_CONNECT` | ✅ | ✅ |
+|  | `PROTOCOL_GRPC` | ❌ | ❌ |
+|  | `PROTOCOL_GRPC_WEB` | ❌ | ❌ |
+| HTTP version | `HTTP_VERSION_1` | ✅ | ✅ |
+|  | `HTTP_VERSION_2` | ❌ | ✅ |
+|  | `HTTP_VERSION_3` | ❌ | ❌ |
+| Codec | `CODEC_PROTO` | ✅ | ✅ |
+|  | `CODEC_JSON` | ✅ | ✅ |
+| Compression | `COMPRESSION_IDENTITY` | ✅ | ✅ |
+|  | `COMPRESSION_GZIP` | ✅ | ✅ |
+|  | `BR` / `ZSTD` / `DEFLATE` / `SNAPPY` | ❌ | ❌ |
+| Stream type | Unary | ✅ | ✅ |
+|  | Client stream | ✅ | ✅ |
+|  | Server stream | ❌ | ❌ |
+|  | Half-/full-duplex bidi | ❌ | ❌ |
+| TLS | TLS | ❌ | ✅ |
+|  | mTLS | ❌ | ✅ |
+| Trailers | Unary trailers + streaming end-frame metadata | ✅ | ✅ |
+| Connect GET | Idempotent unary GET | ✅\* | ✅ |
+| Message receive limit | Unary | ✅ | ✅ |
+
+\* CIO passes Connect GET except cases that send duplicate request headers.
+CIO collapses those headers upstream — the same limitation as the
+`Duplicate Metadata` / `Basic` pins in `conformance/known-failing-cio.txt`.
+
+Both engines currently fail gzip **client-stream** cases because per-message
+streaming compression is unimplemented (pinned as known-failing / known-flaky).
 
 ## Engines
 
-| Engine | HTTP versions | Notes |
-| --- | --- | --- |
-| CIO | HTTP/1.1 plaintext | No HTTPS, no HTTP/2. Duplicate headers collapse upstream. |
-| Netty | HTTP/1.1 + HTTP/2 (h2c / h2), mTLS | Preferred when TLS or HTTP/2 matters. |
+| Engine | Notes |
+| --- | --- |
+| CIO | HTTP/1.1 plaintext only. No HTTPS, no HTTP/2. Prefer a TLS terminator in front if needed. |
+| Netty | HTTP/1.1 + HTTP/2 (h2c / h2), TLS, and mTLS. Prefer this when those matter. |
 
 Known-failing and known-flaky case lists are checked in as:
 
 - `conformance/known-failing-cio.txt` / `known-failing-netty.txt`
 - `conformance/known-flaky-cio.txt` / `known-flaky-netty.txt`
-
-Both engines currently fail gzip client-stream cases because per-message streaming compression is unimplemented.
 
 ## Run locally
 

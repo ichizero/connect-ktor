@@ -6,4 +6,34 @@
 @theme {
   --font-mono: "JetBrains Mono", monospace;
   --default-font-family: "Geist", sans-serif;
+
+  /* Named blues: readable defaults for light mode */
+  --color-brand-blue: blue;
+  --color-brand-blue-hover: mediumblue;
+  --color-brand-cyan: dodgerblue;
+  --color-brand-glow: color-mix(in srgb, dodgerblue 22%, transparent);
+}
+
+:root {
+  --color-fd-primary: blue;
+  --color-fd-primary-foreground: white;
+  --color-fd-ring: dodgerblue;
+}
+
+.dark {
+  /* Lighter named blues so accents stay visible on dark surfaces */
+  --color-fd-primary: cornflowerblue;
+  --color-fd-primary-foreground: midnightblue;
+  --color-fd-ring: skyblue;
+  --color-brand-blue: cornflowerblue;
+  --color-brand-blue-hover: lightskyblue;
+  --color-brand-cyan: skyblue;
+  --color-brand-glow: color-mix(in srgb, skyblue 24%, transparent);
+}
+
+/* Give the home layout more breathing room for the landing page */
+[data-fd-home-layout-container]:has([data-landing]) {
+  max-width: 72rem;
+  padding-top: 0.5rem;
+  padding-bottom: 2rem;
 }
