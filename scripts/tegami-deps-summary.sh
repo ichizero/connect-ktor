@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Summarize Dependabot/Renovate dependency bumps in GitHub Release note style.
 #
-# Output matches connect-ktor release bodies, e.g.:
+# Output keeps the bump text from release notes, with PR refs shortened like
+# feature changelog entries, e.g.:
 #   ### Dependencies
 #
-#   * chore(deps): Bump ktor from 3.5.0 to 3.5.1 by @dependabot[bot] in https://github.com/ichizero/connect-ktor/pull/231
+#   * chore(deps): Bump ktor from 3.5.0 to 3.5.1 by @dependabot[bot] in [PR #231](https://github.com/ichizero/connect-ktor/pull/231)
 #
 # Paste under a Tegami entry body, or use --backfill to update published changelog MDX.
 #
@@ -62,16 +63,28 @@ latest_tag() {
   git tag -l 'v*' --sort=-v:refname | head -n1
 }
 
+# Shorten bare GitHub PR URLs to [PR #N](url), matching feature changelog style.
+# Idempotent for lines that already use the short form.
+shorten_pr_ref() {
+  local line="$1"
+  if [[ "$line" =~ in\ \[PR\ #[0-9]+\]\( ]]; then
+    printf '%s\n' "$line"
+    return
+  fi
+  printf '%s\n' "$line" | sed -E 's| in (https://github\.com/[^/]+/[^/]+/pull/([0-9]+))| in [PR #\2](\1)|'
+}
+
 normalize_deps_line() {
   # Accept "* ..." or "- ..." from release notes / PR titles; emit "* ...".
   local line="$1"
   line="${line//$'\r'/}"
   line="${line#"${line%%[![:space:]]*}"}"
   case "$line" in
-    '*'*) printf '%s\n' "$line" ;;
-    '-'*) printf '* %s\n' "${line#- }" ;;
-    *) printf '* %s\n' "$line" ;;
+    '*'*) line="$line" ;;
+    '-'*) line="* ${line#- }" ;;
+    *) line="* $line" ;;
   esac
+  shorten_pr_ref "$line"
 }
 
 is_deps_line() {
@@ -172,7 +185,7 @@ deps_from_git_range() {
     | (if ($login | test("renovate")) then "renovate[bot]"
        elif ($login | test("dependabot")) then "dependabot[bot]"
        else $login end) as $label
-    | "* \($pr.title) by @\($label) in \($pr.url)"
+    | "* \($pr.title) by @\($label) in [PR #\($pr.number)](\($pr.url))"
   '
 }
 
