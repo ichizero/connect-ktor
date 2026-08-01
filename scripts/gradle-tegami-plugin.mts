@@ -4,6 +4,10 @@ import { WorkspacePackage, type PackagePublishResult, type TegamiPlugin } from "
 
 const PACKAGE_NAME = "connect-ktor";
 const VERSION_FILE = "VERSION";
+const MAVEN_COORDINATE = "io.github.ichizero:connect-ktor";
+
+/** Install-guide files that pin the published Maven coordinate. */
+const VERSION_PIN_FILES = ["README.md", "apps/docs-site/content/getting-started.mdx"] as const;
 
 export class GradlePackage extends WorkspacePackage {
     readonly manager = "gradle";
@@ -36,6 +40,24 @@ async function readVersionFile(cwd: string): Promise<string> {
 }
 
 /**
+ * Rewrite `io.github.ichizero:connect-ktor:<semver>` pins in install guides.
+ * Called from applyDraft when Tegami bumps VERSION for a release PR.
+ */
+export async function syncMavenVersionPins(cwd: string, version: string): Promise<void> {
+    const pattern = new RegExp(`${MAVEN_COORDINATE.replace(/\./g, "\\.")}:\\d+\\.\\d+\\.\\d+(?:-[A-Za-z0-9.]+)?`, "g");
+    const replacement = `${MAVEN_COORDINATE}:${version}`;
+
+    for (const relativePath of VERSION_PIN_FILES) {
+        const filePath = path.join(cwd, relativePath);
+        const original = await readFile(filePath, "utf8");
+        const updated = original.replace(pattern, replacement);
+        if (updated !== original) {
+            await writeFile(filePath, updated, "utf8");
+        }
+    }
+}
+
+/**
  * Discovers the Gradle library as a tegami package and keeps VERSION in sync.
  *
  * Publishing is tag-only: the git/GitHub plugins create `vX.Y.Z`, and the
@@ -57,6 +79,7 @@ export function gradleVersionPlugin(): TegamiPlugin {
 
             pkg.setVersion(bumped);
             await writeFile(path.join(this.cwd, VERSION_FILE), `${bumped}\n`, "utf8");
+            await syncMavenVersionPins(this.cwd, bumped);
         },
         initPublishPlan({ plan }) {
             for (const [id, packagePlan] of plan.packages) {

@@ -81,6 +81,10 @@ Rules:
 - Package name in this repo is `connect-ktor` (Gradle package; see `scripts/tegami.mts`)
 - Do not edit `VERSION`, `.tegami/publish-lock.yaml`, or published
   `apps/docs-site/changelog/*.mdx` for routine PR work
+- Maven coordinate pins in `README.md` and
+  `apps/docs-site/content/getting-started.mdx`
+  (`io.github.ichizero:connect-ktor:<version>`) are rewritten automatically
+  when Tegami applies a version bump; do not hand-edit them for releases
 
 Bump hints (explicit style):
 
