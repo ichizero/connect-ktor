@@ -1,3 +1,10 @@
+# Posts a Tegami release-preview comment on pull requests.
+#
+# Official Tegami docs split generate vs comment across two workflows
+# (pull_request + workflow_run). This repo keeps both steps in one
+# pull_request job: workflow_run was removed to satisfy zizmor, while still
+# using the official CLI (`pr preview --artifact` then `pr comment`).
+# See https://tegami.fuma-nama.dev/ci#pull-request-preview and CONTRIBUTING.md.
 name: tegami-pr
 
 on:
