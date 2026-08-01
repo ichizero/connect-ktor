@@ -84,9 +84,9 @@ Rules:
 - Body is **freeform Markdown**. Do **not** add Changesets-style category headings
   such as `## Features` / `## Fixes`
 - Convention for each change:
-  1. `##` (h2) title
-  2. Brief user-facing description
-  3. PR reference: `PR #123` or `[PR #123](https://github.com/ichizero/connect-ktor/pull/123)`
+    1. `##` (h2) title
+    2. Brief user-facing description
+    3. PR reference: `PR #123` or `[PR #123](https://github.com/ichizero/connect-ktor/pull/123)`
 - Body needs at least one `#` / `##` / `###` heading (Tegami requirement)
 - Write notes for end users (not internal refactor chatter)
 - Package name is `connect-ktor` (Gradle package)
