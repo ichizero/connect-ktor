@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.source/**",
+    "**/build/**",
+    "**/.gradle/**",
+    "**/.tmp/**",
+    "apps/docs-site/src/pages.gen.ts",
+    "**/*.gen.ts",
+    "**/*.gen.tsx",
+    "**/pnpm-lock.yaml"
+  ]
+}

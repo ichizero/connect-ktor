@@ -1,0 +1,27 @@
+---
+title: Plugins
+description: Ktor integrations and the protoc plugin that Connect-Ktor ships.
+---
+
+# Plugins
+
+Connect-Ktor is a small set of focused pieces, not a single framework switch.
+
+Most apps start with serialization plus the generated route helper.
+The rest are optional guards you turn on when the traffic shape needs them.
+
+| Piece                                     | Role                                                      |
+| ----------------------------------------- | --------------------------------------------------------- |
+| [Serialization](/plugins/serialization)   | `connectJson()` / `connectProto()` for ContentNegotiation |
+| [Connect GET](/plugins/connect-get)       | Idempotent unary over HTTP GET                            |
+| [Body limit](/plugins/body-limit)         | Decoded-size caps (`connectBodyLimit`)                    |
+| [Compression](/plugins/compression)       | Gzip with `UnaryCompressionGuard`                         |
+| [Protovalidate](/plugins/protovalidate)   | Request validation via Buf validate rules                 |
+| [Code generator](/plugins/code-generator) | `protoc-gen-connect-ktor` route interfaces                |
+
+Install only what the route needs.
+REST routes outside a Connect scope keep Ktor's default behaviour.
+
+For the protocol behaviour each plugin implements (content types, Connect GET,
+error codes), see the official [Connect protocol](https://connectrpc.com/docs/protocol)
+docs rather than treating these pages as a full protocol reference.

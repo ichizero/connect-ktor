@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+
+savePrefix: ""
+
+onlyBuiltDependencies:
+  - esbuild

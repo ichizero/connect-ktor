@@ -4,11 +4,17 @@ on:
     branches:
       - main
     paths:
-      - "docs-site/**"
+      - "apps/docs-site/**"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "pnpm-lock.yaml"
       - ".github/workflows/docs-site.yml"
   pull_request:
     paths:
-      - "docs-site/**"
+      - "apps/docs-site/**"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "pnpm-lock.yaml"
       - ".github/workflows/docs-site.yml"
   workflow_dispatch:
 
@@ -28,24 +34,29 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        with:
+          version: 10.14.0
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: docs-site/package-lock.json
+          cache: pnpm
 
       - name: Install and build
-        working-directory: docs-site
         run: |
-          npm ci
-          npm run build
-          touch dist/public/.nojekyll
+          pnpm install --frozen-lockfile
+          pnpm --filter docs-site build
+          touch apps/docs-site/dist/public/.nojekyll
+
+      - name: Check formatting
+        run: pnpm fmt:check
 
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: docs-site/dist/public
+          path: apps/docs-site/dist/public
 
   deploy:
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')

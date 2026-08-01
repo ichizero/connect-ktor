@@ -5,10 +5,7 @@ lefthook = "2.1.10"
 buf = "1.72.0"
 
 [tasks.lint]
-run = [
-  "./gradlew spotlessCheck detekt",
-  { task = "plugin:lint" },
-]
+run = ["./gradlew spotlessCheck detekt", { task = "plugin:lint" }]
 
 [tasks.build]
 depends = ["plugin:build"]
@@ -20,10 +17,7 @@ run = [{ task = "library:generate" }]
 
 [tasks.test]
 depends = ["generate"]
-run = [
-  "./gradlew test",
-  { task = "plugin:test" },
-]
+run = ["./gradlew test", { task = "plugin:test" }]
 
 [tasks.conformance]
 description = "Run the connectrpc conformance suite against the connect-ktor server."
@@ -32,19 +26,29 @@ run = [{ task = "conformance:run" }]
 
 [tasks."docs-site:build"]
 description = "Build the Fumapress documentation site (static export)."
-dir = "{{config_root}}/docs-site"
+dir = "{{config_root}}"
 run = '''
 #!/usr/bin/env bash
 set -euo pipefail
-npm ci
-npm run build
-touch dist/public/.nojekyll
+pnpm install --frozen-lockfile
+pnpm --filter docs-site build
+touch apps/docs-site/dist/public/.nojekyll
 '''
 
 [tasks."docs-site:types"]
 description = "Typecheck the Fumapress documentation site."
-dir = "{{config_root}}/docs-site"
-run = "npm run types:check"
+dir = "{{config_root}}"
+run = "pnpm --filter docs-site types:check"
+
+[tasks.fmt]
+description = "Format Markdown/JSON/YAML and apps/docs-site with oxfmt."
+dir = "{{config_root}}"
+run = "pnpm fmt"
+
+[tasks."fmt:check"]
+description = "Check formatting with oxfmt."
+dir = "{{config_root}}"
+run = "pnpm fmt:check"
 
 [tasks."library:mod"]
 dir = "{{config_root}}/library"

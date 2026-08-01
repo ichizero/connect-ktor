@@ -198,12 +198,13 @@ dist/
 # Conformance runner scratch dir (connectconformance binary, etc.)
 .tmp/
 
-# Fumapress docs site
-docs-site/node_modules/
-docs-site/.source/
-docs-site/dist/
-docs-site/src/pages.gen.ts
-
+# Node / docs site
+node_modules/
+apps/docs-site/node_modules/
+apps/docs-site/.source/
+apps/docs-site/dist/
+apps/docs-site/src/pages.gen.ts
+apps/docs-site/package-lock.json
 
 # Local browser/debug artifacts
 .playwright-mcp/

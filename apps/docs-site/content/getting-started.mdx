@@ -43,16 +43,16 @@ Point Buf at the local plugin alongside the usual Java/Kotlin and Connect-Kotlin
 version: v2
 clean: true
 managed:
-  enabled: true
+    enabled: true
 plugins:
-  - remote: buf.build/protocolbuffers/java
-    out: path/to/code
-  - remote: buf.build/protocolbuffers/kotlin
-    out: path/to/code
-  - remote: buf.build/connectrpc/kotlin
-    out: path/to/code
-  - local: protoc-gen-connect-ktor
-    out: path/to/code
+    - remote: buf.build/protocolbuffers/java
+      out: path/to/code
+    - remote: buf.build/protocolbuffers/kotlin
+      out: path/to/code
+    - remote: buf.build/connectrpc/kotlin
+      out: path/to/code
+    - local: protoc-gen-connect-ktor
+      out: path/to/code
 ```
 
 ```bash

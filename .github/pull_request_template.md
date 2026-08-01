@@ -37,7 +37,7 @@ Example row:
 -->
 
 | Question | Decision | Why |
-|---|---|---|
+| -------- | -------- | --- |
 
 ## Commits
 
@@ -50,7 +50,7 @@ Example row:
 -->
 
 | Commit | Purpose |
-|---|---|
+| ------ | ------- |
 
 ## Test plan
 
