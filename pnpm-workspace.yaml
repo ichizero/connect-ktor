@@ -2,6 +2,33 @@ packages:
   - apps/*
 
 savePrefix: ""
+catalogMode: prefer
+confirmModulesPurge: false
+# Keep pnpm's default 1-day maturity gate, but non-strict so freshly
+# pinned catalog versions remain installable. Dependabot's 7-day
+# cooldown still delays automated bumps.
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: false
 
-onlyBuiltDependencies:
-  - esbuild
+allowBuilds:
+  esbuild: true
+
+catalog:
+  "@base-ui/react": 1.6.0
+  "@tailwindcss/vite": 4.3.3
+  "@types/mdx": 2.0.14
+  "@types/node": 26.1.2
+  "@types/react": 19.2.18
+  "@types/react-dom": 19.2.4
+  fumadocs-core: 16.14.0
+  fumadocs-mdx: 15.2.1
+  fumadocs-ui: npm:@fumadocs/base-ui@16.14.0
+  fumapress: 0.7.3
+  lucide-react: 0.525.0
+  oxfmt: 0.61.0
+  react: 19.2.8
+  react-dom: 19.2.8
+  react-server-dom-webpack: 19.2.8
+  tailwindcss: 4.3.3
+  typescript: 7.0.2
+  waku: 1.0.0-beta.6

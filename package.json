@@ -9,7 +9,7 @@
     "docs:types": "pnpm --filter docs-site types:check"
   },
   "devDependencies": {
-    "oxfmt": "0.61.0"
+    "oxfmt": "catalog:"
   },
-  "packageManager": "pnpm@10.14.0"
+  "packageManager": "pnpm@11.18.0"
 }
