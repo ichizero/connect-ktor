@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
+    "@fumapress/tegami": "catalog:",
     "fumadocs-core": "catalog:",
     "fumadocs-mdx": "catalog:",
     "fumadocs-ui": "catalog:",
@@ -20,6 +21,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-server-dom-webpack": "catalog:",
+    "tegami": "catalog:",
     "waku": "catalog:"
   },
   "devDependencies": {
