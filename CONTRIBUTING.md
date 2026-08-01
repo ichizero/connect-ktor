@@ -47,9 +47,10 @@ This repository uses [Tegami](https://tegami.fuma-nama.dev) for versioning. When
 changes a published package (`connect-ktor` / `protoc-gen-connect-ktor`), add a pending
 changelog entry under `.tegami/` **before opening or updating the PR**.
 
-CI (`tegami-pr`) posts a release preview comment. Merges to `main` run `pnpm tegami ci`,
-which bumps `VERSION`, writes docs changelog MDX under `apps/docs-site/changelog/`, and
-opens/updates the version PR. GitHub Releases remain tag-driven (GoReleaser).
+CI (`tegami-pr`) posts a release preview comment (see [PR release preview](#pr-release-preview)).
+Merges to `main` run `pnpm tegami ci`, which bumps `VERSION`, writes docs changelog MDX
+under `apps/docs-site/changelog/`, and opens/updates the version PR. GitHub Releases
+remain tag-driven (GoReleaser).
 
 ### Create an entry
 
@@ -71,16 +72,24 @@ packages:
 ## Support example feature
 
 Short, user-facing description of what changed and why it matters.
+
+[PR #123](https://github.com/ichizero/connect-ktor/pull/123)
 ```
 
 Rules:
 
-- YAML frontmatter must include `packages`
-- Body needs at least one `#` / `##` / `###` heading
+- YAML frontmatter must include `packages` with an explicit bump:
+  `major` | `minor` | `patch` (this repo uses **explicit** style; see
+  `scripts/tegami.mts`)
+- Body is **freeform Markdown**. Do **not** add Changesets-style category headings
+  such as `## Features` / `## Fixes`
+- Convention for each change:
+  1. `##` (h2) title
+  2. Brief user-facing description
+  3. PR reference: `PR #123` or `[PR #123](https://github.com/ichizero/connect-ktor/pull/123)`
+- Body needs at least one `#` / `##` / `###` heading (Tegami requirement)
 - Write notes for end users (not internal refactor chatter)
-- Link related PRs as `[PR #N](https://github.com/ichizero/connect-ktor/pull/N)`
-  (same style as published changelog MDX)
-- Package name in this repo is `connect-ktor` (Gradle package; see `scripts/tegami.mts`)
+- Package name is `connect-ktor` (Gradle package)
 - Do not edit `VERSION`, `.tegami/publish-lock.yaml`, or published
   `apps/docs-site/changelog/*.mdx` for routine PR work
 - Maven coordinate pins in `README.md` and
@@ -88,25 +97,9 @@ Rules:
   (`io.github.ichizero:connect-ktor:<version>`) are rewritten automatically
   when Tegami applies a version bump; do not hand-edit them for releases
 
-### Bump types (not change categories)
-
-Tegami does **not** define changelog type categories like Changesets' grouped
-sections (Features / Fixes / …). Frontmatter only carries **semver bump** intent
-(`major` | `minor` | `patch`), plus optional `replay` for re-emitting notes.
-The body is freeform Markdown; headings are content, not a typed taxonomy.
-
-This repo uses **explicit** style (`packages.connect-ktor: <bump>`). Prefer:
-
-| Frontmatter bump | Typical body heading | When |
-| ---------------- | -------------------- | ---- |
-| `major`          | `# …` or `### Breaking` under a feature note | Breaking API / behavior |
-| `minor`          | `## …`               | User-facing feature |
-| `patch`          | `### …`              | Fix or small improvement |
-
-Optional freeform subsections (for example `### Breaking`, `### Dependencies`)
-are fine; Tegami does not enforce or group them. For comparison, Changesets also
-uses `major` / `minor` / `patch` in frontmatter, but tooling often aggregates
-entries under Features / Fixes headings — Tegami has no equivalent grouping.
+Frontmatter carries only **semver bump** intent (`major` | `minor` | `patch`), plus
+optional `replay` for re-emitting notes. Tegami does not group entries under
+Features / Fixes; headings in the body are content, not a typed taxonomy.
 
 Skip a Tegami entry only for docs-only, CI-only, or otherwise non-releasable changes.
 
@@ -114,7 +107,7 @@ Skip a Tegami entry only for docs-only, CI-only, or otherwise non-releasable cha
 
 Dependabot bumps that should ship as a patch release still need a Tegami entry.
 Create `.tegami/YYYY-MM-DD-deps.md` with `packages.connect-ktor: patch` and a
-`### Dependencies` body. Keep the bump text in GitHub Release note style, but
+`## Dependencies` body. Keep the bump text in GitHub Release note style, but
 shorten PR refs to `[PR #N](...)`:
 
 ```md
@@ -123,7 +116,7 @@ packages:
     connect-ktor: patch
 ---
 
-### Dependencies
+## Dependencies
 
 - chore(deps): Bump ktor from 3.5.0 to 3.5.1 by @dependabot[bot] in [PR #231](https://github.com/ichizero/connect-ktor/pull/231)
 ```
@@ -141,6 +134,21 @@ pnpm tegami:deps-summary
 Paste the script output into the Tegami entry, then open the usual version PR
 path (`pnpm tegami` / CI). Do not hand-edit published
 `apps/docs-site/changelog/*.mdx` for routine deps work.
+
+### PR release preview
+
+On each `pull_request` (opened / synchronize / reopened), `.github/workflows/tegami-pr.yml`
+runs the official Tegami CLI commands:
+
+1. `pnpm tegami pr preview --artifact tegami-pr-preview.md`
+2. `pnpm tegami pr comment tegami-pr-preview.md`
+
+Official docs suggest splitting generate vs comment into two workflows via
+`workflow_run`. This repo posts the comment in the same `pull_request` job instead:
+`workflow_run` was removed after zizmor flagged it, while still using the same
+`--artifact` + `pr comment` CLI surface. The job stays on `pull_request` (not
+`pull_request_target`) with `contents: read` plus `pull-requests: write` only for
+commenting. See [Tegami CI / PR preview](https://tegami.fuma-nama.dev/ci#pull-request-preview).
 
 ## Commit and PR titles
 
