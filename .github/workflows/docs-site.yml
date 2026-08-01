@@ -43,10 +43,11 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Install and build
+      - name: Install, lint, and build
         run: |
           pnpm install --frozen-lockfile
-          pnpm --filter docs-site build
+          pnpm run lint
+          pnpm docs:build
           touch apps/docs-site/dist/public/.nojekyll
 
       - name: Check formatting

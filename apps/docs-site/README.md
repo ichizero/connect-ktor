@@ -11,7 +11,7 @@ From the repository root (pnpm workspace):
 pnpm install
 pnpm docs:dev      # local preview (basePath `/`)
 pnpm docs:build    # static export to apps/docs-site/dist/public
-pnpm docs:types
+pnpm lint          # runs lint:type (fumadocs-mdx + tsc --noEmit)
 pnpm fmt           # format repo Markdown/JSON/YAML + docs-site sources
 ```
 
@@ -19,4 +19,5 @@ Or with mise:
 
 ```bash
 mise run docs-site:build
+mise run docs-site:lint
 ```

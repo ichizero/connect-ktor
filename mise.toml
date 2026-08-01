@@ -35,10 +35,15 @@ pnpm --filter docs-site build
 touch apps/docs-site/dist/public/.nojekyll
 '''
 
-[tasks."docs-site:types"]
+[tasks."docs-site:lint"]
 description = "Typecheck the Fumapress documentation site."
 dir = "{{config_root}}"
-run = "pnpm --filter docs-site types:check"
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+pnpm install --frozen-lockfile
+pnpm run lint
+'''
 
 [tasks.fmt]
 description = "Format Markdown/JSON/YAML and apps/docs-site with oxfmt."

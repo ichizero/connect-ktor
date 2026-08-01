@@ -4,9 +4,10 @@
   "scripts": {
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
+    "lint": "pnpm run lint:type",
+    "lint:type": "pnpm --filter docs-site lint:type",
     "docs:dev": "pnpm --filter docs-site dev",
-    "docs:build": "pnpm --filter docs-site build",
-    "docs:types": "pnpm --filter docs-site types:check"
+    "docs:build": "pnpm --filter docs-site build"
   },
   "devDependencies": {
     "oxfmt": "catalog:"

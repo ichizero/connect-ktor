@@ -90,6 +90,17 @@ buf generate
 Implement the generated handler and register it beside REST:
 
 ```kotlin
+object ElizaServiceHandler : ElizaServiceHandlerInterface {
+    override suspend fun say(
+        request: SayRequest,
+        call: ApplicationCall,
+    ): ResponseMessage<SayResponse> = ResponseMessage.Success(
+        sayResponse { sentence = request.sentence },
+        emptyMap(),
+        emptyMap(),
+    )
+}
+
 fun main() {
     embeddedServer(CIO, port = 8080) {
         install(Resources)

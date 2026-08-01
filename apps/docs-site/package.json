@@ -7,7 +7,7 @@
     "dev": "waku dev",
     "build": "waku build",
     "start": "waku start",
-    "types:check": "fumadocs-mdx && tsc --noEmit"
+    "lint:type": "fumadocs-mdx && tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
