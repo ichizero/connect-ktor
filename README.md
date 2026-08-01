@@ -128,11 +128,16 @@ mise exec -- lefthook install
 mise tasks ls   # build, test, lint, generate, conformance, …
 ```
 
-Format Markdown / JSON / YAML / the docs app from the repo root with:
+Docs site and formatting from the repo root (`docs-site` is an alias for
+`pnpm --filter=docs-site`):
 
 ```bash
 pnpm install
-pnpm fmt
+pnpm docs-site dev      # local preview
+pnpm docs-site build    # static export
+pnpm docs-site lint     # typecheck (lint → lint:type)
+pnpm lint:format        # format check (oxfmt --check)
+pnpm lint-fix          # write-format (lint-fix → lint-fix:format)
 ```
 
 ## Verifying release artifacts

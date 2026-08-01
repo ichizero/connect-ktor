@@ -7,6 +7,7 @@
     "dev": "waku dev",
     "build": "waku build",
     "start": "waku start",
+    "lint": "pnpm run lint:type",
     "lint:type": "fumadocs-mdx && tsc --noEmit"
   },
   "dependencies": {

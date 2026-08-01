@@ -31,7 +31,7 @@ run = '''
 #!/usr/bin/env bash
 set -euo pipefail
 pnpm install --frozen-lockfile
-pnpm --filter docs-site build
+pnpm docs-site build
 touch apps/docs-site/dist/public/.nojekyll
 '''
 
@@ -42,18 +42,23 @@ run = '''
 #!/usr/bin/env bash
 set -euo pipefail
 pnpm install --frozen-lockfile
-pnpm run lint
+pnpm docs-site lint
 '''
 
 [tasks.fmt]
-description = "Format Markdown/JSON/YAML and apps/docs-site with oxfmt."
+description = "Write-format Markdown/JSON/YAML and apps/docs-site (pnpm lint-fix:format)."
 dir = "{{config_root}}"
-run = "pnpm fmt"
+run = "pnpm lint-fix:format"
 
-[tasks."fmt:check"]
-description = "Check formatting with oxfmt."
+[tasks."lint-fix"]
+description = "Write-format via pnpm lint-fix."
 dir = "{{config_root}}"
-run = "pnpm fmt:check"
+run = "pnpm lint-fix"
+
+[tasks."lint:format"]
+description = "Check formatting with oxfmt (pnpm lint:format)."
+dir = "{{config_root}}"
+run = "pnpm lint:format"
 
 [tasks."library:mod"]
 dir = "{{config_root}}/library"
