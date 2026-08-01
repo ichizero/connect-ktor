@@ -24,11 +24,11 @@ catalog:
   fumadocs-mdx: 15.2.1
   fumadocs-ui: npm:@fumadocs/base-ui@16.14.0
   fumapress: 0.7.3
-  lucide-react: 0.525.0
+  lucide-react: 1.26.0
   oxfmt: 0.61.0
   react: 19.2.8
   react-dom: 19.2.8
   react-server-dom-webpack: 19.2.8
   tailwindcss: 4.3.3
   typescript: 7.0.2
-  waku: 1.0.0-beta.6
+  waku: 1.0.0-beta.8
