@@ -1,0 +1,116 @@
+[tools]
+go = "1.26"
+golangci-lint = "2.12.2"
+lefthook = "2.1.10"
+buf = "1.72.0"
+
+[tasks.lint]
+run = [
+  "./gradlew spotlessCheck detekt",
+  { task = "plugin:lint" },
+]
+
+[tasks.build]
+depends = ["plugin:build"]
+
+[tasks.generate]
+alias = "gen"
+depends = ["build"]
+run = [{ task = "library:generate" }]
+
+[tasks.test]
+depends = ["generate"]
+run = [
+  "./gradlew test",
+  { task = "plugin:test" },
+]
+
+[tasks.conformance]
+description = "Run the connectrpc conformance suite against the connect-ktor server."
+depends = ["build"]
+run = [{ task = "conformance:run" }]
+
+[tasks."library:mod"]
+dir = "{{config_root}}/library"
+run = "buf dep update"
+
+[tasks."library:generate"]
+hide = true
+dir = "{{config_root}}/library"
+run = "buf generate --template ./buf.gen.yaml"
+
+[tasks."plugin:format"]
+dir = "{{config_root}}/protoc-gen-connect-ktor"
+run = "go fmt ./..."
+
+[tasks."plugin:lint"]
+dir = "{{config_root}}/protoc-gen-connect-ktor"
+run = "go vet ./..."
+
+[tasks."plugin:build"]
+dir = "{{config_root}}/protoc-gen-connect-ktor"
+run = 'go build -ldflags="-s -w" -trimpath -o="./out/protoc-gen-connect-ktor" ./cmd/protoc-gen-connect-ktor'
+
+[tasks."plugin:test"]
+dir = "{{config_root}}/protoc-gen-connect-ktor"
+run = "go test -v ./..."
+
+[tasks."conformance:generate"]
+description = "Generate Kotlin/Java sources for the ConformanceService."
+dir = "{{config_root}}/conformance"
+run = "buf generate --template ./buf.gen.yaml"
+
+[tasks."conformance:install-runner"]
+description = "Install the connectconformance binary into .tmp/bin."
+dir = "{{config_root}}/conformance"
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+CONFORMANCE_VERSION="v1.0.4"
+BIN_DIR="{{config_root}}/conformance/.tmp/bin"
+if [ -x "$BIN_DIR/connectconformance" ] && [ "$(cat "$BIN_DIR/connectconformance.version" 2>/dev/null)" = "$CONFORMANCE_VERSION" ]; then
+  exit 0
+fi
+mkdir -p "$BIN_DIR"
+GOBIN="$BIN_DIR" go install connectrpc.com/conformance/cmd/connectconformance@"$CONFORMANCE_VERSION"
+printf '%s\n' "$CONFORMANCE_VERSION" > "$BIN_DIR/connectconformance.version"
+'''
+
+[tasks."conformance:build"]
+description = "Build the conformance server-under-test executable."
+depends = ["conformance:generate"]
+dir = "{{config_root}}/conformance"
+run = "../gradlew :conformance:installDist"
+
+[tasks."conformance:run"]
+description = "Run server-mode conformance suite against connect-ktor for all engines."
+depends = ["conformance:install-runner", "conformance:build"]
+dir = "{{config_root}}/conformance"
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+for engine in cio netty; do
+  ENGINE="$engine" mise run conformance:run:engine
+done
+'''
+
+[tasks."conformance:run:engine"]
+description = "Run server-mode conformance suite for a single Ktor engine."
+hide = true
+dir = "{{config_root}}/conformance"
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+: "${ENGINE:?ENGINE is required, e.g. ENGINE=cio mise run conformance:run:engine}"
+BIN_DIR="{{config_root}}/conformance/.tmp/bin"
+SERVER_BIN="{{config_root}}/conformance/build/install/conformance/bin/conformance"
+echo "==> Running conformance suite for engine=${ENGINE}"
+"$BIN_DIR/connectconformance" \
+  --mode server \
+  --conf "{{config_root}}/conformance/config-${ENGINE}.yaml" \
+  --known-failing "@{{config_root}}/conformance/known-failing-${ENGINE}.txt" \
+  --known-flaky "@{{config_root}}/conformance/known-flaky-${ENGINE}.txt" \
+  -v \
+  -- \
+  "$SERVER_BIN" --engine "$ENGINE"
+'''

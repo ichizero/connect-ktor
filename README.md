@@ -63,7 +63,7 @@ Verified Ktor engines:
 Run the suite locally with:
 
 ```bash
-task conformance
+mise run conformance
 ```
 
 which builds the `:conformance` subproject, installs
@@ -465,19 +465,27 @@ body-limit behaviour.
 
 ## Local development
 
-This repository ships a [lefthook](https://github.com/evilmartians/lefthook)
-configuration (`lefthook.yml`) that wires fast quality gates into
-`pre-commit`. Install it once per clone:
+This repository uses [mise](https://mise.jdx.dev/) to manage both local
+tooling (`go`, `golangci-lint`, `lefthook`, `buf`) and the task runner
+(`mise.toml`). After [installing mise](https://mise.jdx.dev/getting-started.html),
+set up the repo once per clone:
 
 ```bash
-brew install lefthook
-lefthook install
+mise install
+mise exec -- lefthook install
 ```
+
+`mise install` pins the tool versions declared in `mise.toml`, and
+`lefthook install` wires the [lefthook](https://github.com/evilmartians/lefthook)
+(`lefthook.yml`) quality gates into `pre-commit`.
 
 The hooks run Spotless (ktlint), detekt, `go vet`, and golangci-lint on
 staged files. They are convenience-only — CI re-runs the same checks —
 so a commit can still be made with `LEFTHOOK=0 git commit ...` when
 needed.
+
+Run `mise tasks ls` to see the available tasks (`mise run build`, `mise run
+test`, `mise run lint`, `mise run generate`, `mise run conformance`, etc.).
 
 ## Verifying release artifacts
 

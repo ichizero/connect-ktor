@@ -48,9 +48,9 @@ tasks.named<JavaExec>("run") {
 }
 
 // Run `buf generate` automatically so that gradle-driven builds (CI, IDE) do
-// not require the developer to run the Taskfile first. The protoc-gen-connect-ktor
+// not require the developer to run mise first. The protoc-gen-connect-ktor
 // binary is expected at ../protoc-gen-connect-ktor/out/protoc-gen-connect-ktor;
-// run `task plugin:build` (or the root `task build`) to produce it.
+// run `mise run plugin:build` (or the root `mise run build`) to produce it.
 val generateProtos = tasks.register<Exec>("bufGenerate") {
     workingDir = projectDir
     commandLine("buf", "generate", "--template", "buf.gen.yaml")
@@ -59,7 +59,7 @@ val generateProtos = tasks.register<Exec>("bufGenerate") {
     // Re-run generation when the local protoc plugin binary changes. The
     // file path is wrapped in a lazy provider so Gradle does not fail
     // configuration when the binary has not been built yet; we rely on
-    // `task plugin:build` (or the root `task build`) to produce it before
+    // `mise run plugin:build` (or the root `mise run build`) to produce it before
     // this task executes.
     inputs.files(
         rootProject.fileTree("protoc-gen-connect-ktor/out") {
