@@ -29,7 +29,7 @@ project — this page only records how far connect-ktor implements them.
 |                       | `BR` / `ZSTD` / `DEFLATE` / `SNAPPY`          |  ❌  |  ❌   |
 | Stream type           | Unary                                         |  ✅  |  ✅   |
 |                       | Client stream                                 |  ✅  |  ✅   |
-|                       | Server stream                                 |  ❌  |  ❌   |
+|                       | Server stream                                 |  ✅  |  ✅   |
 |                       | Half-/full-duplex bidi                        |  ❌  |  ❌   |
 | TLS                   | TLS                                           |  ❌  |  ✅   |
 |                       | mTLS                                          |  ❌  |  ✅   |
@@ -41,8 +41,11 @@ project — this page only records how far connect-ktor implements them.
 CIO collapses those headers upstream — the same limitation as the
 `Duplicate Metadata` / `Basic` pins in `conformance/known-failing-cio.txt`.
 
-Both engines currently fail gzip **client-stream** cases because per-message
-streaming compression is unimplemented (pinned as known-failing / known-flaky).
+Both engines currently fail gzip **client-stream** and **server-stream** cases
+because per-message streaming compression is unimplemented (pinned as
+known-failing / known-flaky). The `Server Message Size` streaming cases are
+pinned too: `connectBodyLimit` caps the whole request body instead of applying a
+per-message receive limit.
 
 ## Engines
 

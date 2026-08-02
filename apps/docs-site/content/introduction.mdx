@@ -33,12 +33,12 @@ That is why it fits an existing Ktor app: you add handlers, you do not replace t
 
 ## What you get today
 
-- Unary and client-streaming Connect handlers on CIO and Netty
+- Unary, client-streaming, and server-streaming Connect handlers on CIO and Netty
 - `connectJson()` / `connectProto()` ContentNegotiation codecs
 - Generated Ktor route interfaces via `protoc-gen-connect-ktor`
 - Optional protovalidate request checks, body size limits, and gzip guards
 
-Server-streaming, bidi, and gRPC/gRPC-Web are still out of scope.
+Bidi streaming and gRPC/gRPC-Web are still out of scope.
 See [Known limitations](/known-limitations) for the honest matrix, and [Conformance](/conformance) for what the suite actually exercises.
 
 ## Relationship to Connect-Kotlin
@@ -62,7 +62,7 @@ A React app on Connect-ES and a Ktor service on Connect-Ktor can share one Buf m
 
 - Teams with a Ktor REST API who want Protobuf RPCs for new or hot paths
 - Stacks that already pair **React (Connect-ES)** with **Kotlin/Ktor**
-- Services that need Connect conformance for unary and client-streaming today, and can wait on server/bidi streaming
+- Services that need Connect conformance for unary, client-streaming, and server-streaming today, and can wait on bidi streaming
 
 It is a poor fit if you need gRPC wire compatibility or full-duplex streams on day one.
 Those limits stay under [Known limitations](/known-limitations), not hidden behind a feature checklist.
