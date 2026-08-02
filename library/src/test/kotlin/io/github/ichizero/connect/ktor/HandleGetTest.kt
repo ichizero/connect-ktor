@@ -2,6 +2,8 @@ package io.github.ichizero.connect.ktor
 
 import com.connectrpc.ResponseMessage
 import com.connectrpc.eliza.v1.ElizaServiceHandlerInterface
+import com.connectrpc.eliza.v1.IntroduceRequest
+import com.connectrpc.eliza.v1.IntroduceResponse
 import com.connectrpc.eliza.v1.SayRequest
 import com.connectrpc.eliza.v1.SayResponse
 import com.connectrpc.eliza.v1.elizaService
@@ -25,6 +27,8 @@ import io.ktor.server.application.install
 import io.ktor.server.resources.Resources
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import java.util.Base64
 import kotlin.reflect.KClass
 
@@ -38,6 +42,12 @@ private object EchoHandler : ElizaServiceHandlerInterface {
         emptyMap(),
         emptyMap(),
     )
+
+    // Connect GET only covers unary RPCs; the server-streaming member is unused here.
+    override suspend fun introduce(
+        request: IntroduceRequest,
+        call: ApplicationCall,
+    ): Flow<IntroduceResponse> = emptyFlow()
 }
 
 class HandleGetTest : FunSpec({
@@ -261,6 +271,11 @@ class HandleGetTest : FunSpec({
                 if (params != null) capturedQueryParams += params
                 return ResponseMessage.Success(sayResponse { sentence = "" }, emptyMap(), emptyMap())
             }
+
+            override suspend fun introduce(
+                request: IntroduceRequest,
+                call: ApplicationCall,
+            ): Flow<IntroduceResponse> = emptyFlow()
         }
 
         testApplication {
