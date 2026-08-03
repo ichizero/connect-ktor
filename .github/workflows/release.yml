@@ -1,14 +1,170 @@
+# Unified release pipeline (Tegami versioning/tags + GoReleaser + Maven).
+#
+# On push to main:
+#   1. `pnpm tegami ci` — open/update Version Packages PR, or publish (create v* tag)
+#   2. When a publish just became due, run GoReleaser (draft release + artifacts)
+#      and Maven Central publish in the same workflow (avoids GITHUB_TOKEN tag-push
+#      not triggering a separate tag workflow).
+#
+# GoReleaser runs on the main checkout after Tegami creates the tag locally/remotely.
+# Tag selection uses GORELEASER_CURRENT_TAG; git validate requires the tag to point
+# at HEAD (true for Tegami tags created on the merge commit).
+#
+# workflow_dispatch with `tag` re-runs GoReleaser + Maven for an existing tag
+# (recovery path when tags exist but artifacts were never published).
 name: release
+
 on:
   push:
-    tags:
-      - v*
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing v* tag to (re)run GoReleaser + Maven publish (e.g. v0.3.0)
+        required: true
+        type: string
+
 permissions:
   contents: read
+
 jobs:
-  library:
+  prepare:
     runs-on: ubuntu-latest
-    needs: plugin
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release: ${{ steps.result.outputs.release }}
+      tag: ${{ steps.result.outputs.tag }}
+      version: ${{ steps.result.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve manual tag re-release
+        id: manual
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          tag="${INPUT_TAG}"
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-].*)?$ ]]; then
+            echo "tag must look like vX.Y.Z (got: ${tag})" >&2
+            exit 1
+          fi
+          git fetch --tags --force origin "refs/tags/${tag}:refs/tags/${tag}"
+          if ! git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            echo "tag not found: ${tag}" >&2
+            exit 1
+          fi
+          version="${tag#v}"
+          {
+            echo "release=true"
+            echo "tag=${tag}"
+            echo "version=${version}"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        if: github.event_name == 'push'
+        with:
+          version: 11.18.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: github.event_name == 'push'
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        if: github.event_name == 'push'
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure git credentials for tegami
+        if: github.event_name == 'push'
+        run: git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Check whether publish is pending
+        id: check
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          if pnpm tegami check-publish; then
+            echo "pending=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pending=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Version & publish
+        if: github.event_name == 'push'
+        run: pnpm tegami ci
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CI: true
+
+      - name: Resolve tag after Tegami publish
+        id: published
+        if: github.event_name == 'push' && steps.check.outputs.pending == 'true'
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < VERSION)"
+          tag="v${version}"
+
+          # Tegami creates the tag on HEAD in this workspace; also refresh from origin.
+          git fetch --tags --force origin "refs/tags/${tag}:refs/tags/${tag}" || true
+          if ! git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            echo "expected tag ${tag} after tegami publish, but it is missing" >&2
+            exit 1
+          fi
+          head_sha="$(git rev-parse HEAD)"
+          tag_sha="$(git rev-list -n1 "refs/tags/${tag}")"
+          if [[ "$head_sha" != "$tag_sha" ]]; then
+            echo "tag ${tag} (${tag_sha}) does not point at HEAD (${head_sha})" >&2
+            exit 1
+          fi
+
+          {
+            echo "release=true"
+            echo "tag=${tag}"
+            echo "version=${version}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set job outputs
+        id: result
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_RELEASE: ${{ steps.manual.outputs.release }}
+          MANUAL_TAG: ${{ steps.manual.outputs.tag }}
+          MANUAL_VERSION: ${{ steps.manual.outputs.version }}
+          PUBLISHED_RELEASE: ${{ steps.published.outputs.release }}
+          PUBLISHED_TAG: ${{ steps.published.outputs.tag }}
+          PUBLISHED_VERSION: ${{ steps.published.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "release=${MANUAL_RELEASE}" >> "$GITHUB_OUTPUT"
+            echo "tag=${MANUAL_TAG}" >> "$GITHUB_OUTPUT"
+            echo "version=${MANUAL_VERSION}" >> "$GITHUB_OUTPUT"
+          elif [[ "${PUBLISHED_RELEASE:-}" == "true" ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "tag=${PUBLISHED_TAG}" >> "$GITHUB_OUTPUT"
+            echo "version=${PUBLISHED_VERSION}" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            echo "version=" >> "$GITHUB_OUTPUT"
+          fi
+
+  plugin:
+    runs-on: ubuntu-latest
+    needs: prepare
+    if: needs.prepare.outputs.release == 'true'
     permissions:
       contents: write
       id-token: write
@@ -16,35 +172,90 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ needs.prepare.outputs.tag }}
+          fetch-depth: 0
           persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: "./protoc-gen-connect-ktor/go.mod"
+          cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
+          cache: false
+
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Write Tegami release notes
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          chmod +x ./scripts/tegami-release-notes.sh
+          ./scripts/tegami-release-notes.sh "$RELEASE_VERSION" > /tmp/tegami-release-notes.md
+          {
+            echo "----- release notes -----"
+            cat /tmp/tegami-release-notes.md
+            echo "----- end release notes -----"
+          }
+
+      - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          args: release --clean --release-notes=/tmp/tegami-release-notes.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ needs.prepare.outputs.tag }}
+
+      - name: Generate SLSA build provenance for Go release archives
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.zip
+
+  library:
+    runs-on: ubuntu-latest
+    needs: [prepare, plugin]
+    if: needs.prepare.outputs.release == 'true'
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
+          persist-credentials: false
+
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           distribution: temurin
           java-version: 21
+
       - uses: jdx/mise-action@9e7f7633ff6f6d6048a9418a68d48f288f50eb14 # v4.2.3
         with:
           install_args: go
           cache: false
+
       - uses: bufbuild/buf-setup-action@a47c93e0b1648d5651a065437926377d060baa99 # v1.50.0
         with:
           github_token: ${{ github.token }}
+
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
-
-      - name: Get version from tag
-        run: |
-          tag=${GITHUB_REF#refs/*/}
-          echo "RELEASE_VERSION=${tag:1}" >> $GITHUB_ENV
 
       - name: Build project
         run: mise run build
         env:
-          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ needs.prepare.outputs.version }}
 
       - name: Assemble library JAR
         run: ./gradlew :library:assemble
         env:
-          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ needs.prepare.outputs.version }}
 
       - name: Generate SLSA build provenance for library JARs
         uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
@@ -59,53 +270,75 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
-          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ needs.prepare.outputs.version }}
 
       - name: Generate CycloneDX SBOM
         run: ./gradlew :library:cyclonedxBom
         env:
-          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ needs.prepare.outputs.version }}
+
       - name: Attach SBOM to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          tag="${GITHUB_REF#refs/tags/}"
-          gh release upload "$tag" \
+          set -euo pipefail
+          gh release upload "$RELEASE_TAG" \
             "library/build/reports/bom.json#library-${RELEASE_VERSION}-cyclonedx.json" \
             --clobber
-  plugin:
+
+  finalize:
     runs-on: ubuntu-latest
+    needs: [prepare, library]
+    if: needs.prepare.outputs.release == 'true' && needs.library.result == 'success'
     permissions:
       contents: write
-      id-token: write
-      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: main
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
         with:
-          go-version-file: "./protoc-gen-connect-ktor/go.mod"
-          cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
-          cache: false
+          version: 11.18.0
 
-      - name: Install syft
-        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
-
-      - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          args: release --clean
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure git credentials
+        run: git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
-      - name: Generate SLSA build provenance for Go release archives
-        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
-        with:
-          subject-path: |
-            dist/*.tar.gz
-            dist/*.zip
+      - name: Cleanup Tegami publish lock
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ ! -f .tegami/publish-lock.yaml ]]; then
+            echo "no publish lock to clean up"
+            exit 0
+          fi
+          pnpm tegami cleanup
+          if [[ -f .tegami/publish-lock.yaml ]]; then
+            echo "publish lock still pending; leaving it in place for retry"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .tegami/publish-lock.yaml
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git commit -m "chore(release): remove tegami publish lock after ${RELEASE_TAG}"
+          # GITHUB_TOKEN pushes do not re-trigger workflows (loop prevention).
+          git push origin HEAD:main

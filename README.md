@@ -148,7 +148,7 @@ SLSA provenance. See the release notes and:
 cosign verify-blob \
   --new-bundle-format \
   --bundle connect-ktor_Linux_x86_64.tar.gz.sigstore.json \
-  --certificate-identity-regexp "^https://github.com/ichizero/connect-ktor/\\.github/workflows/release\\.yml@refs/tags/v.*$" \
+  --certificate-identity-regexp "^https://github.com/ichizero/connect-ktor/\\.github/workflows/release\\.yml@(refs/heads/main|refs/tags/v.*)$" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   connect-ktor_Linux_x86_64.tar.gz
 

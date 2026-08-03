@@ -54,9 +54,15 @@ changes a published package (`connect-ktor` / `protoc-gen-connect-ktor`), add a 
 changelog entry under `.tegami/` **before opening or updating the PR**.
 
 CI (`tegami-pr`) posts a release preview comment (see [PR release preview](#pr-release-preview)).
-Merges to `main` run `pnpm tegami ci`, which bumps `VERSION`, writes docs changelog MDX
-under `apps/docs-site/changelog/`, and opens/updates the version PR. GitHub Releases
-remain tag-driven (GoReleaser).
+Merges to `main` run `.github/workflows/release.yml`, which calls `pnpm tegami ci` to bump
+`VERSION`, write docs changelog MDX under `apps/docs-site/changelog/`, and open/update the
+Version Packages PR. When that version PR merges, the same workflow publishes (creates the
+`v*` tag via Tegami), then runs GoReleaser (draft GitHub Release + plugin artifacts with
+Tegami changelog notes) and Maven Central publish. Tag-only triggers are not used, because
+`GITHUB_TOKEN` tag pushes do not start other workflows.
+
+To re-run GoReleaser + Maven for an existing tag (for example after a partial failure), use
+**Actions → release → Run workflow** and pass the tag (`vX.Y.Z`).
 
 ### Create an entry
 

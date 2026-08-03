@@ -7,7 +7,8 @@
     "lint-fix": "pnpm run lint-fix:format",
     "lint-fix:format": "oxfmt",
     "tegami": "node scripts/tegami.mts",
-    "tegami:deps-summary": "bash scripts/tegami-deps-summary.sh"
+    "tegami:deps-summary": "bash scripts/tegami-deps-summary.sh",
+    "tegami:release-notes": "bash scripts/tegami-release-notes.sh"
   },
   "devDependencies": {
     "@fumapress/tegami": "catalog:",
