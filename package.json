@@ -15,5 +15,12 @@
     "oxfmt": "catalog:",
     "tegami": "catalog:"
   },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24",
+      "onFail": "download"
+    }
+  },
   "packageManager": "pnpm@11.18.0"
 }
