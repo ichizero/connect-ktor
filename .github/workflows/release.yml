@@ -46,11 +46,6 @@ jobs:
 
       - uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
 
-      - name: Configure git credentials for tegami
-        run: git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-
       - name: Check whether publish is pending
         id: check
         run: |
@@ -61,6 +56,7 @@ jobs:
             echo "pending=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # Git credentials: tegami github plugin initCli sets origin via GITHUB_TOKEN when CI=true.
       - name: Version & publish
         run: pnpm tegami ci
         env:
