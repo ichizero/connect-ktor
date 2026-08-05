@@ -17,6 +17,10 @@
 # lock — this workflow never pushes cleanup commits to main.
 #
 # Releases are immutable: there is no workflow_dispatch re-release path.
+#
+# Concurrency serializes overlapping main pushes so two runs cannot both see
+# check-publish as pending and invoke `pnpm tegami ci` publish at once.
+# cancel-in-progress is false so an in-flight Maven/GoReleaser publish is never aborted.
 name: release
 
 on:
@@ -26,6 +30,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   prepare:
