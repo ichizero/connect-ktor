@@ -61,6 +61,12 @@ Version Packages PR. When that version PR merges, the same workflow publishes (c
 Tegami changelog notes) and Maven Central publish. Tag-only triggers are not used, because
 `GITHUB_TOKEN` tag pushes do not start other workflows.
 
+After a successful tag publish, `.tegami/publish-lock.yaml` may remain on `main`
+temporarily. That is fine: once the `v*` tags exist, Tegami publish status is `success`,
+so `check-publish` will not re-run GoReleaser/Maven. The next Version Packages PR
+(from `tegami version` / versioning in `tegami ci`) replaces or removes the spent lock.
+Actions never pushes a cleanup commit directly to `main`.
+
 To re-run GoReleaser + Maven for an existing tag (for example after a partial failure), use
 **Actions → release → Run workflow** and pass the tag (`vX.Y.Z`).
 
