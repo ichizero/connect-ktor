@@ -66,9 +66,7 @@ temporarily. That is fine: once the `v*` tags exist, Tegami publish status is `s
 so `check-publish` will not re-run GoReleaser/Maven. The next Version Packages PR
 (from `tegami version` / versioning in `tegami ci`) replaces or removes the spent lock.
 Actions never pushes a cleanup commit directly to `main`.
-
-To re-run GoReleaser + Maven for an existing tag (for example after a partial failure), use
-**Actions → release → Run workflow** and pass the tag (`vX.Y.Z`).
+Releases are immutable: there is no Actions re-release path for an existing tag.
 
 ### Create an entry
 

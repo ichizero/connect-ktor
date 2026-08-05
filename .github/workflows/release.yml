@@ -16,20 +16,13 @@
 # PR (`tegami version` / `tegami ci` versioning) replaces or removes the spent
 # lock — this workflow never pushes cleanup commits to main.
 #
-# workflow_dispatch with `tag` re-runs GoReleaser + Maven for an existing tag
-# (recovery path when tags exist but artifacts were never published).
+# Releases are immutable: there is no workflow_dispatch re-release path.
 name: release
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: Existing v* tag to (re)run GoReleaser + Maven publish (e.g. v0.3.0)
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -51,42 +44,15 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Resolve manual tag re-release
-        id: manual
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          INPUT_TAG: ${{ inputs.tag }}
-        run: |
-          set -euo pipefail
-          tag="${INPUT_TAG}"
-          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-].*)?$ ]]; then
-            echo "tag must look like vX.Y.Z (got: ${tag})" >&2
-            exit 1
-          fi
-          git fetch --tags --force origin "refs/tags/${tag}:refs/tags/${tag}"
-          if ! git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
-            echo "tag not found: ${tag}" >&2
-            exit 1
-          fi
-          version="${tag#v}"
-          {
-            echo "release=true"
-            echo "tag=${tag}"
-            echo "version=${version}"
-          } >> "$GITHUB_OUTPUT"
-
       - uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
-        if: github.event_name == 'push'
 
       - name: Configure git credentials for tegami
-        if: github.event_name == 'push'
         run: git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Check whether publish is pending
         id: check
-        if: github.event_name == 'push'
         run: |
           set -euo pipefail
           if pnpm tegami check-publish; then
@@ -96,7 +62,6 @@ jobs:
           fi
 
       - name: Version & publish
-        if: github.event_name == 'push'
         run: pnpm tegami ci
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -104,7 +69,7 @@ jobs:
 
       - name: Resolve tag after Tegami publish
         id: published
-        if: github.event_name == 'push' && steps.check.outputs.pending == 'true'
+        if: steps.check.outputs.pending == 'true'
         run: |
           set -euo pipefail
           version="$(tr -d '[:space:]' < VERSION)"
@@ -132,20 +97,12 @@ jobs:
       - name: Set job outputs
         id: result
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          MANUAL_RELEASE: ${{ steps.manual.outputs.release }}
-          MANUAL_TAG: ${{ steps.manual.outputs.tag }}
-          MANUAL_VERSION: ${{ steps.manual.outputs.version }}
           PUBLISHED_RELEASE: ${{ steps.published.outputs.release }}
           PUBLISHED_TAG: ${{ steps.published.outputs.tag }}
           PUBLISHED_VERSION: ${{ steps.published.outputs.version }}
         run: |
           set -euo pipefail
-          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            echo "release=${MANUAL_RELEASE}" >> "$GITHUB_OUTPUT"
-            echo "tag=${MANUAL_TAG}" >> "$GITHUB_OUTPUT"
-            echo "version=${MANUAL_VERSION}" >> "$GITHUB_OUTPUT"
-          elif [[ "${PUBLISHED_RELEASE:-}" == "true" ]]; then
+          if [[ "${PUBLISHED_RELEASE:-}" == "true" ]]; then
             echo "release=true" >> "$GITHUB_OUTPUT"
             echo "tag=${PUBLISHED_TAG}" >> "$GITHUB_OUTPUT"
             echo "version=${PUBLISHED_VERSION}" >> "$GITHUB_OUTPUT"
