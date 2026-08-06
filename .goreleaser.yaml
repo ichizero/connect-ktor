@@ -56,6 +56,8 @@ signs:
     artifacts: all
     output: true
 
+# Changelog body is supplied by CI via --release-notes (Tegami / CHANGELOG.md).
+# Keep filters only as a fallback if notes are omitted.
 changelog:
   sort: asc
   filters:

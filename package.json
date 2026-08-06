@@ -7,12 +7,20 @@
     "lint-fix": "pnpm run lint-fix:format",
     "lint-fix:format": "oxfmt",
     "tegami": "node scripts/tegami.mts",
-    "tegami:deps-summary": "bash scripts/tegami-deps-summary.sh"
+    "tegami:deps-summary": "bash scripts/tegami-deps-summary.sh",
+    "tegami:release-notes": "bash scripts/tegami-release-notes.sh"
   },
   "devDependencies": {
     "@fumapress/tegami": "catalog:",
     "oxfmt": "catalog:",
     "tegami": "catalog:"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24",
+      "onFail": "download"
+    }
   },
   "packageManager": "pnpm@11.18.0"
 }

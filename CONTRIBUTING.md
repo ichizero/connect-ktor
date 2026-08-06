@@ -54,9 +54,19 @@ changes a published package (`connect-ktor` / `protoc-gen-connect-ktor`), add a 
 changelog entry under `.tegami/` **before opening or updating the PR**.
 
 CI (`tegami-pr`) posts a release preview comment (see [PR release preview](#pr-release-preview)).
-Merges to `main` run `pnpm tegami ci`, which bumps `VERSION`, writes docs changelog MDX
-under `apps/docs-site/changelog/`, and opens/updates the version PR. GitHub Releases
-remain tag-driven (GoReleaser).
+Merges to `main` run `.github/workflows/release.yml`, which calls `pnpm tegami ci` to bump
+`VERSION`, write docs changelog MDX under `apps/docs-site/changelog/`, and open/update the
+Version Packages PR. When that version PR merges, the same workflow publishes (creates the
+`v*` tag via Tegami), then runs GoReleaser (draft GitHub Release + plugin artifacts with
+Tegami changelog notes) and Maven Central publish. Tag-only triggers are not used, because
+`GITHUB_TOKEN` tag pushes do not start other workflows.
+
+After a successful tag publish, `.tegami/publish-lock.yaml` may remain on `main`
+temporarily. That is fine: once the `v*` tags exist, Tegami publish status is `success`,
+so `check-publish` will not re-run GoReleaser/Maven. The next Version Packages PR
+(from `tegami version` / versioning in `tegami ci`) replaces or removes the spent lock.
+Actions never pushes a cleanup commit directly to `main`.
+Releases are immutable: there is no Actions re-release path for an existing tag.
 
 ### Create an entry
 

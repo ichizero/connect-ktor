@@ -56,7 +56,7 @@ Example row:
 
 <!--
 Checklist of verifications. Use [x] for things already done locally and
-[ ] for things that only run in CI or post-merge (release tag push,
+[ ] for things that only run in CI or post-merge (release workflow on main,
 production deploy, scanner ingestion, etc.). Be specific — "tests pass"
 is not a test plan; "./gradlew :library:test passes 60 tests including
 new streaming framing coverage" is.

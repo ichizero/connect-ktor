@@ -1,14 +1,136 @@
+# Unified release pipeline (Tegami versioning/tags + GoReleaser + Maven).
+#
+# On push to main:
+#   1. `pnpm tegami ci` — open/update Version Packages PR, or publish (create v* tag)
+#   2. When a publish just became due, run GoReleaser (draft release + artifacts)
+#      and Maven Central publish in the same workflow (avoids GITHUB_TOKEN tag-push
+#      not triggering a separate tag workflow).
+#
+# GoReleaser runs on the main checkout after Tegami creates the tag locally/remotely.
+# Tag selection uses GORELEASER_CURRENT_TAG; git validate requires the tag to point
+# at HEAD (true for Tegami tags created on the merge commit).
+#
+# After a successful tag publish, `.tegami/publish-lock.yaml` may remain on main.
+# That is intentional: once tags exist, Tegami publish status is `success`, so
+# `check-publish` will not re-trigger GoReleaser/Maven. The next Version Packages
+# PR (`tegami version` / `tegami ci` versioning) replaces or removes the spent
+# lock — this workflow never pushes cleanup commits to main.
+#
+# Releases are immutable: there is no workflow_dispatch re-release path.
+#
+# Concurrency serializes overlapping main pushes so two runs cannot both see
+# check-publish as pending and invoke `pnpm tegami ci` publish at once.
+# queue: max keeps pending runs in FIFO order (default single pending would
+# cancel an earlier queued release when a newer main push arrives).
+# cancel-in-progress is false so an in-flight Maven/GoReleaser publish is never aborted.
 name: release
+
 on:
   push:
-    tags:
-      - v*
+    branches:
+      - main
+
 permissions:
   contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+  queue: max
+
 jobs:
-  library:
+  prepare:
     runs-on: ubuntu-latest
-    needs: plugin
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release: ${{ steps.result.outputs.release }}
+      tag: ${{ steps.result.outputs.tag }}
+      version: ${{ steps.result.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+
+      - name: Check whether publish is pending
+        id: check
+        run: |
+          set -euo pipefail
+          # tegami check-publish: 0 = pending, 1 = nothing to publish; other codes fail.
+          set +e
+          pnpm tegami check-publish
+          status=$?
+          set -e
+          if [[ "$status" -eq 0 ]]; then
+            echo "pending=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$status" -eq 1 ]]; then
+            echo "pending=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "tegami check-publish failed with exit code ${status}" >&2
+            exit "$status"
+          fi
+
+      # Git credentials: tegami github plugin initCli sets origin via GITHUB_TOKEN when CI=true.
+      - name: Version & publish
+        run: pnpm tegami ci
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CI: true
+
+      - name: Resolve tag after Tegami publish
+        id: published
+        if: steps.check.outputs.pending == 'true'
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < VERSION)"
+          tag="v${version}"
+
+          # Tegami creates the tag on HEAD in this workspace; also refresh from origin.
+          git fetch --tags --force origin "refs/tags/${tag}:refs/tags/${tag}" || true
+          if ! git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            echo "expected tag ${tag} after tegami publish, but it is missing" >&2
+            exit 1
+          fi
+          head_sha="$(git rev-parse HEAD)"
+          tag_sha="$(git rev-list -n1 "refs/tags/${tag}")"
+          if [[ "$head_sha" != "$tag_sha" ]]; then
+            echo "tag ${tag} (${tag_sha}) does not point at HEAD (${head_sha})" >&2
+            exit 1
+          fi
+
+          {
+            echo "release=true"
+            echo "tag=${tag}"
+            echo "version=${version}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set job outputs
+        id: result
+        env:
+          PUBLISHED_RELEASE: ${{ steps.published.outputs.release }}
+          PUBLISHED_TAG: ${{ steps.published.outputs.tag }}
+          PUBLISHED_VERSION: ${{ steps.published.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ "${PUBLISHED_RELEASE:-}" == "true" ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "tag=${PUBLISHED_TAG}" >> "$GITHUB_OUTPUT"
+            echo "version=${PUBLISHED_VERSION}" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            echo "version=" >> "$GITHUB_OUTPUT"
+          fi
+
+  plugin:
+    runs-on: ubuntu-latest
+    needs: prepare
+    if: needs.prepare.outputs.release == 'true'
     permissions:
       contents: write
       id-token: write
@@ -16,35 +138,90 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ needs.prepare.outputs.tag }}
+          fetch-depth: 0
           persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: "./protoc-gen-connect-ktor/go.mod"
+          cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
+          cache: false
+
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Write Tegami release notes
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          chmod +x ./scripts/tegami-release-notes.sh
+          ./scripts/tegami-release-notes.sh "$RELEASE_VERSION" > /tmp/tegami-release-notes.md
+          {
+            echo "----- release notes -----"
+            cat /tmp/tegami-release-notes.md
+            echo "----- end release notes -----"
+          }
+
+      - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          args: release --clean --release-notes=/tmp/tegami-release-notes.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ needs.prepare.outputs.tag }}
+
+      - name: Generate SLSA build provenance for Go release archives
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.zip
+
+  library:
+    runs-on: ubuntu-latest
+    needs: [prepare, plugin]
+    if: needs.prepare.outputs.release == 'true'
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
+          persist-credentials: false
+
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           distribution: temurin
           java-version: 21
+
       - uses: jdx/mise-action@9e7f7633ff6f6d6048a9418a68d48f288f50eb14 # v4.2.3
         with:
           install_args: go
           cache: false
+
       - uses: bufbuild/buf-setup-action@a47c93e0b1648d5651a065437926377d060baa99 # v1.50.0
         with:
           github_token: ${{ github.token }}
+
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
-
-      - name: Get version from tag
-        run: |
-          tag=${GITHUB_REF#refs/*/}
-          echo "RELEASE_VERSION=${tag:1}" >> $GITHUB_ENV
 
       - name: Build project
         run: mise run build
         env:
-          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ needs.prepare.outputs.version }}
 
       - name: Assemble library JAR
         run: ./gradlew :library:assemble
         env:
-          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ needs.prepare.outputs.version }}
 
       - name: Generate SLSA build provenance for library JARs
         uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
@@ -59,53 +236,20 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
-          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ needs.prepare.outputs.version }}
 
       - name: Generate CycloneDX SBOM
         run: ./gradlew :library:cyclonedxBom
         env:
-          ORG_GRADLE_PROJECT_releaseVersion: ${{ env.RELEASE_VERSION }}
+          ORG_GRADLE_PROJECT_releaseVersion: ${{ needs.prepare.outputs.version }}
+
       - name: Attach SBOM to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          tag="${GITHUB_REF#refs/tags/}"
-          gh release upload "$tag" \
+          set -euo pipefail
+          gh release upload "$RELEASE_TAG" \
             "library/build/reports/bom.json#library-${RELEASE_VERSION}-cyclonedx.json" \
             --clobber
-  plugin:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: "./protoc-gen-connect-ktor/go.mod"
-          cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
-          cache: false
-
-      - name: Install syft
-        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
-
-      - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
-        with:
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
-
-      - name: Generate SLSA build provenance for Go release archives
-        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
-        with:
-          subject-path: |
-            dist/*.tar.gz
-            dist/*.zip

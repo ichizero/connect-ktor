@@ -17,7 +17,8 @@ const paper = tegami({
             versionPr: {
                 base: "main",
             },
-            // GoReleaser already creates draft GitHub releases on v* tags.
+            // Draft GitHub releases + artifacts are created by release.yml / GoReleaser
+            // with --release-notes from Tegami changelog content (CHANGELOG.md).
             release: false,
         }),
     ],

@@ -34,18 +34,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-        with:
-          version: 11.18.0
+      - uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install, lint, and build
+      - name: Lint and build
         run: |
-          pnpm install --frozen-lockfile
           pnpm docs-site lint
           pnpm docs-site build
           touch apps/docs-site/dist/public/.nojekyll
