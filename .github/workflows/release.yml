@@ -20,6 +20,8 @@
 #
 # Concurrency serializes overlapping main pushes so two runs cannot both see
 # check-publish as pending and invoke `pnpm tegami ci` publish at once.
+# queue: max keeps pending runs in FIFO order (default single pending would
+# cancel an earlier queued release when a newer main push arrives).
 # cancel-in-progress is false so an in-flight Maven/GoReleaser publish is never aborted.
 name: release
 
@@ -34,6 +36,7 @@ permissions:
 concurrency:
   group: release
   cancel-in-progress: false
+  queue: max
 
 jobs:
   prepare:
@@ -58,10 +61,18 @@ jobs:
         id: check
         run: |
           set -euo pipefail
-          if pnpm tegami check-publish; then
+          # tegami check-publish: 0 = pending, 1 = nothing to publish; other codes fail.
+          set +e
+          pnpm tegami check-publish
+          status=$?
+          set -e
+          if [[ "$status" -eq 0 ]]; then
             echo "pending=true" >> "$GITHUB_OUTPUT"
-          else
+          elif [[ "$status" -eq 1 ]]; then
             echo "pending=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "tegami check-publish failed with exit code ${status}" >&2
+            exit "$status"
           fi
 
       # Git credentials: tegami github plugin initCli sets origin via GITHUB_TOKEN when CI=true.
