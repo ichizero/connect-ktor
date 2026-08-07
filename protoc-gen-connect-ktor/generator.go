@@ -12,13 +12,14 @@ import (
 
 // streamType mirrors Connect's StreamType vocabulary (see connect-go's connect.StreamType and
 // connect-kotlin's com.connectrpc.StreamType) for the RPC shapes connect-ktor currently knows
-// how to generate. Server-streaming and bidirectional streaming are reserved for future work;
-// methods of those kinds are skipped during generation.
+// how to generate. Bidirectional streaming is reserved for future work; methods of that kind are
+// skipped during generation.
 type streamType string
 
 const (
 	streamTypeUnary  streamType = "Unary"
 	streamTypeClient streamType = "Client"
+	streamTypeServer streamType = "Server"
 )
 
 // Run is the protogen entry point: it iterates the files marked for
@@ -62,15 +63,20 @@ func run(plugin *protogen.Plugin, file *protogen.File) error {
 func serviceToData(service *protogen.Service, protoPackageName, javaPackageName, sourceFileName string) *serviceData {
 	methods := make([]*methodData, 0, len(service.Methods))
 	hasClientStream := false
+	hasServerStream := false
 	hasGetRoute := false
 	for _, method := range service.Methods {
 		st, ok := streamTypeOf(method)
 		if !ok {
-			// Server-streaming / bidirectional streaming: skip for now.
+			// Bidirectional streaming: skip for now.
 			continue
 		}
-		if st == streamTypeClient {
+		switch st {
+		case streamTypeClient:
 			hasClientStream = true
+		case streamTypeServer:
+			hasServerStream = true
+		case streamTypeUnary:
 		}
 		noSideEffects := isNoSideEffects(method)
 		// Connect GET is emitted only for unary RPCs annotated NO_SIDE_EFFECTS
@@ -96,6 +102,7 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 		Comment:          toKDocComment(service.Comments.Leading),
 		Methods:          methods,
 		HasClientStream:  hasClientStream,
+		HasServerStream:  hasServerStream,
 		HasGetRoute:      hasGetRoute,
 	}
 }
@@ -123,7 +130,7 @@ func idempotencyAllowsGet(level descriptorpb.MethodOptions_IdempotencyLevel) boo
 }
 
 // streamTypeOf returns the supported stream type and true, or (_, false) when the method is a
-// server-streaming or bidirectional RPC that we do not yet generate code for.
+// bidirectional RPC that we do not yet generate code for.
 func streamTypeOf(method *protogen.Method) (streamType, bool) {
 	return classifyStreamType(method.Desc.IsStreamingClient(), method.Desc.IsStreamingServer())
 }
@@ -136,6 +143,8 @@ func classifyStreamType(clientStream, serverStream bool) (streamType, bool) {
 		return streamTypeUnary, true
 	case clientStream && !serverStream:
 		return streamTypeClient, true
+	case !clientStream && serverStream:
+		return streamTypeServer, true
 	default:
 		return "", false
 	}

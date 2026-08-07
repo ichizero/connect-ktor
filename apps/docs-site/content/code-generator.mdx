@@ -6,7 +6,7 @@ description: protoc-gen-connect-ktor generates Ktor handler interfaces from .pro
 # Code generator
 
 `protoc-gen-connect-ktor` turns service RPCs into Kotlin interfaces and `Route` helpers.
-You implement the interface; the generator owns path wiring and the choice between `handle` and `handleClientStream`.
+You implement the interface; the generator owns path wiring and the choice between `handle`, `handleClientStream`, and `handleServerStream`.
 
 ## What it emits
 
@@ -22,27 +22,55 @@ public interface ElizaServiceHandlerInterface {
         call: ApplicationCall,
     ): ResponseMessage<UploadResponse>
 
+    public suspend fun introduce(
+        request: IntroduceRequest,
+        call: ApplicationCall,
+    ): Flow<IntroduceResponse>
+
     public object Procedures {
         @Resource("/connectrpc.eliza.v1.ElizaService/Say")
         public class Say
 
         @Resource("/connectrpc.eliza.v1.ElizaService/Upload")
         public class Upload
+
+        @Resource("/connectrpc.eliza.v1.ElizaService/Introduce")
+        public class Introduce
     }
 }
 
 public fun Route.elizaService(handler: ElizaServiceHandlerInterface) {
     post<ElizaServiceHandlerInterface.Procedures.Say, SayRequest>(handle(handler::say))
     post<ElizaServiceHandlerInterface.Procedures.Upload>(handleClientStream(handler::upload))
+    post<ElizaServiceHandlerInterface.Procedures.Introduce>(handleServerStream(handler::introduce))
 }
 ```
 
 Unary RPCs receive one message.
 Client-streaming RPCs (`rpc X(stream Req) returns (Res)`) receive a cold `Flow<Req>`.
+Server-streaming RPCs (`rpc X(Req) returns (stream Res)`) receive one message and return a cold `Flow<Res>`.
+
+A server-streaming handler reports its outcome through the flow: normal completion ends the stream,
+and a thrown `ConnectException` becomes the error in the end-of-stream frame. Response headers go on
+`call.response.headers` before the flow is collected; trailers go on `call.connectResponseTrailers()`,
+which is read when the end-of-stream frame is written.
+
+```kotlin
+override suspend fun introduce(
+    request: IntroduceRequest,
+    call: ApplicationCall,
+): Flow<IntroduceResponse> {
+    call.connectResponseTrailers().append("x-sentence-count", "2")
+    return flow {
+        emit(introduceResponse { sentence = "Hi ${request.name}!" })
+        emit(introduceResponse { sentence = "I'm Eliza." })
+    }
+}
+```
 
 ## What it skips
 
-Server-streaming and bidirectional RPCs are not generated today.
+Bidirectional RPCs are not generated today.
 The plugin skips those methods rather than emitting stubs that cannot run.
 Track that gap under [Known limitations](/known-limitations).
 
