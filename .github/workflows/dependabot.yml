@@ -2,6 +2,65 @@ name: Dependabot auto-merge
 on: pull_request
 permissions: {}
 jobs:
+  fix-pnpm-lockfile-drift:
+    # Dependabot's pnpm updater can write a resolved version into
+    # pnpm-lock.yaml instead of preserving the pnpm-workspace.yaml catalog
+    # specifier, which breaks `pnpm install --frozen-lockfile` in CI.
+    # See https://github.com/dependabot/dependabot-core/issues/12244
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'ichizero/connect-ktor'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+
+      - name: Checkout PR branch
+        if: steps.dependabot-metadata.outputs.package-ecosystem == 'npm_and_yarn'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          # Falls back to GITHUB_TOKEN if no PAT is configured. A PAT/App
+          # token is needed for the resulting push to re-trigger the other
+          # required checks (GITHUB_TOKEN pushes don't trigger workflows).
+          token: ${{ secrets.DEPENDABOT_LOCKFILE_PAT || secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - uses: pnpm/setup@4700d737c3d7a2e7199f3d42a920f0bf7f34e411 # v2.0.1
+        if: steps.dependabot-metadata.outputs.package-ecosystem == 'npm_and_yarn'
+        with:
+          install: false
+
+      - name: Reconcile pnpm-lock.yaml with pnpm-workspace.yaml catalog
+        if: steps.dependabot-metadata.outputs.package-ecosystem == 'npm_and_yarn'
+        id: fix
+        run: |
+          set -euo pipefail
+          pnpm install --no-frozen-lockfile
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git commit -m "chore: reconcile pnpm-lock.yaml catalog specifiers"
+          git push origin "HEAD:$PR_HEAD_REF"
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+
+      - name: Comment about the drift fix
+        if: steps.dependabot-metadata.outputs.package-ecosystem == 'npm_and_yarn' && steps.fix.outputs.changed == 'true'
+        run: |
+          gh pr comment "$PR_URL" --body "pnpm-lock.yaml had a catalog specifier out of sync with pnpm-workspace.yaml (a known dependabot-core bug, see [dependabot/dependabot-core#12244](https://github.com/dependabot/dependabot-core/issues/12244)). Pushed a fix commit. If checks don't automatically restart on the new commit, re-run them manually."
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   dependabot:
     runs-on: ubuntu-latest
     if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'ichizero/connect-ktor'
