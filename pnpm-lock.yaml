@@ -81,7 +81,7 @@ importers:
         specifier: 'catalog:'
         version: 0.62.0
       tegami:
-        specifier: 1.3.3
+        specifier: 'catalog:'
         version: 1.3.3
 
   apps/docs-site:
