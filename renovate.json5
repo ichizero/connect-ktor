@@ -1,0 +1,27 @@
+{
+    $schema: "https://docs.renovatebot.com/renovate-schema.json",
+    extends: ["config:recommended", "schedule:daily"],
+    timezone: "Etc/UTC",
+    // Mirrors dependabot.yml's `cooldown.default-days: 7` for every ecosystem.
+    minimumReleaseAge: "7 days",
+    dependencyDashboard: true,
+    packageRules: [
+        {
+            description: "Group github/codeql-action updates (mirrors dependabot.yml's `codeql-action` group).",
+            matchManagers: ["github-actions"],
+            matchPackageNames: ["github/codeql-action/**"],
+            groupName: "codeql-action",
+        },
+        {
+            description: "Group all npm/pnpm updates (mirrors dependabot.yml's `docs-site` group, which matched every npm dependency).",
+            matchManagers: ["npm"],
+            groupName: "docs-site",
+        },
+        {
+            description: "Auto-merge patch updates once required checks and an approving review pass (mirrors the semver-patch auto-merge in .github/workflows/dependabot.yml).",
+            matchUpdateTypes: ["patch"],
+            automerge: true,
+            automergeType: "pr",
+        },
+    ],
+}
