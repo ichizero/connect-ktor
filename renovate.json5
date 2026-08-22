@@ -18,8 +18,8 @@
             groupName: "docs-site",
         },
         {
-            description: "Auto-merge patch updates once required checks and any required review pass (mirrors the old semver-patch auto-merge in dependabot.yml).",
-            matchUpdateTypes: ["patch"],
+            description: "Auto-merge minor and patch updates once required checks and any required review pass (expanded from the old semver-patch-only auto-merge in dependabot.yml).",
+            matchUpdateTypes: ["minor", "patch"],
             automerge: true,
             automergeType: "pr",
         },
