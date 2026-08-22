@@ -1,7 +1,7 @@
 {
     $schema: "https://docs.renovatebot.com/renovate-schema.json",
     extends: ["config:recommended", "schedule:daily"],
-    timezone: "Etc/UTC",
+    timezone: "Asia/Tokyo",
     // Mirrors dependabot.yml's `cooldown.default-days: 7` for every ecosystem.
     minimumReleaseAge: "7 days",
     dependencyDashboard: true,
@@ -18,7 +18,7 @@
             groupName: "docs-site",
         },
         {
-            description: "Auto-merge patch updates once required checks and an approving review pass (mirrors the semver-patch auto-merge in .github/workflows/dependabot.yml).",
+            description: "Auto-merge patch updates once required checks and any required review pass (mirrors the old semver-patch auto-merge in dependabot.yml).",
             matchUpdateTypes: ["patch"],
             automerge: true,
             automergeType: "pr",
