@@ -121,7 +121,7 @@ Skip a Tegami entry only for docs-only, CI-only, or otherwise non-releasable cha
 
 ### Dependency-only releases
 
-Dependabot bumps that should ship as a patch release still need a Tegami entry.
+Renovate bumps that should ship as a patch release still need a Tegami entry.
 Create `.tegami/YYYY-MM-DD-deps.md` with `packages.connect-ktor: patch` and a
 `## Dependencies` body. Keep the bump text in GitHub Release note style, but
 shorten PR refs to `[PR #N](...)`:
@@ -134,7 +134,7 @@ packages:
 
 ## Dependencies
 
-- chore(deps): Bump ktor from 3.5.0 to 3.5.1 by @dependabot[bot] in [PR #231](https://github.com/ichizero/connect-ktor/pull/231)
+- chore(deps): Bump ktor from 3.5.0 to 3.5.1 by @renovate[bot] in [PR #231](https://github.com/ichizero/connect-ktor/pull/231)
 ```
 
 Generate the bullets (since the latest `v*` tag by default):
