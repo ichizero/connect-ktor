@@ -73,13 +73,6 @@ report_sizes: true
 release:
   draft: true
 
-# NOTE: GoReleaser's built-in Homebrew formula template always emits an
-# explicit `version "x.y.z"` line, regardless of what is configured here —
-# there is no `brews` field to suppress it (upstream limitation, tracked at
-# https://github.com/goreleaser/goreleaser/issues/1908). Since our download
-# URLs already embed the version, `brew audit` flags that line as redundant.
-# The `plugin` job in .github/workflows/release.yml strips it from the
-# formula committed to homebrew-tap right after this pipe runs.
 brews:
   - name: protoc-gen-connect-ktor
     ids:
