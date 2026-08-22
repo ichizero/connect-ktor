@@ -9,7 +9,7 @@
         {
             description: "Group github/codeql-action updates (mirrors dependabot.yml's `codeql-action` group).",
             matchManagers: ["github-actions"],
-            matchPackageNames: ["github/codeql-action/**"],
+            matchPackageNames: ["github/codeql-action", "github/codeql-action/**"],
             groupName: "codeql-action",
         },
         {
