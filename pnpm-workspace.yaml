@@ -21,9 +21,9 @@ catalog:
   "@types/node": 26.2.0
   "@types/react": 19.2.18
   "@types/react-dom": 19.2.4
-  fumadocs-core: 16.14.5
-  fumadocs-mdx: 15.3.0
-  fumadocs-ui: npm:@fumadocs/base-ui@16.14.5
+  fumadocs-core: 16.15.1
+  fumadocs-mdx: 15.3.1
+  fumadocs-ui: npm:@fumadocs/base-ui@16.15.1
   fumapress: 0.7.3
   lucide-react: 1.33.0
   oxfmt: 0.64.0
