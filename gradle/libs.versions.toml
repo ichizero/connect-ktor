@@ -16,7 +16,7 @@ okhttp = "5.5.0"
 slf4j = "2.0.18"
 
 junit-jupiter-engine = "6.1.3"
-kotest = "5.9.1"
+kotest = "6.2.4"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -55,7 +55,6 @@ slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter-engine" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
-kotest-framework-datatest = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.ref = "kotest" }
 kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
@@ -78,7 +77,6 @@ protobuf = ["protobuf-java", "protobuf-java-util", "protobuf-kotlin", "protovali
 test = [
     "junit-jupiter-engine",
     "kotest-runner-junit5",
-    "kotest-framework-datatest",
     "kotest-assertions-core",
     "kotest-assertions-json",
     "ktor-server-test-host",
