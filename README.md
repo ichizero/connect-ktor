@@ -73,14 +73,14 @@ Install the generator (`brew install ichizero/tap/protoc-gen-connect-ktor` or a
 ```yaml
 # buf.gen.yaml (excerpt)
 plugins:
-    - remote: buf.build/protocolbuffers/java
-      out: path/to/code
-    - remote: buf.build/protocolbuffers/kotlin
-      out: path/to/code
-    - remote: buf.build/connectrpc/kotlin
-      out: path/to/code
-    - local: protoc-gen-connect-ktor
-      out: path/to/code
+  - remote: buf.build/protocolbuffers/java
+    out: path/to/code
+  - remote: buf.build/protocolbuffers/kotlin
+    out: path/to/code
+  - remote: buf.build/connectrpc/kotlin
+    out: path/to/code
+  - local: protoc-gen-connect-ktor
+    out: path/to/code
 ```
 
 ```bash
