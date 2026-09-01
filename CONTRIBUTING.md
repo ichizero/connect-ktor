@@ -82,7 +82,7 @@ Or create `.tegami/YYYY-MM-DD-<id>.md` by hand (see
 ```md
 ---
 packages:
-    connect-ktor: minor
+  connect-ktor: minor
 ---
 
 ## Support example feature
@@ -97,12 +97,17 @@ Rules:
 - YAML frontmatter must include `packages` with an explicit bump:
   `major` | `minor` | `patch` (this repo uses **explicit** style; see
   `scripts/tegami.mts`)
+- Frontmatter is indented with **2 spaces**. Tegami writes YAML at its own
+  2-space default for both `.tegami/*.md` and the generated
+  `apps/docs-site/changelog/*.mdx`, so `.editorconfig` sets `indent_size = 2`
+  for `*.md` / `*.mdx`; without it `lint-format` fails on the changelog files
+  the release workflow generates
 - Body is **freeform Markdown**. Do **not** add Changesets-style category headings
   such as `## Features` / `## Fixes`
 - Convention for each change:
-    1. `##` (h2) title
-    2. Brief user-facing description
-    3. PR reference: `PR #123` or `[PR #123](https://github.com/ichizero/connect-ktor/pull/123)`
+  1. `##` (h2) title
+  2. Brief user-facing description
+  3. PR reference: `PR #123` or `[PR #123](https://github.com/ichizero/connect-ktor/pull/123)`
 - Body needs at least one `#` / `##` / `###` heading (Tegami requirement)
 - Write notes for end users (not internal refactor chatter)
 - Package name is `connect-ktor` (Gradle package)
@@ -129,7 +134,7 @@ shorten PR refs to `[PR #N](...)`:
 ```md
 ---
 packages:
-    connect-ktor: patch
+  connect-ktor: patch
 ---
 
 ## Dependencies
