@@ -1,3 +1,44 @@
+## connect-ktor@0.3.1
+
+### Dependencies
+
+- chore(deps): Bump pnpm/action-setup from 4.2.0 to 6.0.9 by @dependabot[bot] in [PR #280](https://github.com/ichizero/connect-ktor/pull/280)
+- chore(deps): Bump lucide-react from 1.26.0 to 1.27.0 in the docs-site group by @dependabot[bot] in [PR #279](https://github.com/ichizero/connect-ktor/pull/279)
+- chore(deps): Bump spotless from 8.8.0 to 8.9.0 by @dependabot[bot] in [PR #282](https://github.com/ichizero/connect-ktor/pull/282)
+- chore(deps): Bump com.squareup.okio:okio from 3.18.0 to 3.18.1 by @dependabot[bot] in [PR #283](https://github.com/ichizero/connect-ktor/pull/283)
+- chore(deps): Bump actions/attest from 4.2.0 to 4.2.1 by @dependabot[bot] in [PR #284](https://github.com/ichizero/connect-ktor/pull/284)
+- chore(deps): Bump the codeql-action group with 3 updates by @dependabot[bot] in [PR #285](https://github.com/ichizero/connect-ktor/pull/285)
+- chore(deps): Bump actions/setup-java from 5.6.0 to 5.7.0 by @dependabot[bot] in [PR #287](https://github.com/ichizero/connect-ktor/pull/287)
+- chore(deps): Bump lucide-react from 1.27.0 to 1.28.0 in the docs-site group by @dependabot[bot] in [PR #286](https://github.com/ichizero/connect-ktor/pull/286)
+- chore(deps): Bump ktor from 3.5.1 to 3.5.2 by @dependabot[bot] in [PR #288](https://github.com/ichizero/connect-ktor/pull/288)
+- chore(deps): Bump the codeql-action group with 3 updates by @dependabot[bot] in [PR #290](https://github.com/ichizero/connect-ktor/pull/290)
+- chore(deps): Bump zizmorcore/zizmor-action from 0.6.1 to 0.6.2 by @dependabot[bot] in [PR #291](https://github.com/ichizero/connect-ktor/pull/291)
+- chore(deps): Bump gradle/actions/wrapper-validation from 6.2.0 to 6.3.0 by @dependabot[bot] in [PR #293](https://github.com/ichizero/connect-ktor/pull/293)
+- chore(deps): Bump jdx/mise-action from 4.2.3 to 4.2.4 by @dependabot[bot] in [PR #292](https://github.com/ichizero/connect-ktor/pull/292)
+- chore(deps): Bump actions/attest from 4.2.1 to 4.2.2 by @dependabot[bot] in [PR #296](https://github.com/ichizero/connect-ktor/pull/296)
+- chore(deps): Bump the codeql-action group with 3 updates by @dependabot[bot] in [PR #295](https://github.com/ichizero/connect-ktor/pull/295)
+- chore(deps): Bump pnpm/setup from 2.0.0 to 2.0.1 by @dependabot[bot] in [PR #301](https://github.com/ichizero/connect-ktor/pull/301)
+- chore(deps): Bump jdx/mise-action from 4.2.4 to 4.2.5 by @dependabot[bot] in [PR #310](https://github.com/ichizero/connect-ktor/pull/310)
+- chore(deps): Bump org.cyclonedx.bom from 3.3.0 to 3.4.1 by @dependabot[bot] in [PR #308](https://github.com/ichizero/connect-ktor/pull/308)
+- chore(deps): Bump the codeql-action group with 3 updates by @dependabot[bot] in [PR #309](https://github.com/ichizero/connect-ktor/pull/309)
+- chore(deps): Bump the docs-site group across 1 directory with 8 updates by @dependabot[bot] in [PR #305](https://github.com/ichizero/connect-ktor/pull/305)
+- chore(deps): Bump google.golang.org/protobuf from 1.36.11 to 1.36.12 in /protoc-gen-connect-ktor by @dependabot[bot] in [PR #307](https://github.com/ichizero/connect-ktor/pull/307)
+- chore(deps): Bump org.junit.jupiter:junit-jupiter-engine from 6.1.2 to 6.1.3 by @dependabot[bot] in [PR #303](https://github.com/ichizero/connect-ktor/pull/303)
+- chore(deps): Bump pnpm/setup from 2.0.1 to 2.0.2 by @dependabot[bot] in [PR #304](https://github.com/ichizero/connect-ktor/pull/304)
+- chore(deps): update docs-site by @renovate[bot] in [PR #313](https://github.com/ichizero/connect-ktor/pull/313)
+- chore(deps): update pnpm to v11.22.0 by @renovate[bot] in [PR #317](https://github.com/ichizero/connect-ktor/pull/317)
+- fix(deps): update dependency com.squareup.okhttp3:okhttp to v5.5.0 by @renovate[bot] in [PR #318](https://github.com/ichizero/connect-ktor/pull/318)
+- chore(deps): update dependency go to v1.27.0 by @renovate[bot] in [PR #320](https://github.com/ichizero/connect-ktor/pull/320)
+- chore(deps): update docs-site by @renovate[bot] in [PR #319](https://github.com/ichizero/connect-ktor/pull/319)
+- chore(deps): update gradle to v9.7.1 by @renovate[bot] in [PR #314](https://github.com/ichizero/connect-ktor/pull/314)
+- chore(deps): update dependency lefthook to v2.1.11 by @renovate[bot] in [PR #321](https://github.com/ichizero/connect-ktor/pull/321)
+- chore(deps): update github/codeql-action action to v4.37.8 by @renovate[bot] in [PR #322](https://github.com/ichizero/connect-ktor/pull/322)
+- fix(deps): update kotest to v6 by @renovate[bot] in [PR #316](https://github.com/ichizero/connect-ktor/pull/316)
+- chore(deps): update dependency golangci-lint to v2.13.1 by @renovate[bot] in [PR #323](https://github.com/ichizero/connect-ktor/pull/323)
+- chore(deps): update docs-site by @renovate[bot] in [PR #324](https://github.com/ichizero/connect-ktor/pull/324)
+- chore(deps): update docs-site by @renovate[bot] in [PR #327](https://github.com/ichizero/connect-ktor/pull/327)
+- fix(deps): update protobuf monorepo to v4.36.0 by @renovate[bot] in [PR #328](https://github.com/ichizero/connect-ktor/pull/328)
+
 ## connect-ktor@0.3.0
 
 ### Support Connect GET for idempotent unary RPCs

@@ -63,7 +63,7 @@ mise run conformance
 
 ```kotlin
 dependencies {
-    implementation("io.github.ichizero:connect-ktor:0.3.0")
+    implementation("io.github.ichizero:connect-ktor:0.3.1")
 }
 ```
 
