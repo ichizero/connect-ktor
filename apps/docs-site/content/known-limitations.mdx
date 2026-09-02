@@ -11,7 +11,7 @@ The limits below are deliberate scope choices, not silent bugs.
 ## Protocol surface
 
 - **gRPC / gRPC-Web** — Connect only. Official Connect implementations can speak gRPC as well; see the [Connect protocol](https://connectrpc.com/docs/protocol) and language guides on [connectrpc.com](https://connectrpc.com/) when that interop is required. Here, gRPC would need length-prefixed framing and trailer-only error responses.
-- **Server-streaming and bidi** — Client streaming works via `handleClientStream` and the generator. Server and bidirectional streams need more generator branches and a streaming response writer. Bidi also needs HTTP/2. The full stream taxonomy is documented in the official protocol / language docs.
+- **Bidirectional streaming** — Client streaming (`handleClientStream`) and server streaming (`handleServerStream`) are generated and conformance-tested. Bidi streams still need a full-duplex handler shape and HTTP/2. The full stream taxonomy is documented in the official protocol / language docs.
 
 ## Engines
 
@@ -21,8 +21,8 @@ The limits below are deliberate scope choices, not silent bugs.
 ## Compression and limits
 
 - **Extra content encodings** — `br`, `zstd`, and `snappy` need custom Ktor `ContentEncoder`s plus matching entries in `UnaryCompressionGuard.supportedEncodings`.
-- **Client-stream gzip** — Per-message streaming compression is unimplemented; related conformance cases stay known-failing.
-- **Per-message receive limits on client streams** — `connectBodyLimit` caps the whole request body. Unary equals one message; client-stream needs a different mechanism.
+- **Streaming gzip** — Per-message streaming compression is unimplemented; the related client-stream and server-stream conformance cases stay known-failing.
+- **Per-message receive limits on streams** — `connectBodyLimit` caps the whole request body. Unary equals one message; client-stream and server-stream need a different mechanism.
 
 ## Product status
 

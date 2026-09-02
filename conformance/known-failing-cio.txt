@@ -6,7 +6,16 @@
 # without switching engines. This is a CIO upstream limitation, not a
 # connect-ktor regression, and is treated as out-of-scope for the Connect GET
 # work (PR #194 / issue #189): all listed cases pass on Netty.
-Duplicate Metadata/**
+#
+# `Duplicate Metadata` is listed per stream type rather than as a single
+# `Duplicate Metadata/**` glob: its `server-stream/no-response` case sends no
+# duplicate request headers (it has no requestHeaders at all), so it passes on
+# CIO and a blanket glob would be reported as "expected to fail but did not".
+Duplicate Metadata/**/unary/*
+Duplicate Metadata/**/client-stream/*
+Duplicate Metadata/**/server-stream/success
+Duplicate Metadata/**/server-stream/error-with-responses
+Duplicate Metadata/**/server-stream/error-with-no-responses
 # Reference client sends duplicate "X-Conformance-Test" headers in these cases;
 # CIO collapses them so the echoed request_info disagrees with the expectation.
 # Listed with the exact case names so an unrelated regression in `Basic` or
@@ -15,8 +24,15 @@ Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_PROTO/Compression:COMP
 Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_JSON/Compression:COMPRESSION_IDENTITY/TLS:false/unary/success
 Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_PROTO/Compression:COMPRESSION_IDENTITY/TLS:false/client-stream/success
 Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_JSON/Compression:COMPRESSION_IDENTITY/TLS:false/client-stream/success
+Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_PROTO/Compression:COMPRESSION_IDENTITY/TLS:false/server-stream/success
+Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_JSON/Compression:COMPRESSION_IDENTITY/TLS:false/server-stream/success
 Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_PROTO/Compression:COMPRESSION_GZIP/TLS:false/unary/success
 Basic/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/Codec:CODEC_JSON/Compression:COMPRESSION_GZIP/TLS:false/unary/success
+# Same duplicate-header collapsing, on the two server-stream error cases that
+# echo request_info back (`server-stream/no-responses` sends no message, so its
+# request_info is never compared and it still passes on CIO).
+Errors/**/Compression:COMPRESSION_IDENTITY/**/server-stream/error-with-responses
+Errors/**/Compression:COMPRESSION_IDENTITY/**/server-stream/error-with-no-responses
 Server Empty Requests/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/TLS:false/unary/empty-request
 Server Empty Requests/HTTPVersion:1/Protocol:PROTOCOL_CONNECT/TLS:false/client-stream/empty-request
 # The two GET cases below also fail solely due to CIO's duplicate-header
@@ -27,22 +43,31 @@ Connect with GET/HTTPVersion:1/Codec:CODEC_PROTO/TLS:false/success
 Connect with GET/HTTPVersion:1/Codec:CODEC_JSON/TLS:false/success
 
 # Per-message (envelope) compression for streaming RPCs is not implemented yet
-# (see issue #190): handleClientStream rejects a non-identity
-# `Connect-Content-Encoding` and any compressed envelope frame with
-# CODE_UNIMPLEMENTED. The conformance config advertises COMPRESSION_GZIP for the
-# whole server, so the runner also exercises gzip against client-stream, where
-# every case fails the same way. Unary gzip is fully supported. The Timeouts
-# suite races the rejection against the deadline and is tracked in
-# known-flaky-cio.txt instead.
+# (see issue #190): the streaming handlers reject a non-identity
+# `Connect-Content-Encoding` with CODE_UNIMPLEMENTED. The conformance config
+# advertises COMPRESSION_GZIP for the whole server, so the runner also exercises
+# gzip against the streaming RPCs, where every case fails the same way. Unary
+# gzip is fully supported. The Timeouts suite races the rejection against the
+# deadline and is tracked in known-flaky-cio.txt instead.
 Basic/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Basic/**/Compression:COMPRESSION_GZIP/**/server-stream/**
 Connect to HTTP Code Mapping/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Connect to HTTP Code Mapping/**/Compression:COMPRESSION_GZIP/**/server-stream/**
 Deadline Propagation/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Deadline Propagation/**/Compression:COMPRESSION_GZIP/**/server-stream/**
 Errors/**/Compression:COMPRESSION_GZIP/**/client-stream/**
+Errors/**/Compression:COMPRESSION_GZIP/**/server-stream/**
+# The rest of `Duplicate Metadata` is already pinned above by the duplicate
+# request header limitation; only this case passes on identity and needs the
+# gzip variant pinned separately.
+Duplicate Metadata/**/Compression:COMPRESSION_GZIP/**/server-stream/no-response
 
 # `connectBodyLimit` enforces a whole-body byte cap, which equals a single
-# message for unary RPCs. Client-streaming needs a per-message receive limit
-# (and a streaming end-of-stream error frame): the whole-body cap both
-# over-rejects when individual messages are within the limit but their sum is
-# not, and surfaces the overflow as CODE_UNKNOWN instead of RESOURCE_EXHAUSTED.
+# message for unary RPCs. Streaming RPCs need a per-message receive limit (and a
+# streaming end-of-stream error frame): the whole-body cap also counts the 5 byte
+# envelope prefix, over-rejects when individual messages are within the limit but
+# their sum is not, and surfaces the overflow as a unary JSON error (HTTP 429,
+# read back as CODE_UNAVAILABLE) instead of RESOURCE_EXHAUSTED.
 # Per-message streaming receive limits are future work.
 Server Message Size/**/client-stream/*
+Server Message Size/**/server-stream/*

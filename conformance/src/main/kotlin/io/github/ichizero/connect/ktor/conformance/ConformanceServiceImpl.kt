@@ -10,6 +10,8 @@ import com.connectrpc.conformance.v1.ConformancePayload
 import com.connectrpc.conformance.v1.ConformanceServiceHandlerInterface
 import com.connectrpc.conformance.v1.IdempotentUnaryRequest
 import com.connectrpc.conformance.v1.IdempotentUnaryResponse
+import com.connectrpc.conformance.v1.ServerStreamRequest
+import com.connectrpc.conformance.v1.ServerStreamResponse
 import com.connectrpc.conformance.v1.UnaryRequest
 import com.connectrpc.conformance.v1.UnaryResponse
 import com.connectrpc.conformance.v1.UnaryResponseDefinition
@@ -17,11 +19,14 @@ import com.connectrpc.conformance.v1.UnimplementedRequest
 import com.connectrpc.conformance.v1.UnimplementedResponse
 import com.google.protobuf.Message
 import io.github.ichizero.connect.ktor.ConnectGetQueryParamsKey
+import io.github.ichizero.connect.ktor.streaming.connectResponseTrailers
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.ApplicationRequest
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import okio.ByteString.Companion.toByteString
+import com.connectrpc.conformance.v1.Error as ConformanceError
 import com.connectrpc.conformance.v1.Header as ConformanceHeader
 import com.google.protobuf.Any as ProtoAny
 
@@ -72,7 +77,7 @@ class ConformanceServiceImpl : ConformanceServiceHandlerInterface {
             ?.takeIf { it.hasResponseDefinition() }
             ?.responseDefinition
 
-        val requestInfo = buildClientStreamRequestInfo(call.request, collected)
+        val requestInfo = buildStreamRequestInfo(call.request, collected)
 
         val headers = responseDefinition?.responseHeadersList.toMultimap()
         val trailers = responseDefinition?.responseTrailersList.toMultimap()
@@ -82,22 +87,7 @@ class ConformanceServiceImpl : ConformanceServiceHandlerInterface {
         }
 
         if (responseDefinition != null && responseDefinition.hasError()) {
-            val err = responseDefinition.error
-            val cause = ConnectException(
-                code = connectCodeFor(err.code.number),
-                message = if (err.hasMessage()) err.message else null,
-            ).withErrorDetails(
-                errorParser = NoopErrorDetailParser,
-                details = err.detailsList.map {
-                    ConnectErrorDetail(
-                        type = it.typeUrl.substringAfterLast('/'),
-                        payload = it.value.toByteArray().toByteString(),
-                    )
-                } + ConnectErrorDetail(
-                    type = requestInfo.descriptorForType.fullName,
-                    payload = requestInfo.toByteArray().toByteString(),
-                ),
-            )
+            val cause = responseDefinition.error.toConnectException(requestInfo)
             return ResponseMessage.Failure(cause = cause, headers = headers, trailers = trailers)
         }
 
@@ -119,6 +109,49 @@ class ConformanceServiceImpl : ConformanceServiceHandlerInterface {
         )
     }
 
+    override suspend fun serverStream(
+        request: ServerStreamRequest,
+        call: ApplicationCall,
+    ): Flow<ServerStreamResponse> {
+        val responseDefinition = if (request.hasResponseDefinition()) request.responseDefinition else null
+
+        // Headers go out with the response head, trailers with the end-stream frame. Both are set
+        // before the flow is collected so they are observable even when the producer is slow or the
+        // stream ends in an error.
+        responseDefinition?.responseHeadersList?.forEach { header ->
+            header.valueList.forEach { call.response.headers.append(header.name, it, safeOnly = false) }
+        }
+        responseDefinition?.responseTrailersList?.forEach { header ->
+            call.connectResponseTrailers().appendAll(header.name, header.valueList)
+        }
+
+        val requestInfo = buildStreamRequestInfo(call.request, listOf(request))
+
+        return flow {
+            if (responseDefinition == null) return@flow
+
+            var sent = 0
+            for (data in responseDefinition.responseDataList) {
+                if (responseDefinition.responseDelayMs > 0) {
+                    kotlinx.coroutines.delay(responseDefinition.responseDelayMs.toLong())
+                }
+                val payload = ConformancePayload.newBuilder()
+                    .setData(data)
+                    // Nothing in the request info changes after the first response, so the
+                    // conformance spec only expects it on the first message.
+                    .apply { if (sent == 0) setRequestInfo(requestInfo) }
+                    .build()
+                emit(ServerStreamResponse.newBuilder().setPayload(payload).build())
+                sent++
+            }
+
+            if (responseDefinition.hasError()) {
+                // The request info can only be reported through the error when no response carried it.
+                throw responseDefinition.error.toConnectException(requestInfo.takeIf { sent == 0 })
+            }
+        }
+    }
+
     private suspend fun <Resp : Message> handleUnary(
         responseDefinition: UnaryResponseDefinition?,
         echoMessage: Message,
@@ -135,22 +168,7 @@ class ConformanceServiceImpl : ConformanceServiceHandlerInterface {
         }
 
         if (responseDefinition != null && responseDefinition.hasError()) {
-            val err = responseDefinition.error
-            val cause = ConnectException(
-                code = connectCodeFor(err.code.number),
-                message = if (err.hasMessage()) err.message else null,
-            ).withErrorDetails(
-                errorParser = NoopErrorDetailParser,
-                details = err.detailsList.map {
-                    ConnectErrorDetail(
-                        type = it.typeUrl.substringAfterLast('/'),
-                        payload = it.value.toByteArray().toByteString(),
-                    )
-                } + ConnectErrorDetail(
-                    type = requestInfo.descriptorForType.fullName,
-                    payload = requestInfo.toByteArray().toByteString(),
-                ),
-            )
+            val cause = responseDefinition.error.toConnectException(requestInfo)
             return ResponseMessage.Failure(cause = cause, headers = headers, trailers = trailers)
         }
 
@@ -194,7 +212,7 @@ private fun buildRequestInfo(call: ApplicationCall, echoMessage: Message): Confo
     return builder.build()
 }
 
-private fun buildClientStreamRequestInfo(
+private fun buildStreamRequestInfo(
     request: ApplicationRequest,
     echoMessages: List<Message>,
 ): ConformancePayload.RequestInfo {
@@ -223,6 +241,33 @@ private fun List<ConformanceHeader>?.toMultimap(): Map<String, List<String>> {
     }
     return map
 }
+
+/**
+ * Build the Connect error the conformance definition asks for. [requestInfo], when non-null, is
+ * appended to the error details — the conformance client reads it back from there whenever no
+ * response message could carry it.
+ */
+private fun ConformanceError.toConnectException(
+    requestInfo: ConformancePayload.RequestInfo?,
+): ConnectException = ConnectException(
+    code = connectCodeFor(code.number),
+    message = if (hasMessage()) message else null,
+).withErrorDetails(
+    errorParser = NoopErrorDetailParser,
+    details = detailsList.map {
+        ConnectErrorDetail(
+            type = it.typeUrl.substringAfterLast('/'),
+            payload = it.value.toByteArray().toByteString(),
+        )
+    } + listOfNotNull(
+        requestInfo?.let {
+            ConnectErrorDetail(
+                type = it.descriptorForType.fullName,
+                payload = it.toByteArray().toByteString(),
+            )
+        },
+    ),
+)
 
 private fun connectCodeFor(protoNumber: Int): Code =
     Code.entries.firstOrNull { it.value == protoNumber } ?: Code.UNKNOWN

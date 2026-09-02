@@ -77,10 +77,11 @@ func Test_classifyStreamType(t *testing.T) {
 			describesShape: "stream Req -> Res",
 		},
 		{
-			name:           "server streaming (unsupported)",
+			name:           "server streaming",
 			clientStream:   false,
 			serverStream:   true,
-			wantSupported:  false,
+			wantType:       streamTypeServer,
+			wantSupported:  true,
 			describesShape: "Req -> stream Res",
 		},
 		{
@@ -154,6 +155,29 @@ func Test_template_unaryOnly(t *testing.T) {
 	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Say, SayRequest>(handle(handler::say))")
 	mustNotContain(t, out, "kotlinx.coroutines.flow.Flow")
 	mustNotContain(t, out, "handleClientStream")
+	mustNotContain(t, out, "handleServerStream")
+}
+
+// Test_template_serverStream verifies that a server-streaming method returns a Flow and is
+// dispatched through handleServerStream, without dragging in the client-streaming import.
+func Test_template_serverStream(t *testing.T) {
+	t.Parallel()
+	out := renderTemplate(t, &serviceData{
+		ProtoPackageName: "example.v1",
+		JavaPackageName:  "com.example.v1",
+		SourceFileName:   "example/v1/example.proto",
+		Name:             "Example",
+		Methods: []*methodData{
+			{Name: "Tail", InputTypeName: "TailRequest", OutputTypeName: "TailResponse", StreamType: streamTypeServer},
+		},
+		HasServerStream: true,
+	})
+
+	mustContain(t, out, "import kotlinx.coroutines.flow.Flow")
+	mustContain(t, out, "import io.github.ichizero.connect.ktor.streaming.handleServerStream")
+	mustContain(t, out, "suspend fun tail(request: TailRequest, call: ApplicationCall): Flow<TailResponse>")
+	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Tail>(handleServerStream(handler::tail))")
+	mustNotContain(t, out, "handleClientStream")
 }
 
 // Test_template_mixedKinds verifies a service with both unary and client-streaming methods
@@ -178,6 +202,7 @@ func Test_template_mixedKinds(t *testing.T) {
 	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Upload>(handleClientStream(handler::upload))")
 	// unary entry remains unchanged.
 	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Say, SayRequest>(handle(handler::say))")
+	mustNotContain(t, out, "handleServerStream")
 }
 
 func renderTemplate(t *testing.T, data *serviceData) string {
