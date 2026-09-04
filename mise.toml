@@ -1,6 +1,6 @@
 [tools]
 go = "1.27.0"
-golangci-lint = "2.13.1"
+golangci-lint = "2.13.2"
 lefthook = "2.1.11"
 buf = "1.72.0"
 
