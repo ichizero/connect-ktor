@@ -1,7 +1,7 @@
 [tools]
 go = "1.27.0"
 golangci-lint = "2.13.2"
-lefthook = "2.1.11"
+lefthook = "2.1.12"
 buf = "1.72.0"
 
 # Wire git hooks after tools are on PATH (including no-op `mise install`).
