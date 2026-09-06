@@ -75,11 +75,11 @@ import kotlinx.coroutines.flow.Flow
 interface {{ .Name }}HandlerInterface {
     {{- range .Methods }}
     {{- .Comment | nIndent 4 -}}
-    {{- if eq (printf "%s" .StreamType) "Unary" }}
+    {{- if eq .StreamType "Unary" }}
     suspend fun {{ .Name | toLowerFirst }}(request: {{ .InputTypeName }}, call: ApplicationCall): ResponseMessage<{{ .OutputTypeName }}>
-    {{- else if eq (printf "%s" .StreamType) "Client" }}
+    {{- else if eq .StreamType "Client" }}
     suspend fun {{ .Name | toLowerFirst }}(requests: Flow<{{ .InputTypeName }}>, call: ApplicationCall): ResponseMessage<{{ .OutputTypeName }}>
-    {{- else if eq (printf "%s" .StreamType) "Server" }}
+    {{- else if eq .StreamType "Server" }}
     suspend fun {{ .Name | toLowerFirst }}(request: {{ .InputTypeName }}, call: ApplicationCall): Flow<{{ .OutputTypeName }}>
     {{- end }}
     {{- end }}
@@ -94,14 +94,14 @@ interface {{ .Name }}HandlerInterface {
 
 fun Route.{{ .Name | toLowerFirst }}(handler: {{ .Name }}HandlerInterface) {
     {{- range .Methods }}
-    {{- if eq (printf "%s" .StreamType) "Unary" }}
+    {{- if eq .StreamType "Unary" }}
     post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}, {{ .InputTypeName }}>(handle(handler::{{ .Name | toLowerFirst }}))
     {{- if .NoSideEffects }}
     get<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleGet<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}, {{ .InputTypeName }}, {{ .OutputTypeName }}>(handler::{{ .Name | toLowerFirst }}))
     {{- end }}
-    {{- else if eq (printf "%s" .StreamType) "Client" }}
+    {{- else if eq .StreamType "Client" }}
     post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleClientStream(handler::{{ .Name | toLowerFirst }}))
-    {{- else if eq (printf "%s" .StreamType) "Server" }}
+    {{- else if eq .StreamType "Server" }}
     post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleServerStream(handler::{{ .Name | toLowerFirst }}))
     {{- end }}
     {{- end }}

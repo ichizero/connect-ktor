@@ -27,25 +27,14 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 
 /**
- * Handle a Connect protocol server-streaming RPC on a Ktor route.
+ * Handle a Connect server-streaming RPC with one request envelope and a cold [Flow] of responses.
+ * Zero or multiple request messages are rejected with [Code.UNIMPLEMENTED]. Each response is
+ * flushed as a data frame, followed by an end-stream frame containing trailers and any RPC error.
+ * Streaming responses use HTTP 200; RPC errors are carried in the end-stream payload.
  *
- * Wire behavior:
- * - Request body is a single Connect envelope frame holding the request message. A body with no
- *   data frame, or with more than one, is rejected with [Code.UNIMPLEMENTED] — the same shape
- *   connect-go's server-stream handler produces.
- * - The handler returns a cold [Flow] of [Res]. Each emitted message is written as one data frame
- *   and flushed, so the client observes messages as the producer emits them.
- * - The stream terminates with an end-stream frame carrying the trailers accumulated via
- *   [connectResponseTrailers] and, when the flow failed, the error. A [ConnectException] thrown by
- *   the flow supplies both the error and (through its `metadata`) extra trailers.
- * - HTTP status is always 200; streaming errors are conveyed in the end-stream payload.
- *
- * Response headers are set by the handler on `call.response.headers` before the flow is collected,
- * and the response head is flushed ahead of the first message so a slow producer never keeps the
- * client waiting on headers.
- *
- * Cancellation propagates: when the client disconnects, the collector of the handler's flow is
- * cancelled instead of the failure being converted into an end-stream frame nobody will read.
+ * Set response headers on `call.response.headers` before returning the flow. Trailers can be
+ * appended through [connectResponseTrailers] until collection ends; [ConnectException.metadata]
+ * is merged into them on failure. Cancellation, broken response channels, and JVM errors propagate.
  *
  * Use via the generated route binding:
  * ```
@@ -77,16 +66,13 @@ internal suspend fun <Req : Any, Res : Any> handleServerStreamCall(
     resClass: KClass<Res>,
     handlerFunc: suspend (Req, ApplicationCall) -> Flow<Res>,
 ) {
-    // Connect streaming bodies are length-prefixed (LPM). Any user-installed Ktor Compression
-    // plugin would otherwise double-encode the body on output or attempt to decode the request
-    // before our framer sees it. Per-message compression negotiated via `Connect-Content-Encoding`
-    // is the framer's responsibility (currently unimplemented; see issue #190).
+    // Envelope framing owns compression; HTTP compression plugins must not transform these bodies.
     call.suppressCompression()
     call.suppressDecompression()
 
     val requestContentType = call.request.contentType()
 
-    // Phase 1: validate headers and resolve codec before any response writing.
+    // Resolve the codec before opening the response writer so header failures can use a fallback type.
     val codec: StreamingCodec = try {
         call.validateConnectStreamingHeaders()
         resolveStreamingCodec(call.application, requestContentType)
@@ -102,17 +88,13 @@ internal suspend fun <Req : Any, Res : Any> handleServerStreamCall(
 
     val deadline = call.connectTimeoutMs()?.let(::StreamDeadline)
 
-    // Phase 2: read the single request message and let the handler produce its flow. Failures here
-    // happen before any data frame exists, so they render as an end-stream-only body.
     val started = call.startStream(codec, reqClass, maxMessageSize, deadline, handlerFunc)
 
-    // Phase 3: stream the messages. The response head is committed by respondBytesWriter; flushing
-    // before the first message pushes it to the client even when the producer is slow, mirroring
-    // the empty send connect-go issues at the start of a server stream.
     when (started) {
         is StartedStream.Failed -> call.respondEndStream(codec, started.error)
 
         is StartedStream.Ready -> call.respondBytesWriter(contentType = codec.streamingContentType) {
+            // Send headers before collection so a slow producer does not delay the response head.
             flush()
             val error = writeResponseMessages(codec, resClass, started.responses, deadline)
             writeEndStream(
@@ -153,13 +135,8 @@ private suspend fun <Req : Any, Res : Any> ApplicationCall.startStream(
     StartedStream.Failed(ConnectException(code = Code.UNKNOWN, message = e.message, exception = e))
 }
 
-/**
- * Read the one envelope frame a server-streaming request carries.
- *
- * Both "no message" and "more than one message" are protocol violations for this stream type;
- * connect-go reports them as [Code.UNIMPLEMENTED] and the conformance suite pins that expectation.
- * Reading a second frame before invoking the handler is what makes the second case detectable.
- */
+// Read up to two data frames to distinguish missing and extra messages, matching connect-go's
+// UNIMPLEMENTED response for these protocol violations.
 private suspend fun ApplicationCall.receiveRequestFrame(maxMessageSize: Int): EnvelopeFrame {
     val frames = receiveChannel()
         .readEnvelopeFrames(maxMessageSize)
@@ -200,14 +177,7 @@ private fun <Req : Any> StreamingCodec.decodeRequest(frame: EnvelopeFrame, reqCl
     )
 }
 
-/**
- * Collect [responses] into data frames, returning the error that terminated the stream (or null on
- * normal completion) so the caller can put it in the end-stream frame.
- *
- * Cancellation and broken response channels are rethrown rather than converted: the client is gone,
- * so there is nobody left to read an end-stream frame, and swallowing the cancellation would leave
- * the flow's collector — and whatever resources it holds — running.
- */
+/** Return the terminating RPC error, or null on successful collection. */
 private suspend fun <Res : Any> ByteWriteChannel.writeResponseMessages(
     codec: StreamingCodec,
     resClass: KClass<Res>,

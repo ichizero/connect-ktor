@@ -11,11 +11,6 @@ private val ConnectResponseTrailersKey: AttributeKey<HeadersBuilder> =
 /**
  * Trailers to send in the end-stream frame of a Connect streaming response.
  *
- * Streaming RPCs carry their trailers inside the terminating envelope frame (`metadata`), not as
- * HTTP headers, so they cannot be set through [io.ktor.server.response.ApplicationResponse.headers].
- * A server-streaming handler returns a `Flow`, which has no slot for them either — hence this
- * call-scoped builder.
- *
  * Values are read once, when the end-stream frame is written, so a handler may append to it either
  * before returning the flow or while the flow is being collected. Keys are lowercased on the wire
  * per the Connect protocol.

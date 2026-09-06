@@ -56,7 +56,7 @@ class HandleClientStreamTest : FunSpec({
         response.status shouldBe HttpStatusCode.OK
         response.parseContentType()?.contentSubtype shouldBe "connect+proto"
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 2
         frames[0].isEndStream shouldBe false
         frames[1].isEndStream shouldBe true
@@ -82,7 +82,7 @@ class HandleClientStreamTest : FunSpec({
         }
 
         response.status shouldBe HttpStatusCode.OK
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         frames[0].isEndStream shouldBe true
         val json = String(frames[0].payload)
@@ -98,7 +98,7 @@ class HandleClientStreamTest : FunSpec({
         }
 
         response.status shouldBe HttpStatusCode.OK
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         frames[0].isEndStream shouldBe true
         val json = String(frames[0].payload)
@@ -113,7 +113,7 @@ class HandleClientStreamTest : FunSpec({
             throw ConnectException(code = Code.PERMISSION_DENIED, message = "no")
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload) shouldBe """{"error":{"code":"permission_denied","message":"no"}}"""
     }
@@ -132,7 +132,7 @@ class HandleClientStreamTest : FunSpec({
             )
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload) shouldBe
             """{"error":{"code":"resource_exhausted","message":"slow down"},""" +
@@ -147,7 +147,7 @@ class HandleClientStreamTest : FunSpec({
             ResponseMessage.Success(uploadResponse {}, emptyMap(), emptyMap())
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         frames[0].isEndStream shouldBe true
         val json = String(frames[0].payload)
@@ -167,7 +167,7 @@ class HandleClientStreamTest : FunSpec({
             ResponseMessage.Success(uploadResponse {}, emptyMap(), emptyMap())
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload).contains(""""code":"resource_exhausted"""") shouldBe true
     }
@@ -192,7 +192,7 @@ class HandleClientStreamTest : FunSpec({
         response.status shouldBe HttpStatusCode.OK
         response.parseContentType()?.contentSubtype shouldBe "connect+json"
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 2
         frames[0].isEndStream shouldBe false
         // Data frame is JSON when codec is JSON. Parse it back and assert structurally rather than
@@ -221,7 +221,7 @@ class HandleClientStreamTest : FunSpec({
             )
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 2
         frames[1].isEndStream shouldBe true
         String(frames[1].payload) shouldBe """{"metadata":{"x-checksum":["deadbeef"]}}"""
@@ -238,7 +238,7 @@ class HandleClientStreamTest : FunSpec({
             ResponseMessage.Success(uploadResponse {}, emptyMap(), emptyMap())
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         frames[0].isEndStream shouldBe true
         String(frames[0].payload).contains(""""code":"deadline_exceeded"""") shouldBe true
@@ -256,7 +256,7 @@ class HandleClientStreamTest : FunSpec({
             ResponseMessage.Success(uploadResponse {}, emptyMap(), emptyMap())
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         frames[0].isEndStream shouldBe true
         String(frames[0].payload).contains(""""code":"invalid_argument"""") shouldBe true
@@ -313,69 +313,11 @@ private fun Application.configureUpload(
 
 private fun encodeJsonFrames(reqs: List<UploadRequest>): ByteArray {
     val printer = com.google.protobuf.util.JsonFormat.printer().omittingInsignificantWhitespace()
-    val out = mutableListOf<Byte>()
-    for (r in reqs) {
-        val bytes = printer.print(r).toByteArray(Charsets.UTF_8)
-        out.add(0)
-        out.add(((bytes.size ushr 24) and 0xFF).toByte())
-        out.add(((bytes.size ushr 16) and 0xFF).toByte())
-        out.add(((bytes.size ushr 8) and 0xFF).toByte())
-        out.add((bytes.size and 0xFF).toByte())
-        out.addAll(bytes.toList())
-    }
-    // Send end-stream frame with empty JSON.
-    out.add(0x02)
-    out.add(0)
-    out.add(0)
-    out.add(0)
-    out.add(2)
-    out.add('{'.code.toByte())
-    out.add('}'.code.toByte())
-    return out.toByteArray()
+    return encodeTestFrames(reqs.map { printer.print(it).toByteArray(Charsets.UTF_8) })
 }
 
-private fun encodeFrames(reqs: List<UploadRequest>, endStream: Boolean = true): ByteArray {
-    val out = mutableListOf<Byte>()
-    for (r in reqs) {
-        val bytes = r.toByteArray()
-        out.add(0)
-        out.add(((bytes.size ushr 24) and 0xFF).toByte())
-        out.add(((bytes.size ushr 16) and 0xFF).toByte())
-        out.add(((bytes.size ushr 8) and 0xFF).toByte())
-        out.add((bytes.size and 0xFF).toByte())
-        out.addAll(bytes.toList())
-    }
-    if (endStream) {
-        out.add(0x02) // end-stream flag
-        out.add(0)
-        out.add(0)
-        out.add(0)
-        out.add(2)
-        out.add('{'.code.toByte())
-        out.add('}'.code.toByte())
-    }
-    return out.toByteArray()
-}
-
-private fun decodeFrames(bytes: ByteArray): List<EnvelopeFrame> {
-    val frames = mutableListOf<EnvelopeFrame>()
-    var i = 0
-    while (i < bytes.size) {
-        if (i + ENVELOPE_HEADER_SIZE > bytes.size) error("truncated header at $i")
-        val flags = bytes[i]
-        val length = ((bytes[i + 1].toInt() and 0xFF) shl 24) or
-            ((bytes[i + 2].toInt() and 0xFF) shl 16) or
-            ((bytes[i + 3].toInt() and 0xFF) shl 8) or
-            (bytes[i + 4].toInt() and 0xFF)
-        if (i + ENVELOPE_HEADER_SIZE + length > bytes.size) {
-            error("truncated payload at $i: declared length $length exceeds remaining bytes")
-        }
-        val payload = bytes.copyOfRange(i + ENVELOPE_HEADER_SIZE, i + ENVELOPE_HEADER_SIZE + length)
-        frames.add(EnvelopeFrame(flags, payload))
-        i += ENVELOPE_HEADER_SIZE + length
-    }
-    return frames
-}
+private fun encodeFrames(reqs: List<UploadRequest>, endStream: Boolean = true): ByteArray =
+    encodeTestFrames(reqs.map { it.toByteArray() }, endStream)
 
 private fun HttpResponse.parseContentType(): ContentType? =
     headers[HttpHeaders.ContentType]?.let { ContentType.parse(it) }

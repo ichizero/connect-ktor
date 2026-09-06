@@ -39,12 +39,7 @@ val ProtoRequestValidation: RouteScopedPlugin<ProtoRequestValidationConfig> = cr
     }
 
     on(RequestBodyTransformed) { content ->
-        if (content !is Message) return@on
-
-        val result = validator.validate(content)
-        if (result.isSuccess) return@on
-
-        throw ProtoRequestValidationException(content, result)
+        validator.validationFailure(content)?.let { throw it }
     }
 }
 
@@ -80,10 +75,12 @@ private val StreamingRequestValidatorKey = AttributeKey<Validator>("ConnectStrea
 
 /** Validate an already decoded streaming message using the validator installed on this call's route. */
 internal fun ApplicationCall.validateStreamingRequest(content: Any) {
-    if (content !is Message) return
     val validator = attributes.getOrNull(StreamingRequestValidatorKey) ?: return
-    val result = validator.validate(content)
-    if (!result.isSuccess) {
-        throw ProtoRequestValidationException(content, result).toConnectException()
-    }
+    validator.validationFailure(content)?.let { throw it.toConnectException() }
+}
+
+private fun Validator.validationFailure(content: Any): ProtoRequestValidationException? {
+    if (content !is Message) return null
+    val result = validate(content)
+    return if (result.isSuccess) null else ProtoRequestValidationException(content, result)
 }

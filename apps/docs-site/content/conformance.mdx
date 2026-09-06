@@ -44,8 +44,9 @@ CIO collapses those headers upstream — the same limitation as the
 Both engines currently fail gzip **client-stream** and **server-stream** cases
 because per-message streaming compression is unimplemented (pinned as
 known-failing / known-flaky). The `Server Message Size` streaming cases are
-pinned too: `connectBodyLimit` caps the whole request body instead of applying a
-per-message receive limit.
+pinned too: the harness applies the requested limit through `connectBodyLimit`, which
+caps the whole body including envelope prefixes. Generated streaming routes retain
+their separate, default 4 MiB per-message limit.
 
 ## Engines
 

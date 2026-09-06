@@ -68,10 +68,10 @@ class HandleServerStreamTest : FunSpec({
                     }
                     val response = client.post("/$prefix/stricteliza.v1.StrictElizaService/Countdown") {
                         header(HttpHeaders.ContentType, contentType.toString())
-                        setBody(frame(payload))
+                        setBody(encodeTestFrame(payload))
                     }
                     response.status shouldBe HttpStatusCode.OK
-                    val frames = decodeFrames(response.bodyAsBytes())
+                    val frames = decodeTestFrames(response.bodyAsBytes())
                     frames.size shouldBe 1
                     frames.single().isEndStream shouldBe true
                     val end = String(frames.single().payload)
@@ -122,7 +122,7 @@ class HandleServerStreamTest : FunSpec({
         response.status shouldBe HttpStatusCode.OK
         response.parseContentType()?.contentSubtype shouldBe "connect+proto"
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 4
         frames.dropLast(1).map { it.isEndStream } shouldBe listOf(false, false, false)
         frames.dropLast(1).map { CountdownResponse.parseFrom(it.payload).value } shouldBe listOf(3, 2, 1)
@@ -138,7 +138,7 @@ class HandleServerStreamTest : FunSpec({
         ) { _, _ -> emptyFlow() }
 
         response.status shouldBe HttpStatusCode.OK
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         frames[0].isEndStream shouldBe true
         String(frames[0].payload) shouldBe "{}"
@@ -157,7 +157,7 @@ class HandleServerStreamTest : FunSpec({
         response.headers["x-custom-header"] shouldBe "foo"
         response.headers["x-custom-trailer"] shouldBe null
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 2
         String(frames[1].payload) shouldBe """{"metadata":{"x-custom-trailer":["bing"]}}"""
     }
@@ -171,7 +171,7 @@ class HandleServerStreamTest : FunSpec({
             emptyFlow()
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         String(frames[0].payload) shouldBe """{"metadata":{"x-custom-trailer":["bing","quux"]}}"""
     }
 
@@ -189,7 +189,7 @@ class HandleServerStreamTest : FunSpec({
         }
 
         response.status shouldBe HttpStatusCode.OK
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 3
         frames.dropLast(1).map { CountdownResponse.parseFrom(it.payload).value } shouldBe listOf(2, 1)
         String(frames.last().payload) shouldBe
@@ -205,7 +205,7 @@ class HandleServerStreamTest : FunSpec({
             flow<CountdownResponse> { throw IllegalStateException("boom") }
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload) shouldBe """{"error":{"code":"unknown","message":"boom"}}"""
     }
@@ -221,7 +221,7 @@ class HandleServerStreamTest : FunSpec({
             }
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 2
         CountdownResponse.parseFrom(frames.first().payload).value shouldBe 1
         frames.last().isEndStream shouldBe true
@@ -244,7 +244,7 @@ class HandleServerStreamTest : FunSpec({
             }
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         String(frames[0].payload) shouldBe
             """{"error":{"code":"resource_exhausted","message":"slow down"},""" +
             """"metadata":{"x-custom-trailer":["bing"],"retry-after":["30"]}}"""
@@ -258,7 +258,7 @@ class HandleServerStreamTest : FunSpec({
             throw ConnectException(code = Code.PERMISSION_DENIED, message = "no")
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload) shouldBe """{"error":{"code":"permission_denied","message":"no"}}"""
     }
@@ -276,7 +276,7 @@ class HandleServerStreamTest : FunSpec({
         }
 
         response.parseContentType()?.contentSubtype shouldBe "connect+json"
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 3
         val decoded = CountdownResponse.newBuilder().also {
             com.google.protobuf.util.JsonFormat.parser().merge(String(frames[0].payload), it)
@@ -291,7 +291,7 @@ class HandleServerStreamTest : FunSpec({
             body = byteArrayOf(),
         ) { _, _ -> emptyFlow() }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload) shouldBe
             """{"error":{"code":"unimplemented","message":"unary request has zero messages"}}"""
@@ -303,7 +303,7 @@ class HandleServerStreamTest : FunSpec({
             body = encodeFrame(countdownRequest { from = 1 }) + encodeFrame(countdownRequest { from = 2 }),
         ) { _, _ -> emptyFlow() }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload) shouldBe
             """{"error":{"code":"unimplemented","message":"unary request has multiple messages"}}"""
@@ -317,7 +317,7 @@ class HandleServerStreamTest : FunSpec({
             body = compressedFrame,
         ) { _, _ -> emptyFlow() }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload) shouldBe """{"error":{"code":"internal",""" +
             """"message":"protocol error: sent compressed message without connect-content-encoding"}}"""
@@ -330,7 +330,7 @@ class HandleServerStreamTest : FunSpec({
             body = byteArrayOf(0x00, 0x00, 0x00, 0x00, garbage.size.toByte()) + garbage,
         ) { _, _ -> emptyFlow() }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload).contains(""""code":"invalid_argument"""") shouldBe true
     }
@@ -339,11 +339,11 @@ class HandleServerStreamTest : FunSpec({
         val big = ByteArray(1024) { 'a'.code.toByte() }
         val response = postCountdown(
             contentType = ConnectStreamingContentType.Proto,
-            body = frame(big),
+            body = encodeTestFrame(big),
             maxMessageSize = 64,
         ) { _, _ -> emptyFlow() }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload).contains(""""code":"resource_exhausted"""") shouldBe true
     }
@@ -355,7 +355,7 @@ class HandleServerStreamTest : FunSpec({
         ) { _, _ -> emptyFlow() }
 
         response.parseContentType()?.contentSubtype shouldBe "connect+json"
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload).contains(""""code":"unimplemented"""") shouldBe true
     }
@@ -374,7 +374,7 @@ class HandleServerStreamTest : FunSpec({
             }
         }
 
-        val frames = decodeFrames(response.bodyAsBytes())
+        val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 2
         frames[0].isEndStream shouldBe false
         String(frames[1].payload).contains(""""code":"deadline_exceeded"""") shouldBe true
@@ -418,39 +418,11 @@ private fun Application.configureCountdown(
     }
 }
 
-private fun encodeFrame(request: CountdownRequest): ByteArray = frame(request.toByteArray())
+private fun encodeFrame(request: CountdownRequest): ByteArray = encodeTestFrame(request.toByteArray())
 
 private fun encodeJsonFrame(request: CountdownRequest): ByteArray {
     val printer = com.google.protobuf.util.JsonFormat.printer().omittingInsignificantWhitespace()
-    return frame(printer.print(request).toByteArray(Charsets.UTF_8))
-}
-
-private fun frame(payload: ByteArray): ByteArray = byteArrayOf(
-    0,
-    ((payload.size ushr 24) and 0xFF).toByte(),
-    ((payload.size ushr 16) and 0xFF).toByte(),
-    ((payload.size ushr 8) and 0xFF).toByte(),
-    (payload.size and 0xFF).toByte(),
-) + payload
-
-private fun decodeFrames(bytes: ByteArray): List<EnvelopeFrame> {
-    val frames = mutableListOf<EnvelopeFrame>()
-    var i = 0
-    while (i < bytes.size) {
-        if (i + ENVELOPE_HEADER_SIZE > bytes.size) error("truncated header at $i")
-        val flags = bytes[i]
-        val length = ((bytes[i + 1].toInt() and 0xFF) shl 24) or
-            ((bytes[i + 2].toInt() and 0xFF) shl 16) or
-            ((bytes[i + 3].toInt() and 0xFF) shl 8) or
-            (bytes[i + 4].toInt() and 0xFF)
-        if (i + ENVELOPE_HEADER_SIZE + length > bytes.size) {
-            error("truncated payload at $i: declared length $length exceeds remaining bytes")
-        }
-        val payload = bytes.copyOfRange(i + ENVELOPE_HEADER_SIZE, i + ENVELOPE_HEADER_SIZE + length)
-        frames.add(EnvelopeFrame(flags, payload))
-        i += ENVELOPE_HEADER_SIZE + length
-    }
-    return frames
+    return encodeTestFrame(printer.print(request).toByteArray(Charsets.UTF_8))
 }
 
 private fun HttpResponse.parseContentType(): ContentType? =

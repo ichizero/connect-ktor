@@ -22,7 +22,7 @@ The limits below are deliberate scope choices, not silent bugs.
 
 - **Extra content encodings** — `br`, `zstd`, and `snappy` need custom Ktor `ContentEncoder`s plus matching entries in `UnaryCompressionGuard.supportedEncodings`.
 - **Streaming gzip** — Per-message streaming compression is unimplemented; the related client-stream and server-stream conformance cases stay known-failing.
-- **Per-message receive limits on streams** — `connectBodyLimit` caps the whole request body. Unary equals one message; client-stream and server-stream need a different mechanism.
+- **Streaming receive-limit configuration** — `handleClientStream` and `handleServerStream` enforce `maxMessageSize` on each request envelope payload (4 MiB by default). Generated routes use that default; a custom limit requires manual route binding. `connectBodyLimit` separately caps the entire request body, including envelope prefixes, and does not configure the per-message limit.
 
 ## Product status
 
