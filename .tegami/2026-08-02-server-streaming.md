@@ -1,6 +1,6 @@
 ---
 packages:
-    connect-ktor: minor
+  connect-ktor: minor
 ---
 
 ## Support Connect server-streaming RPCs
