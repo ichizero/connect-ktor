@@ -2,6 +2,7 @@ package io.github.ichizero.connect.ktor.streaming
 
 import com.connectrpc.Code
 import com.connectrpc.ConnectException
+import io.github.ichizero.ktor.protovalidate.validateStreamingRequest
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.application
 import io.ktor.server.http.content.suppressCompression
@@ -14,6 +15,7 @@ import io.ktor.utils.io.ByteWriteChannel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -137,6 +139,7 @@ private suspend fun <Req : Any, Res : Any> ApplicationCall.startStream(
     StartedStream.Ready(
         withDeadline(deadline) {
             val request = codec.decodeRequest(receiveRequestFrame(maxMessageSize), reqClass)
+            validateStreamingRequest(request)
             handlerFunc(request, this)
         },
     )
@@ -146,7 +149,7 @@ private suspend fun <Req : Any, Res : Any> ApplicationCall.startStream(
     throw e
 } catch (e: ConnectException) {
     StartedStream.Failed(e)
-} catch (e: Throwable) {
+} catch (e: Exception) {
     StartedStream.Failed(ConnectException(code = Code.UNKNOWN, message = e.message, exception = e))
 }
 
@@ -189,7 +192,7 @@ private fun <Req : Any> StreamingCodec.decodeRequest(frame: EnvelopeFrame, reqCl
     deserialize(frame.payload, reqClass)
 } catch (e: ConnectException) {
     throw e
-} catch (e: Throwable) {
+} catch (e: Exception) {
     throw ConnectException(
         code = Code.INVALID_ARGUMENT,
         message = "failed to decode request frame: ${e.message}",
@@ -211,12 +214,21 @@ private suspend fun <Res : Any> ByteWriteChannel.writeResponseMessages(
     responses: Flow<Res>,
     deadline: StreamDeadline?,
 ): ConnectException? = try {
+    var producerError: ConnectException? = null
     withDeadline(deadline) {
-        responses.collect { message ->
+        // Flow.catch only handles upstream failures, leaving response-channel failures to propagate.
+        responses.catch { cause ->
+            producerError = when (cause) {
+                is CancellationException -> throw cause
+                is ConnectException -> cause
+                is Exception -> ConnectException(code = Code.UNKNOWN, message = cause.message, exception = cause)
+                else -> throw cause
+            }
+        }.collect { message ->
             writeEnvelopeFrame(EnvelopeFrame(flags = 0, payload = codec.encodeResponse(message, resClass)))
         }
     }
-    null
+    producerError
 } catch (e: TimeoutCancellationException) {
     deadlineExceeded(e)
 } catch (e: CancellationException) {
@@ -225,13 +237,13 @@ private suspend fun <Res : Any> ByteWriteChannel.writeResponseMessages(
     throw e
 } catch (e: ConnectException) {
     e
-} catch (e: Throwable) {
+} catch (e: Exception) {
     ConnectException(code = Code.UNKNOWN, message = e.message, exception = e)
 }
 
 private fun <Res : Any> StreamingCodec.encodeResponse(message: Res, resClass: KClass<Res>): ByteArray = try {
     serialize(message, resClass)
-} catch (e: Throwable) {
+} catch (e: Exception) {
     throw ConnectException(
         code = Code.INTERNAL_ERROR,
         message = "failed to encode response: ${e.message}",

@@ -4,8 +4,12 @@ import com.connectrpc.Code
 import com.connectrpc.ConnectException
 import com.stricteliza.v1.CountdownRequest
 import com.stricteliza.v1.CountdownResponse
+import com.stricteliza.v1.SayRequest
+import com.stricteliza.v1.SayResponse
 import com.stricteliza.v1.countdownRequest
 import com.stricteliza.v1.countdownResponse
+import com.stricteliza.v1.sayRequest
+import io.github.ichizero.ktor.protovalidate.ProtoRequestValidation
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.header
@@ -22,6 +26,7 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.resources.Resources
 import io.ktor.server.resources.post
+import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.flow.Flow
@@ -29,6 +34,79 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 
 class HandleServerStreamTest : FunSpec({
+    test("server streaming: request validation respects the installed route and preserves details") {
+        var handled = 0
+        testApplication {
+            application {
+                install(Resources)
+                routing {
+                    for (validated in listOf(true, false)) {
+                        route(if (validated) "/validated" else "/unvalidated") {
+                            if (validated) install(ProtoRequestValidation)
+                            post<CountdownResource>(
+                                handleServerStream<CountdownResource, SayRequest, SayResponse>({ _, _ ->
+                                    handled++
+                                    emptyFlow()
+                                }),
+                            )
+                        }
+                    }
+                }
+            }
+            for (contentType in listOf(ConnectStreamingContentType.Proto, ConnectStreamingContentType.Json)) {
+                for ((prefix, length, rejected) in listOf(
+                    Triple("validated", 101, true),
+                    Triple("validated", 100, false),
+                    Triple("unvalidated", 101, false),
+                )) {
+                    val before = handled
+                    val request = sayRequest { sentence = "a".repeat(length) }
+                    val payload = if (contentType == ConnectStreamingContentType.Proto) {
+                        request.toByteArray()
+                    } else {
+                        com.google.protobuf.util.JsonFormat.printer().print(request).toByteArray(Charsets.UTF_8)
+                    }
+                    val response = client.post("/$prefix/stricteliza.v1.StrictElizaService/Countdown") {
+                        header(HttpHeaders.ContentType, contentType.toString())
+                        setBody(frame(payload))
+                    }
+                    response.status shouldBe HttpStatusCode.OK
+                    val frames = decodeFrames(response.bodyAsBytes())
+                    frames.size shouldBe 1
+                    frames.single().isEndStream shouldBe true
+                    val end = String(frames.single().payload)
+                    if (rejected) {
+                        handled shouldBe before
+                        end.contains("\"code\":\"invalid_argument\"") shouldBe true
+                        end.contains("buf.validate.Violation") shouldBe true
+                    } else {
+                        handled shouldBe before + 1
+                        end shouldBe "{}"
+                    }
+                }
+            }
+        }
+    }
+
+    test("server streaming: fatal handler errors reach the engine instead of an end frame") {
+        val response = postCountdown(
+            contentType = ConnectStreamingContentType.Proto,
+            body = encodeFrame(countdownRequest { from = 1 }),
+        ) { _, _ -> throw LinkageError("broken handler linkage") }
+        response.status shouldBe HttpStatusCode.InternalServerError
+    }
+
+    test("server streaming: fatal producer errors break the body instead of an end frame") {
+        val fatal = LinkageError("broken producer linkage")
+        val response = postCountdown(
+            contentType = ConnectStreamingContentType.Proto,
+            body = encodeFrame(countdownRequest { from = 1 }),
+        ) { _, _ -> flow<CountdownResponse> { throw fatal } }
+        // The test host has already committed the headers and exposes an empty body on writer failure.
+        // In particular, it must not contain a Connect UNKNOWN error or a successful end-stream frame.
+        response.bodyAsBytes().size shouldBe 0
+    }
+
     test("server streaming: 3 messages produce 3 data frames plus an end frame") {
         val response = postCountdown(
             contentType = ConnectStreamingContentType.Proto,
@@ -130,6 +208,25 @@ class HandleServerStreamTest : FunSpec({
         val frames = decodeFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload) shouldBe """{"error":{"code":"unknown","message":"boom"}}"""
+    }
+
+    test("server streaming: producer IOException terminates with an UNKNOWN end frame") {
+        val response = postCountdown(
+            contentType = ConnectStreamingContentType.Proto,
+            body = encodeFrame(countdownRequest { from = 1 }),
+        ) { _, _ ->
+            flow {
+                emit(countdownResponse { value = 1 })
+                throw java.io.IOException("upstream unavailable")
+            }
+        }
+
+        val frames = decodeFrames(response.bodyAsBytes())
+        frames.size shouldBe 2
+        CountdownResponse.parseFrom(frames.first().payload).value shouldBe 1
+        frames.last().isEndStream shouldBe true
+        String(frames.last().payload) shouldBe
+            """{"error":{"code":"unknown","message":"upstream unavailable"}}"""
     }
 
     test("server streaming: ConnectException.metadata is merged into end-stream trailers") {
@@ -242,7 +339,7 @@ class HandleServerStreamTest : FunSpec({
         val big = ByteArray(1024) { 'a'.code.toByte() }
         val response = postCountdown(
             contentType = ConnectStreamingContentType.Proto,
-            body = byteArrayOf(0x00, 0x00, 0x00, 0x00, big.size.toByte()) + big,
+            body = frame(big),
             maxMessageSize = 64,
         ) { _, _ -> emptyFlow() }
 

@@ -28,6 +28,7 @@ import java.net.Socket
 class HandleServerStreamCancellationTest : FunSpec({
     test("server streaming: a client disconnect cancels the handler's flow") {
         val collectorReleased = CompletableDeferred<Unit>()
+        val collectorStarted = CompletableDeferred<Unit>()
 
         val server = embeddedServer(CIO, port = 0) {
             install(Resources)
@@ -37,6 +38,7 @@ class HandleServerStreamCancellationTest : FunSpec({
                         handlerFunc = { _, _ ->
                             flow {
                                 try {
+                                    collectorStarted.complete(Unit)
                                     // Bounded so a server that never notices the disconnect fails the
                                     // test on the await() timeout instead of streaming forever.
                                     repeat(MAX_MESSAGES) { value ->
@@ -67,6 +69,7 @@ class HandleServerStreamCancellationTest : FunSpec({
                     // Block until the server has begun responding, so the disconnect lands mid-stream.
                     val firstByte = socket.getInputStream().read()
                     firstByte shouldBe 'H'.code
+                    withTimeout(RELEASE_TIMEOUT_MS) { collectorStarted.await() }
 
                     // Close with a RST rather than a FIN so the server's next write fails promptly.
                     socket.setSoLinger(true, 0)
