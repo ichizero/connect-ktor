@@ -59,7 +59,7 @@ plugins:
 buf generate
 ```
 
-For a service like Eliza's `Say` RPC, the plugin emits a handler interface and a `Route` extension that wires `handle` / `handleClientStream`.
+For a service like Eliza's `Say` RPC, the plugin emits a handler interface and a `Route` extension that wires `handle` / `handleClientStream` / `handleServerStream`.
 
 ## Implement the handler
 
@@ -78,6 +78,7 @@ object ElizaServiceHandler : ElizaServiceHandlerInterface {
 
 Unary methods take a single request.
 Client-streaming methods take a cold `Flow<Req>` and still return one `ResponseMessage`.
+Server-streaming methods take a single request and return a cold `Flow<Res>`.
 
 ## Register beside REST
 

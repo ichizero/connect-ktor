@@ -21,6 +21,9 @@ type serviceData struct {
 	// HasClientStream is true when any of Methods has StreamType == streamTypeClient.
 	// Drives conditional imports for Flow / handleClientStream.
 	HasClientStream bool
+	// HasServerStream is true when any of Methods has StreamType == streamTypeServer.
+	// Drives conditional imports for Flow / handleServerStream.
+	HasServerStream bool
 	// HasGetRoute is true when the service emits at least one Connect GET route,
 	// i.e. it has a unary method whose NoSideEffects is true. Drives conditional
 	// imports for handleGet / io.ktor.server.resources.get.
@@ -51,6 +54,9 @@ import io.github.ichizero.connect.ktor.handle
 {{- if .HasClientStream }}
 import io.github.ichizero.connect.ktor.streaming.handleClientStream
 {{- end }}
+{{- if .HasServerStream }}
+import io.github.ichizero.connect.ktor.streaming.handleServerStream
+{{- end }}
 {{- if .HasGetRoute }}
 import io.github.ichizero.connect.ktor.handleGet
 {{- end }}
@@ -61,7 +67,7 @@ import io.ktor.server.resources.get
 {{- end }}
 import io.ktor.server.resources.post
 import io.ktor.server.routing.Route
-{{- if .HasClientStream }}
+{{- if or .HasClientStream .HasServerStream }}
 import kotlinx.coroutines.flow.Flow
 {{- end }}
 
@@ -69,10 +75,12 @@ import kotlinx.coroutines.flow.Flow
 interface {{ .Name }}HandlerInterface {
     {{- range .Methods }}
     {{- .Comment | nIndent 4 -}}
-    {{- if eq (printf "%s" .StreamType) "Unary" }}
+    {{- if eq .StreamType "Unary" }}
     suspend fun {{ .Name | toLowerFirst }}(request: {{ .InputTypeName }}, call: ApplicationCall): ResponseMessage<{{ .OutputTypeName }}>
-    {{- else if eq (printf "%s" .StreamType) "Client" }}
+    {{- else if eq .StreamType "Client" }}
     suspend fun {{ .Name | toLowerFirst }}(requests: Flow<{{ .InputTypeName }}>, call: ApplicationCall): ResponseMessage<{{ .OutputTypeName }}>
+    {{- else if eq .StreamType "Server" }}
+    suspend fun {{ .Name | toLowerFirst }}(request: {{ .InputTypeName }}, call: ApplicationCall): Flow<{{ .OutputTypeName }}>
     {{- end }}
     {{- end }}
 
@@ -86,13 +94,15 @@ interface {{ .Name }}HandlerInterface {
 
 fun Route.{{ .Name | toLowerFirst }}(handler: {{ .Name }}HandlerInterface) {
     {{- range .Methods }}
-    {{- if eq (printf "%s" .StreamType) "Unary" }}
+    {{- if eq .StreamType "Unary" }}
     post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}, {{ .InputTypeName }}>(handle(handler::{{ .Name | toLowerFirst }}))
     {{- if .NoSideEffects }}
     get<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleGet<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}, {{ .InputTypeName }}, {{ .OutputTypeName }}>(handler::{{ .Name | toLowerFirst }}))
     {{- end }}
-    {{- else if eq (printf "%s" .StreamType) "Client" }}
+    {{- else if eq .StreamType "Client" }}
     post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleClientStream(handler::{{ .Name | toLowerFirst }}))
+    {{- else if eq .StreamType "Server" }}
+    post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleServerStream(handler::{{ .Name | toLowerFirst }}))
     {{- end }}
     {{- end }}
 }

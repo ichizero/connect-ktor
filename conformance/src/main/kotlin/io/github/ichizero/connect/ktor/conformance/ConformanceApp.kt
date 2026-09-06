@@ -3,6 +3,7 @@ package io.github.ichizero.connect.ktor.conformance
 import com.connectrpc.conformance.v1.ClientStreamRequest
 import com.connectrpc.conformance.v1.ConformanceServiceHandlerInterface
 import com.connectrpc.conformance.v1.IdempotentUnaryRequest
+import com.connectrpc.conformance.v1.ServerStreamRequest
 import com.connectrpc.conformance.v1.UnaryRequest
 import com.connectrpc.conformance.v1.UnimplementedRequest
 import com.connectrpc.conformance.v1.conformanceService
@@ -41,6 +42,7 @@ internal val conformanceTypeRegistry: TypeRegistry = TypeRegistry.newBuilder()
     .add(IdempotentUnaryRequest.getDescriptor())
     .add(UnimplementedRequest.getDescriptor())
     .add(ClientStreamRequest.getDescriptor())
+    .add(ServerStreamRequest.getDescriptor())
     .build()
 
 /**

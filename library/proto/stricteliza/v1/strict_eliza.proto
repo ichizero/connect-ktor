@@ -11,6 +11,9 @@ service StrictElizaService {
 
     // Upload is a client-streaming RPC used to exercise envelope-framed request bodies.
     rpc Upload(stream UploadRequest) returns (UploadResponse);
+
+    // Countdown is a server-streaming RPC used to exercise envelope-framed response bodies.
+    rpc Countdown(CountdownRequest) returns (stream CountdownResponse);
 }
 
 message SayRequest {
@@ -29,4 +32,12 @@ message UploadRequest {
 message UploadResponse {
     int64 total_chars = 1;
     int64 chunk_count = 2;
+}
+
+message CountdownRequest {
+    int32 from = 1;
+}
+
+message CountdownResponse {
+    int32 value = 1;
 }

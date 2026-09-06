@@ -1,6 +1,8 @@
 package io.github.ichizero.ktor.protovalidate
 
 import com.connectrpc.ResponseMessage
+import com.stricteliza.v1.CountdownRequest
+import com.stricteliza.v1.CountdownResponse
 import com.stricteliza.v1.SayRequest
 import com.stricteliza.v1.SayResponse
 import com.stricteliza.v1.StrictElizaServiceHandlerInterface
@@ -31,6 +33,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 object Handler : StrictElizaServiceHandlerInterface {
     override suspend fun say(
@@ -52,6 +55,11 @@ object Handler : StrictElizaServiceHandlerInterface {
         emptyMap(),
         emptyMap(),
     )
+
+    override suspend fun countdown(
+        request: CountdownRequest,
+        call: ApplicationCall,
+    ): Flow<CountdownResponse> = emptyFlow()
 }
 
 class ProtoRequestValidationTest : FunSpec({

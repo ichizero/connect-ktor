@@ -12,12 +12,15 @@ import io.github.ichizero.connect.ktor.toConnectErrorDetails
 import io.github.ichizero.connect.ktor.toErrorJsonBytes
 import io.ktor.server.application.*
 import io.ktor.server.request.*
+import io.ktor.util.AttributeKey
 
 /**
  * A plugin that checks a request body using [Validator].
  *
  * If validation fails, it will throw [ProtoRequestValidationException].
  * If there are any validation exceptions, it will throw [ValidationException].
+ * Server-streaming requests use the same validator after decoding; violations are returned as
+ * INVALID_ARGUMENT end-stream errors with the validation details.
  */
 val ProtoRequestValidation: RouteScopedPlugin<ProtoRequestValidationConfig> = createRouteScopedPlugin(
     "ProtoRequestValidation",
@@ -31,13 +34,12 @@ val ProtoRequestValidation: RouteScopedPlugin<ProtoRequestValidationConfig> = cr
         ValidatorFactory.newBuilder().build()
     }
 
+    onCall { call ->
+        call.attributes.put(StreamingRequestValidatorKey, validator)
+    }
+
     on(RequestBodyTransformed) { content ->
-        if (content !is Message) return@on
-
-        val result = validator.validate(content)
-        if (result.isSuccess) return@on
-
-        throw ProtoRequestValidationException(content, result)
+        validator.validationFailure(content)?.let { throw it }
     }
 }
 
@@ -52,11 +54,13 @@ class ProtoRequestValidationException internal constructor(
         private val errorDetailParser = GoogleJavaJSONStrategy().errorDetailParser()
     }
 
-    fun toErrorJsonBytes(message: String = "invalid request"): ByteArray = ConnectException(
+    fun toErrorJsonBytes(message: String = "invalid request"): ByteArray =
+        toConnectException(message).toErrorJsonBytes()
+
+    internal fun toConnectException(message: String = "invalid request"): ConnectException = ConnectException(
         code = Code.INVALID_ARGUMENT,
         message = message,
     ).withErrorDetails(errorDetailParser, result.violations.map { it.toProto() }.toConnectErrorDetails())
-        .toErrorJsonBytes()
 }
 
 private object RequestBodyTransformed : Hook<suspend (content: Any) -> Unit> {
@@ -65,4 +69,18 @@ private object RequestBodyTransformed : Hook<suspend (content: Any) -> Unit> {
             handler(subject)
         }
     }
+}
+
+private val StreamingRequestValidatorKey = AttributeKey<Validator>("ConnectStreamingRequestValidator")
+
+/** Validate an already decoded streaming message using the validator installed on this call's route. */
+internal fun ApplicationCall.validateStreamingRequest(content: Any) {
+    val validator = attributes.getOrNull(StreamingRequestValidatorKey) ?: return
+    validator.validationFailure(content)?.let { throw it.toConnectException() }
+}
+
+private fun Validator.validationFailure(content: Any): ProtoRequestValidationException? {
+    if (content !is Message) return null
+    val result = validate(content)
+    return if (result.isSuccess) null else ProtoRequestValidationException(content, result)
 }

@@ -19,10 +19,11 @@ organization). For Connect itself and Connect-Kotlin clients, prefer the officia
 
 ## Features
 
-- **connect-ktor** — Protobuf JSON/binary codecs via Connect-Kotlin, client-streaming
-  RPCs with envelope framing, optional [protovalidate](https://github.com/bufbuild/protovalidate)
-- **protoc-gen-connect-ktor** — generates Ktor route handler interfaces (unary +
-  client-streaming `Flow<Req>`)
+- **connect-ktor** — Protobuf JSON/binary codecs via Connect-Kotlin, client- and
+  server-streaming RPCs with envelope framing, optional
+  [protovalidate](https://github.com/bufbuild/protovalidate)
+- **protoc-gen-connect-ktor** — generates Ktor route handler interfaces (unary,
+  client-streaming `Flow<Req>`, server-streaming `Flow<Res>`)
 
 Plugins (Connect GET, body limits, compression guards, and more), engine notes,
 and longer guides live in the [documentation site](https://ichizero.github.io/connect-ktor/).
@@ -44,15 +45,15 @@ Summary (details and footnotes:
 | Codec                 | Proto / JSON                 |  ✅  |  ✅   |
 | Compression           | identity / gzip              |  ✅  |  ✅   |
 |                       | br / zstd / deflate / snappy |  ❌  |  ❌   |
-| Streams               | unary / client-stream        |  ✅  |  ✅   |
-|                       | server / bidi                |  ❌  |  ❌   |
+| Streams               | unary / client / server      |  ✅  |  ✅   |
+|                       | bidi                         |  ❌  |  ❌   |
 | TLS / mTLS            |                              |  ❌  |  ✅   |
 | Trailers              |                              |  ✅  |  ✅   |
 | Connect GET           |                              | ✅\* |  ✅   |
 | Message receive limit | unary                        |  ✅  |  ✅   |
 
 \* CIO Connect GET fails cases that rely on duplicate request headers (upstream
-CIO limitation). Both engines currently fail gzip client-stream cases (per-message
+CIO limitation). Both engines currently fail gzip streaming cases (per-message
 streaming compression unimplemented).
 
 ```bash
