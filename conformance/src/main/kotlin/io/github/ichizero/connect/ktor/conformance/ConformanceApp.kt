@@ -1,12 +1,13 @@
 package io.github.ichizero.connect.ktor.conformance
 
+import com.connectrpc.conformance.v1.BidiStreamRequest
 import com.connectrpc.conformance.v1.ClientStreamRequest
 import com.connectrpc.conformance.v1.ConformanceServiceHandlerInterface
+import com.connectrpc.conformance.v1.ConformanceServiceHandlerInterface.Procedures
 import com.connectrpc.conformance.v1.IdempotentUnaryRequest
 import com.connectrpc.conformance.v1.ServerStreamRequest
 import com.connectrpc.conformance.v1.UnaryRequest
 import com.connectrpc.conformance.v1.UnimplementedRequest
-import com.connectrpc.conformance.v1.conformanceService
 import com.connectrpc.extensions.GoogleJavaJSONStrategy
 import com.connectrpc.extensions.GoogleJavaProtobufStrategy
 import com.google.protobuf.Message
@@ -16,9 +17,15 @@ import io.github.ichizero.connect.ktor.ConnectGetJsonSerializer
 import io.github.ichizero.connect.ktor.ConnectGetStrategies
 import io.github.ichizero.connect.ktor.UnaryCompressionGuard
 import io.github.ichizero.connect.ktor.connectBodyLimit
+import io.github.ichizero.connect.ktor.handle
+import io.github.ichizero.connect.ktor.handleGet
 import io.github.ichizero.connect.ktor.installConnectGetCodecs
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingJsonStrategy
 import io.github.ichizero.connect.ktor.streaming.ConnectStreamingStrategies
+import io.github.ichizero.connect.ktor.streaming.DEFAULT_MAX_MESSAGE_SIZE
+import io.github.ichizero.connect.ktor.streaming.handleBidiStream
+import io.github.ichizero.connect.ktor.streaming.handleClientStream
+import io.github.ichizero.connect.ktor.streaming.handleServerStream
 import io.github.ichizero.connect.ktor.streaming.installConnectStreamingCodecs
 import io.github.ichizero.ktor.serialization.connect.connectProto
 import io.ktor.http.ContentType
@@ -32,6 +39,9 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.contentnegotiation.ContentTypeWithQuality
 import io.ktor.server.request.contentType
 import io.ktor.server.resources.Resources
+import io.ktor.server.resources.get
+import io.ktor.server.resources.post
+import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -42,6 +52,7 @@ internal val conformanceTypeRegistry: TypeRegistry = TypeRegistry.newBuilder()
     .add(IdempotentUnaryRequest.getDescriptor())
     .add(UnimplementedRequest.getDescriptor())
     .add(ClientStreamRequest.getDescriptor())
+    .add(BidiStreamRequest.getDescriptor())
     .add(ServerStreamRequest.getDescriptor())
     .build()
 
@@ -113,13 +124,24 @@ internal fun Application.conformanceModule(
             // Content-Encoding values are accepted, and is surfaced in error responses.
             supportedEncodings = setOf("gzip", "identity")
         }
-        // messageReceiveLimit == 0 means the conformance runner did not request a
-        // cap (see ServerCompatRequest.message_receive_limit, which is uint32 and
-        // uses 0 as the "unset" sentinel).
-        if (messageReceiveLimit > 0L) {
-            connectBodyLimit(maxBytes = messageReceiveLimit)
+        // RequestBodyLimit buffers small chunks until EOF, which deadlocks full-duplex
+        // exchanges. Keep the existing bindings under the body cap and bind bidi separately
+        // with the requested per-message envelope limit.
+        route("/") {
+            if (messageReceiveLimit > 0L) connectBodyLimit(maxBytes = messageReceiveLimit)
+            post<Procedures.Unary, UnaryRequest>(handle(handler::unary))
+            post<Procedures.IdempotentUnary, IdempotentUnaryRequest>(handle(handler::idempotentUnary))
+            get<Procedures.IdempotentUnary>(handleGet(handler::idempotentUnary))
+            post<Procedures.Unimplemented, UnimplementedRequest>(handle(handler::unimplemented))
+            post<Procedures.ClientStream>(handleClientStream(handler::clientStream))
+            post<Procedures.ServerStream>(handleServerStream(handler::serverStream))
         }
-        conformanceService(handler)
+        val bidiLimit = if (messageReceiveLimit > 0L) {
+            messageReceiveLimit.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        } else {
+            DEFAULT_MAX_MESSAGE_SIZE
+        }
+        post<Procedures.BidiStream>(handleBidiStream(handler::bidiStream, maxMessageSize = bidiLimit))
     }
 }
 

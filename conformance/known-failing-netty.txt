@@ -31,3 +31,13 @@ TLS Client Certs/**/Compression:COMPRESSION_GZIP/**/client-stream
 # Per-message streaming receive limits are future work.
 Server Message Size/**/client-stream/*
 Server Message Size/**/server-stream/*
+
+# Bidi uses the same envelope codec as client/server streaming (#190).
+Basic/**/Compression:COMPRESSION_GZIP/**/bidi-stream/**
+Connect to HTTP Code Mapping/**/Compression:COMPRESSION_GZIP/**/bidi-stream/**
+Deadline Propagation/**/Compression:COMPRESSION_GZIP/**/bidi-stream/**
+Duplicate Metadata/**/Compression:COMPRESSION_GZIP/**/bidi-stream/**
+Errors/**/Compression:COMPRESSION_GZIP/**/bidi-stream/**
+
+# Bidi applies per-message limits; compressed envelopes remain unsupported (#190).
+Server Message Size/**/Compression:COMPRESSION_GZIP/**/bidi-stream/**

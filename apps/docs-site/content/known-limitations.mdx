@@ -11,7 +11,7 @@ The limits below are deliberate scope choices, not silent bugs.
 ## Protocol surface
 
 - **gRPC / gRPC-Web** — Connect only. Official Connect implementations can speak gRPC as well; see the [Connect protocol](https://connectrpc.com/docs/protocol) and language guides on [connectrpc.com](https://connectrpc.com/) when that interop is required. Here, gRPC would need length-prefixed framing and trailer-only error responses.
-- **Bidirectional streaming** — Client streaming (`handleClientStream`) and server streaming (`handleServerStream`) are generated and conformance-tested. Bidi streams still need a full-duplex handler shape and HTTP/2. The full stream taxonomy is documented in the official protocol / language docs.
+- **Full-duplex transport** — Bidirectional RPCs are generated with `handleBidiStream`. Half-duplex works on CIO and Netty over HTTP/1.1; full-duplex requires Netty with HTTP/2. Keep full-duplex routes outside `connectBodyLimit` / Ktor `RequestBodyLimit`, which buffers small chunks until EOF; use `handleBidiStream`'s per-message limit instead.
 
 ## Engines
 
