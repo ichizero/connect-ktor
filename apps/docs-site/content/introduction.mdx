@@ -64,8 +64,9 @@ A React app on Connect-ES and a Ktor service on Connect-Ktor can share one Buf m
 - Stacks that already pair **React (Connect-ES)** with **Kotlin/Ktor**
 - Services that need Connect conformance for unary, client-streaming, server-streaming, and bidirectional RPCs
 
-It is a poor fit if you need gRPC wire compatibility or full-duplex streams on day one.
-Those limits stay under [Known limitations](/known-limitations), not hidden behind a feature checklist.
+Full-duplex streams are supported with Netty over HTTP/2.
+It is a poor fit if you need gRPC wire compatibility.
+See [Known limitations](/known-limitations) for engine and streaming constraints.
 
 ## Design stance
 
