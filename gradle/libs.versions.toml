@@ -13,7 +13,7 @@ protovalidate = "1.3.0"
 
 okio = "3.18.2"
 okhttp = "5.5.0"
-slf4j = "2.0.18"
+slf4j = "2.0.19"
 
 junit-jupiter-engine = "6.1.3"
 kotest = "6.2.4"
