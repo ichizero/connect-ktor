@@ -17,6 +17,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.net.Socket
@@ -26,59 +27,59 @@ import java.net.Socket
  * breaks a connection the way a client that walks away does.
  */
 class HandleServerStreamCancellationTest : FunSpec({
-    test("server streaming: a client disconnect cancels the handler's flow") {
-        val collectorReleased = CompletableDeferred<Unit>()
-        val collectorStarted = CompletableDeferred<Unit>()
+    for (bidi in listOf(false, true)) {
+        test("client disconnect cancels the handler flow with bidi=$bidi") {
+            val collectorReleased = CompletableDeferred<Unit>()
+            val collectorStarted = CompletableDeferred<Unit>()
 
-        val server = embeddedServer(CIO, port = 0) {
-            install(Resources)
-            routing {
-                post<CancellingCountdownResource>(
-                    handleServerStream<CancellingCountdownResource, CountdownRequest, CountdownResponse>(
-                        handlerFunc = { _, _ ->
-                            flow {
-                                try {
-                                    collectorStarted.complete(Unit)
-                                    // Bounded so a server that never notices the disconnect fails the
-                                    // test on the await() timeout instead of streaming forever.
-                                    repeat(MAX_MESSAGES) { value ->
-                                        emit(countdownResponse { this.value = value })
-                                        delay(EMIT_INTERVAL_MS)
-                                    }
-                                } finally {
-                                    // Stands in for whatever resource a real producer would hold.
-                                    collectorReleased.complete(Unit)
-                                }
+            val server = embeddedServer(CIO, port = 0) {
+                install(Resources)
+                routing {
+                    post<CancellingCountdownResource>(
+                        (
+                            if (bidi) {
+                                handleBidiStream<CancellingCountdownResource, CountdownRequest, CountdownResponse>(
+                                    handlerFunc = { requests, _ ->
+                                        requests.toList()
+                                        cancellingResponses(collectorStarted, collectorReleased)
+                                    },
+                                )
+                            } else {
+                                handleServerStream<CancellingCountdownResource, CountdownRequest, CountdownResponse>(
+                                    handlerFunc = { _, _ ->
+                                        cancellingResponses(collectorStarted, collectorReleased)
+                                    },
+                                )
                             }
-                        },
-                    ),
-                )
-            }
-        }
-        server.start(wait = false)
-
-        try {
-            val port = server.engine.resolvedConnectors().first().port
-
-            withContext(Dispatchers.IO) {
-                Socket("127.0.0.1", port).use { socket ->
-                    socket.soTimeout = SOCKET_TIMEOUT_MS
-                    socket.tcpNoDelay = true
-                    socket.sendRequest(port, countdownRequest { from = 1 })
-
-                    // Block until the server has begun responding, so the disconnect lands mid-stream.
-                    val firstByte = socket.getInputStream().read()
-                    firstByte shouldBe 'H'.code
-                    withTimeout(RELEASE_TIMEOUT_MS) { collectorStarted.await() }
-
-                    // Close with a RST rather than a FIN so the server's next write fails promptly.
-                    socket.setSoLinger(true, 0)
+                            ),
+                    )
                 }
             }
+            server.start(wait = false)
 
-            withTimeout(RELEASE_TIMEOUT_MS) { collectorReleased.await() }
-        } finally {
-            server.stop()
+            try {
+                val port = server.engine.resolvedConnectors().first().port
+
+                withContext(Dispatchers.IO) {
+                    Socket("127.0.0.1", port).use { socket ->
+                        socket.soTimeout = SOCKET_TIMEOUT_MS
+                        socket.tcpNoDelay = true
+                        socket.sendRequest(port, countdownRequest { from = 1 })
+
+                        // Block until the server has begun responding, so the disconnect lands mid-stream.
+                        val firstByte = socket.getInputStream().read()
+                        firstByte shouldBe 'H'.code
+                        withTimeout(RELEASE_TIMEOUT_MS) { collectorStarted.await() }
+
+                        // Close with a RST rather than a FIN so the server's next write fails promptly.
+                        socket.setSoLinger(true, 0)
+                    }
+                }
+
+                withTimeout(RELEASE_TIMEOUT_MS) { collectorReleased.await() }
+            } finally {
+                server.stop()
+            }
         }
     }
 })
@@ -115,3 +116,22 @@ private fun Socket.sendRequest(port: Int, request: CountdownRequest) {
         flush()
     }
 }
+
+private fun cancellingResponses(
+    collectorStarted: CompletableDeferred<Unit>,
+    collectorReleased: CompletableDeferred<Unit>,
+) =
+    flow {
+        try {
+            collectorStarted.complete(Unit)
+            // Bounded so a server that never notices the disconnect fails the
+            // test on the await() timeout instead of streaming forever.
+            repeat(MAX_MESSAGES) { value ->
+                emit(countdownResponse { this.value = value })
+                delay(EMIT_INTERVAL_MS)
+            }
+        } finally {
+            // Stands in for whatever resource a real producer would hold.
+            collectorReleased.complete(Unit)
+        }
+    }

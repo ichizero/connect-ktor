@@ -19,11 +19,11 @@ organization). For Connect itself and Connect-Kotlin clients, prefer the officia
 
 ## Features
 
-- **connect-ktor** — Protobuf JSON/binary codecs via Connect-Kotlin, client- and
-  server-streaming RPCs with envelope framing, optional
+- **connect-ktor** — Protobuf JSON/binary codecs via Connect-Kotlin, client-streaming,
+  server-streaming, and bidirectional RPCs with envelope framing, optional
   [protovalidate](https://github.com/bufbuild/protovalidate)
 - **protoc-gen-connect-ktor** — generates Ktor route handler interfaces (unary,
-  client-streaming `Flow<Req>`, server-streaming `Flow<Res>`)
+  client-streaming `Flow<Req>`, server-streaming `Flow<Res>`, and bidi `Flow<Req>` → `Flow<Res>`)
 
 Plugins (Connect GET, body limits, compression guards, and more), engine notes,
 and longer guides live in the [documentation site](https://ichizero.github.io/connect-ktor/).
@@ -46,7 +46,8 @@ Summary (details and footnotes:
 | Compression           | identity / gzip              |  ✅  |  ✅   |
 |                       | br / zstd / deflate / snappy |  ❌  |  ❌   |
 | Streams               | unary / client / server      |  ✅  |  ✅   |
-|                       | bidi                         |  ❌  |  ❌   |
+|                       | half-duplex bidi             |  ✅  |  ✅   |
+|                       | full-duplex bidi (HTTP/2)    |  ❌  |  ✅   |
 | TLS / mTLS            |                              |  ❌  |  ✅   |
 | Trailers              |                              |  ✅  |  ✅   |
 | Connect GET           |                              | ✅\* |  ✅   |

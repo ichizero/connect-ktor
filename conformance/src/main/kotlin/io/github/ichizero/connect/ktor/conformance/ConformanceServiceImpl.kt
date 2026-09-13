@@ -4,6 +4,8 @@ import com.connectrpc.Code
 import com.connectrpc.ConnectErrorDetail
 import com.connectrpc.ConnectException
 import com.connectrpc.ResponseMessage
+import com.connectrpc.conformance.v1.BidiStreamRequest
+import com.connectrpc.conformance.v1.BidiStreamResponse
 import com.connectrpc.conformance.v1.ClientStreamRequest
 import com.connectrpc.conformance.v1.ClientStreamResponse
 import com.connectrpc.conformance.v1.ConformancePayload
@@ -12,6 +14,7 @@ import com.connectrpc.conformance.v1.IdempotentUnaryRequest
 import com.connectrpc.conformance.v1.IdempotentUnaryResponse
 import com.connectrpc.conformance.v1.ServerStreamRequest
 import com.connectrpc.conformance.v1.ServerStreamResponse
+import com.connectrpc.conformance.v1.StreamResponseDefinition
 import com.connectrpc.conformance.v1.UnaryRequest
 import com.connectrpc.conformance.v1.UnaryResponse
 import com.connectrpc.conformance.v1.UnaryResponseDefinition
@@ -23,7 +26,10 @@ import io.github.ichizero.connect.ktor.streaming.connectResponseTrailers
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.ApplicationRequest
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.toList
 import okio.ByteString.Companion.toByteString
 import com.connectrpc.conformance.v1.Error as ConformanceError
@@ -148,6 +154,50 @@ class ConformanceServiceImpl : ConformanceServiceHandlerInterface {
             if (responseDefinition.hasError()) {
                 // The request info can only be reported through the error when no response carried it.
                 throw responseDefinition.error.toConnectException(requestInfo.takeIf { sent == 0 })
+            }
+        }
+    }
+
+    override suspend fun bidiStream(
+        requests: Flow<BidiStreamRequest>,
+        call: ApplicationCall,
+    ): Flow<BidiStreamResponse> {
+        // Read the definition before committing headers. Further collection resumes at the
+        // next unread message on the same channel, without replaying the first message.
+        val first = requests.firstOrNull() ?: return emptyFlow()
+        val definition = first.responseDefinition
+        definition.responseHeadersList.forEach { header ->
+            header.valueList.forEach { call.response.headers.append(header.name, it, safeOnly = false) }
+        }
+        definition.responseTrailersList.forEach { header ->
+            call.connectResponseTrailers().appendAll(header.name, header.valueList)
+        }
+        val pending = mutableListOf(first)
+        if (!first.fullDuplex) requests.toList(pending)
+
+        return flow {
+            var sent = 0
+            if (first.fullDuplex && definition.responseDataCount > 0) {
+                emit(definition.bidiResponse(sent++, buildStreamRequestInfo(call.request, pending)))
+                pending.clear()
+                requests.takeWhile { request ->
+                    pending.add(request)
+                    sent < definition.responseDataCount
+                }.collect {
+                    val info = ConformancePayload.RequestInfo.newBuilder()
+                        .addAllRequests(pending.map { ProtoAny.pack(it) }).build()
+                    emit(definition.bidiResponse(sent++, info))
+                    pending.clear()
+                }
+            }
+            while (sent < definition.responseDataCount) {
+                val info = if (sent == 0) buildStreamRequestInfo(call.request, pending) else null
+                emit(definition.bidiResponse(sent++, info))
+            }
+            if (definition.hasError()) {
+                throw definition.error.toConnectException(
+                    if (sent == 0) buildStreamRequestInfo(call.request, pending) else null,
+                )
             }
         }
     }
@@ -279,4 +329,16 @@ private fun connectCodeFor(protoNumber: Int): Code =
 private object NoopErrorDetailParser : com.connectrpc.ErrorDetailParser {
     override fun <E : Any> unpack(any: com.connectrpc.AnyError, clazz: kotlin.reflect.KClass<E>): E? = null
     override fun parseDetails(bytes: ByteArray): List<com.connectrpc.ConnectErrorDetail> = emptyList()
+}
+
+private suspend fun StreamResponseDefinition.bidiResponse(
+    index: Int,
+    info: ConformancePayload.RequestInfo?,
+): BidiStreamResponse {
+    if (responseDelayMs > 0) kotlinx.coroutines.delay(responseDelayMs.toLong())
+    val payload = ConformancePayload.newBuilder()
+        .setData(getResponseData(index))
+        .apply { if (info != null) setRequestInfo(info) }
+        .build()
+    return BidiStreamResponse.newBuilder().setPayload(payload).build()
 }
