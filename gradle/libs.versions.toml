@@ -2,7 +2,7 @@
 kotlin = "2.4.20"
 kotlinx-serialization = "1.11.0"
 maven-publish = "0.37.0"
-spotless = "8.10.1"
+spotless = "8.10.2"
 cyclonedx = "3.4.1"
 detekt = "1.23.8"
 
