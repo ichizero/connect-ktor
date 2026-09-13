@@ -2,12 +2,16 @@ package io.github.ichizero.protocgen.connect.ktor
 
 import com.connectrpc.ProtocolClientConfig
 import com.connectrpc.ResponseMessage
+import com.connectrpc.eliza.v1.ConverseRequest
+import com.connectrpc.eliza.v1.ConverseResponse
 import com.connectrpc.eliza.v1.ElizaServiceClient
 import com.connectrpc.eliza.v1.ElizaServiceHandlerInterface
 import com.connectrpc.eliza.v1.IntroduceRequest
 import com.connectrpc.eliza.v1.IntroduceResponse
 import com.connectrpc.eliza.v1.SayRequest
 import com.connectrpc.eliza.v1.SayResponse
+import com.connectrpc.eliza.v1.converseRequest
+import com.connectrpc.eliza.v1.converseResponse
 import com.connectrpc.eliza.v1.elizaService
 import com.connectrpc.eliza.v1.introduceRequest
 import com.connectrpc.eliza.v1.introduceResponse
@@ -18,21 +22,36 @@ import com.connectrpc.fold
 import com.connectrpc.impl.ProtocolClient
 import com.connectrpc.okhttp.ConnectOkHttpClient
 import io.github.ichizero.connect.ktor.streaming.connectResponseTrailers
+import io.github.ichizero.connect.ktor.streaming.decodeTestFrames
+import io.github.ichizero.connect.ktor.streaming.encodeTestFrame
 import io.github.ichizero.ktor.serialization.connect.connectJson
 import io.kotest.core.spec.style.*
 import io.kotest.matchers.*
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsBytes
 import io.ktor.server.application.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.resources.*
 import io.ktor.server.routing.*
+import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import okhttp3.OkHttpClient
 
 object Handler : ElizaServiceHandlerInterface {
+    override suspend fun converse(
+        requests: Flow<ConverseRequest>,
+        call: ApplicationCall,
+    ): Flow<ConverseResponse> = requests.map { request ->
+        converseResponse { sentence = request.sentence }
+    }
+
     override suspend fun say(
         request: SayRequest,
         call: ApplicationCall,
@@ -66,6 +85,23 @@ class GeneratorTest : FunSpec({
                 connectJson()
             }
             elizaService(Handler)
+        }
+    }
+
+    test("generated bidi route round-trips multiple messages") {
+        testApplication {
+            application { startServer() }
+            val body = listOf("one", "two").map { sentence ->
+                encodeTestFrame(converseRequest { this.sentence = sentence }.toByteArray())
+            }.reduce { first, second -> first + second }
+            val response = client.post("/connectrpc.eliza.v1.ElizaService/Converse") {
+                header("Content-Type", "application/connect+proto")
+                setBody(body)
+            }
+            val frames = decodeTestFrames(response.bodyAsBytes())
+            frames.dropLast(1).map { ConverseResponse.parseFrom(it.payload).sentence } shouldBe listOf("one", "two")
+            frames.last().isEndStream shouldBe true
+            String(frames.last().payload) shouldBe "{}"
         }
     }
 

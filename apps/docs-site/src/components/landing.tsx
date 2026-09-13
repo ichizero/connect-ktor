@@ -61,7 +61,7 @@ const startHere = [
     },
     {
         title: "Known limitations",
-        description: "gRPC, server/bidi streaming, and engine gaps — stated up front.",
+        description: "gRPC, streaming compression, and engine gaps — stated up front.",
         href: "/known-limitations",
     },
 ] as const;

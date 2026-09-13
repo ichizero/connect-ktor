@@ -9,3 +9,6 @@
 # required — to fail.
 Timeouts/**/Compression:COMPRESSION_GZIP/**/client-stream
 Timeouts/**/Compression:COMPRESSION_GZIP/**/server-stream
+
+# Bidi gzip rejection races the deadline for the same reason as other streams.
+Timeouts/**/Compression:COMPRESSION_GZIP/**/bidi-stream/**

@@ -57,7 +57,6 @@ func Test_classifyStreamType(t *testing.T) {
 		clientStream   bool
 		serverStream   bool
 		wantType       streamType
-		wantSupported  bool
 		describesShape string
 	}{
 		{
@@ -65,7 +64,6 @@ func Test_classifyStreamType(t *testing.T) {
 			clientStream:   false,
 			serverStream:   false,
 			wantType:       streamTypeUnary,
-			wantSupported:  true,
 			describesShape: "Req -> Res",
 		},
 		{
@@ -73,7 +71,6 @@ func Test_classifyStreamType(t *testing.T) {
 			clientStream:   true,
 			serverStream:   false,
 			wantType:       streamTypeClient,
-			wantSupported:  true,
 			describesShape: "stream Req -> Res",
 		},
 		{
@@ -81,14 +78,13 @@ func Test_classifyStreamType(t *testing.T) {
 			clientStream:   false,
 			serverStream:   true,
 			wantType:       streamTypeServer,
-			wantSupported:  true,
 			describesShape: "Req -> stream Res",
 		},
 		{
-			name:           "bidirectional (unsupported)",
+			name:           "bidirectional",
 			clientStream:   true,
 			serverStream:   true,
-			wantSupported:  false,
+			wantType:       streamTypeBidi,
 			describesShape: "stream Req -> stream Res",
 		},
 	}
@@ -96,12 +92,8 @@ func Test_classifyStreamType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			st, ok := classifyStreamType(tt.clientStream, tt.serverStream)
-			if ok != tt.wantSupported {
-				t.Errorf("classifyStreamType(%v, %v) supported = %v, want %v (%s)",
-					tt.clientStream, tt.serverStream, ok, tt.wantSupported, tt.describesShape)
-			}
-			if ok && st != tt.wantType {
+			st := classifyStreamType(tt.clientStream, tt.serverStream)
+			if st != tt.wantType {
 				t.Errorf("classifyStreamType(%v, %v) type = %q, want %q",
 					tt.clientStream, tt.serverStream, st, tt.wantType)
 			}
@@ -230,4 +222,23 @@ func mustNotContain(t *testing.T, haystack, needle string) {
 	if strings.Contains(haystack, needle) {
 		t.Errorf("expected output NOT to contain %q, got:\n%s", needle, haystack)
 	}
+}
+
+func Test_template_bidiStream(t *testing.T) {
+	t.Parallel()
+	out := renderTemplate(t, &serviceData{
+		ProtoPackageName: "example.v1", JavaPackageName: "com.example.v1",
+		SourceFileName: "example/v1/example.proto", Name: "Example",
+		Methods: []*methodData{
+			{Name: "Chat", InputTypeName: "ChatRequest", OutputTypeName: "ChatResponse", StreamType: streamTypeBidi, NoSideEffects: true},
+		},
+		HasBidiStream: true,
+	})
+	mustContain(t, out, "import kotlinx.coroutines.flow.Flow")
+	mustContain(t, out, "import io.github.ichizero.connect.ktor.streaming.handleBidiStream")
+	mustContain(t, out, "suspend fun chat(requests: Flow<ChatRequest>, call: ApplicationCall): Flow<ChatResponse>")
+	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Chat>(handleBidiStream(handler::chat))")
+	mustNotContain(t, out, "handleClientStream")
+	mustNotContain(t, out, "handleServerStream")
+	mustNotContain(t, out, "get<")
 }

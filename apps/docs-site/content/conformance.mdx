@@ -30,7 +30,8 @@ project — this page only records how far connect-ktor implements them.
 | Stream type           | Unary                                         |  ✅  |  ✅   |
 |                       | Client stream                                 |  ✅  |  ✅   |
 |                       | Server stream                                 |  ✅  |  ✅   |
-|                       | Half-/full-duplex bidi                        |  ❌  |  ❌   |
+|                       | Half-duplex bidi                              |  ✅  |  ✅   |
+|                       | Full-duplex bidi (HTTP/2)                     |  ❌  |  ✅   |
 | TLS                   | TLS                                           |  ❌  |  ✅   |
 |                       | mTLS                                          |  ❌  |  ✅   |
 | Trailers              | Unary trailers + streaming end-frame metadata |  ✅  |  ✅   |
@@ -41,12 +42,14 @@ project — this page only records how far connect-ktor implements them.
 CIO collapses those headers upstream — the same limitation as the
 `Duplicate Metadata` / `Basic` pins in `conformance/known-failing-cio.txt`.
 
-Both engines currently fail gzip **client-stream** and **server-stream** cases
+Both engines currently fail gzip **client-stream**, **server-stream**, and **bidi-stream** cases
 because per-message streaming compression is unimplemented (pinned as
-known-failing / known-flaky). The `Server Message Size` streaming cases are
-pinned too: the harness applies the requested limit through `connectBodyLimit`, which
-caps the whole body including envelope prefixes. Generated streaming routes retain
-their separate, default 4 MiB per-message limit.
+known-failing / known-flaky). The client/server-stream `Server Message Size` cases
+are pinned too: those harness routes apply `connectBodyLimit`, which caps the whole
+body including envelope prefixes. Bidi routes instead use `handleBidiStream`'s
+per-message limit and pass the identity-compression size cases. Keeping bidi outside
+the body-limit plugin also avoids buffering small chunks until EOF during full-duplex
+exchanges. Generated streaming routes use a default 4 MiB per-message limit.
 
 ## Engines
 

@@ -19,7 +19,7 @@ import io.ktor.util.AttributeKey
  *
  * If validation fails, it will throw [ProtoRequestValidationException].
  * If there are any validation exceptions, it will throw [ValidationException].
- * Server-streaming requests use the same validator after decoding; violations are returned as
+ * Server-streaming and bidirectional requests use the same validator after decoding; violations are returned as
  * INVALID_ARGUMENT end-stream errors with the validation details.
  */
 val ProtoRequestValidation: RouteScopedPlugin<ProtoRequestValidationConfig> = createRouteScopedPlugin(

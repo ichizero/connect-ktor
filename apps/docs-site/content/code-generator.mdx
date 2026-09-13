@@ -68,11 +68,38 @@ override suspend fun introduce(
 }
 ```
 
-## What it skips
+## Bidirectional streaming
 
-Bidirectional RPCs are not generated today.
-The plugin skips those methods rather than emitting stubs that cannot run.
-Track that gap under [Known limitations](/known-limitations).
+Bidirectional RPCs (`rpc X(stream Req) returns (stream Res)`) receive a `Flow<Req>`
+and return a `Flow<Res>`, bound through `handleBidiStream`:
+
+```kotlin
+override suspend fun converse(
+    requests: Flow<ConverseRequest>,
+    call: ApplicationCall,
+): Flow<ConverseResponse> = requests.map { request ->
+    converseResponse { sentence = request.sentence }
+}
+```
+
+This interleaves each request with a response and requires HTTP/2 (Netty).
+For half-duplex, collect `requests.toList()` before returning the response flow;
+this works over HTTP/1.1 on both CIO and Netty.
+
+The request flow consumes the channel. Sequential collections resume at the next
+unread message, so `requests.firstOrNull()` can read metadata from the first request
+before setting response headers, followed by collection of the remaining messages.
+Only one collector may read requests at a time. All collection must finish within
+the call; use structured coroutines such as `channelFlow` for concurrent work.
+Headers, trailers, errors, and deadlines follow the server-streaming rules above.
+
+Keep full-duplex routes outside `connectBodyLimit` / Ktor `RequestBodyLimit`, which
+buffers small chunks until request EOF. The framer enforces a 4 MiB limit per
+message by default; use a manual `handleBidiStream(handler::converse,
+maxMessageSize = ...)` route binding to customize that limit.
+
+Regenerating a service with bidi methods adds members to its handler interface.
+Existing implementations must implement these previously skipped methods.
 
 ## Install
 

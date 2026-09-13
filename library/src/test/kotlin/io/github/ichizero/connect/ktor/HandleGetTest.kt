@@ -1,6 +1,8 @@
 package io.github.ichizero.connect.ktor
 
 import com.connectrpc.ResponseMessage
+import com.connectrpc.eliza.v1.ConverseRequest
+import com.connectrpc.eliza.v1.ConverseResponse
 import com.connectrpc.eliza.v1.ElizaServiceHandlerInterface
 import com.connectrpc.eliza.v1.IntroduceRequest
 import com.connectrpc.eliza.v1.IntroduceResponse
@@ -42,6 +44,11 @@ private object EchoHandler : ElizaServiceHandlerInterface {
         emptyMap(),
         emptyMap(),
     )
+
+    override suspend fun converse(
+        requests: Flow<ConverseRequest>,
+        call: ApplicationCall,
+    ): Flow<ConverseResponse> = emptyFlow()
 
     // Connect GET only covers unary RPCs; the server-streaming member is unused here.
     override suspend fun introduce(
@@ -262,7 +269,7 @@ class HandleGetTest : FunSpec({
         // Use a handler that reads ConnectGetQueryParamsKey to verify it was set.
         val capturedQueryParams = mutableListOf<Parameters>()
 
-        val capturingHandler = object : ElizaServiceHandlerInterface {
+        val capturingHandler = object : ElizaServiceHandlerInterface by EchoHandler {
             override suspend fun say(
                 request: SayRequest,
                 call: ApplicationCall,

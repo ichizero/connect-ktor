@@ -24,6 +24,7 @@ type serviceData struct {
 	// HasServerStream is true when any of Methods has StreamType == streamTypeServer.
 	// Drives conditional imports for Flow / handleServerStream.
 	HasServerStream bool
+	HasBidiStream   bool
 	// HasGetRoute is true when the service emits at least one Connect GET route,
 	// i.e. it has a unary method whose NoSideEffects is true. Drives conditional
 	// imports for handleGet / io.ktor.server.resources.get.
@@ -57,6 +58,9 @@ import io.github.ichizero.connect.ktor.streaming.handleClientStream
 {{- if .HasServerStream }}
 import io.github.ichizero.connect.ktor.streaming.handleServerStream
 {{- end }}
+{{- if .HasBidiStream }}
+import io.github.ichizero.connect.ktor.streaming.handleBidiStream
+{{- end }}
 {{- if .HasGetRoute }}
 import io.github.ichizero.connect.ktor.handleGet
 {{- end }}
@@ -67,7 +71,7 @@ import io.ktor.server.resources.get
 {{- end }}
 import io.ktor.server.resources.post
 import io.ktor.server.routing.Route
-{{- if or .HasClientStream .HasServerStream }}
+{{- if or .HasClientStream .HasServerStream .HasBidiStream }}
 import kotlinx.coroutines.flow.Flow
 {{- end }}
 
@@ -79,6 +83,8 @@ interface {{ .Name }}HandlerInterface {
     suspend fun {{ .Name | toLowerFirst }}(request: {{ .InputTypeName }}, call: ApplicationCall): ResponseMessage<{{ .OutputTypeName }}>
     {{- else if eq .StreamType "Client" }}
     suspend fun {{ .Name | toLowerFirst }}(requests: Flow<{{ .InputTypeName }}>, call: ApplicationCall): ResponseMessage<{{ .OutputTypeName }}>
+    {{- else if eq .StreamType "Bidi" }}
+    suspend fun {{ .Name | toLowerFirst }}(requests: Flow<{{ .InputTypeName }}>, call: ApplicationCall): Flow<{{ .OutputTypeName }}>
     {{- else if eq .StreamType "Server" }}
     suspend fun {{ .Name | toLowerFirst }}(request: {{ .InputTypeName }}, call: ApplicationCall): Flow<{{ .OutputTypeName }}>
     {{- end }}
@@ -101,6 +107,8 @@ fun Route.{{ .Name | toLowerFirst }}(handler: {{ .Name }}HandlerInterface) {
     {{- end }}
     {{- else if eq .StreamType "Client" }}
     post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleClientStream(handler::{{ .Name | toLowerFirst }}))
+    {{- else if eq .StreamType "Bidi" }}
+    post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleBidiStream(handler::{{ .Name | toLowerFirst }}))
     {{- else if eq .StreamType "Server" }}
     post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleServerStream(handler::{{ .Name | toLowerFirst }}))
     {{- end }}

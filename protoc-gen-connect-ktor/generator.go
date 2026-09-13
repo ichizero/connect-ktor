@@ -12,14 +12,14 @@ import (
 
 // streamType mirrors Connect's StreamType vocabulary (see connect-go's connect.StreamType and
 // connect-kotlin's com.connectrpc.StreamType) for the RPC shapes connect-ktor currently knows
-// how to generate. Bidirectional streaming is reserved for future work; methods of that kind are
-// skipped during generation.
+// how to generate.
 type streamType string
 
 const (
 	streamTypeUnary  streamType = "Unary"
 	streamTypeClient streamType = "Client"
 	streamTypeServer streamType = "Server"
+	streamTypeBidi   streamType = "Bidi"
 )
 
 // Run is the protogen entry point: it iterates the files marked for
@@ -65,17 +65,16 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 	hasClientStream := false
 	hasServerStream := false
 	hasGetRoute := false
+	hasBidiStream := false
 	for _, method := range service.Methods {
-		st, ok := streamTypeOf(method)
-		if !ok {
-			// Bidirectional streaming: skip for now.
-			continue
-		}
+		st := streamTypeOf(method)
 		switch st {
 		case streamTypeClient:
 			hasClientStream = true
 		case streamTypeServer:
 			hasServerStream = true
+		case streamTypeBidi:
+			hasBidiStream = true
 		case streamTypeUnary:
 		}
 		noSideEffects := isNoSideEffects(method)
@@ -104,6 +103,7 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 		HasClientStream:  hasClientStream,
 		HasServerStream:  hasServerStream,
 		HasGetRoute:      hasGetRoute,
+		HasBidiStream:    hasBidiStream,
 	}
 }
 
@@ -129,24 +129,23 @@ func idempotencyAllowsGet(level descriptorpb.MethodOptions_IdempotencyLevel) boo
 	return level == descriptorpb.MethodOptions_NO_SIDE_EFFECTS
 }
 
-// streamTypeOf returns the supported stream type and true, or (_, false) when the method is a
-// bidirectional RPC that we do not yet generate code for.
-func streamTypeOf(method *protogen.Method) (streamType, bool) {
+// streamTypeOf returns the RPC stream type.
+func streamTypeOf(method *protogen.Method) streamType {
 	return classifyStreamType(method.Desc.IsStreamingClient(), method.Desc.IsStreamingServer())
 }
 
 // classifyStreamType is the pure-boolean form of [streamTypeOf], split out so it can be
 // table-driven tested without constructing protogen descriptors.
-func classifyStreamType(clientStream, serverStream bool) (streamType, bool) {
+func classifyStreamType(clientStream, serverStream bool) streamType {
 	switch {
 	case !clientStream && !serverStream:
-		return streamTypeUnary, true
+		return streamTypeUnary
 	case clientStream && !serverStream:
-		return streamTypeClient, true
+		return streamTypeClient
 	case !clientStream && serverStream:
-		return streamTypeServer, true
+		return streamTypeServer
 	default:
-		return "", false
+		return streamTypeBidi
 	}
 }
 
