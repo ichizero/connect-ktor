@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import okio.ByteString.Companion.toByteString
 import com.connectrpc.conformance.v1.Error as ConformanceError
@@ -180,14 +180,15 @@ class ConformanceServiceImpl : ConformanceServiceHandlerInterface {
             if (first.fullDuplex && definition.responseDataCount > 0) {
                 emit(definition.bidiResponse(sent++, buildStreamRequestInfo(call.request, pending)))
                 pending.clear()
-                requests.takeWhile { request ->
-                    pending.add(request)
-                    sent < definition.responseDataCount
-                }.collect {
-                    val info = ConformancePayload.RequestInfo.newBuilder()
-                        .addAllRequests(pending.map { ProtoAny.pack(it) }).build()
-                    emit(definition.bidiResponse(sent++, info))
-                    pending.clear()
+                val remainingRequests = definition.responseDataCount - sent
+                if (remainingRequests > 0) {
+                    requests.take(remainingRequests).collect { request ->
+                        pending.add(request)
+                        val info = ConformancePayload.RequestInfo.newBuilder()
+                            .addAllRequests(pending.map { ProtoAny.pack(it) }).build()
+                        emit(definition.bidiResponse(sent++, info))
+                        pending.clear()
+                    }
                 }
             }
             while (sent < definition.responseDataCount) {

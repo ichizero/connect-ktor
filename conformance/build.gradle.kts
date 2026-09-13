@@ -25,6 +25,8 @@ dependencies {
     implementation(libs.bundles.protobuf)
     implementation(libs.okio)
 
+    testImplementation(libs.bundles.test)
+
     runtimeOnly(libs.slf4j.simple)
 }
 

@@ -33,12 +33,13 @@ That is why it fits an existing Ktor app: you add handlers, you do not replace t
 
 ## What you get today
 
-- Unary, client-streaming, and server-streaming Connect handlers on CIO and Netty
+- Unary, client-streaming, server-streaming, and half-duplex bidi Connect handlers on CIO and Netty
 - `connectJson()` / `connectProto()` ContentNegotiation codecs
 - Generated Ktor route interfaces via `protoc-gen-connect-ktor`
 - Optional protovalidate request checks, body size limits, and gzip guards
 
-Bidi streaming and gRPC/gRPC-Web are still out of scope.
+Full-duplex bidi streaming is supported with Netty over HTTP/2.
+gRPC/gRPC-Web are still out of scope.
 See [Known limitations](/known-limitations) for the honest matrix, and [Conformance](/conformance) for what the suite actually exercises.
 
 ## Relationship to Connect-Kotlin
