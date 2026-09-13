@@ -14,18 +14,18 @@ allowBuilds:
   esbuild: true
 
 catalog:
-  "@base-ui/react": 1.7.0
+  "@base-ui/react": 1.8.0
   "@fumapress/tegami": 0.7.3
   "@tailwindcss/vite": 4.3.3
   "@types/mdx": 2.0.14
   "@types/node": 26.4.1
   "@types/react": 19.2.18
   "@types/react-dom": 19.2.7
-  fumadocs-core: 16.15.5
+  fumadocs-core: 16.15.7
   fumadocs-mdx: 15.4.0
-  fumadocs-ui: npm:@fumadocs/base-ui@16.15.5
+  fumadocs-ui: npm:@fumadocs/base-ui@16.15.7
   fumapress: 0.7.3
-  lucide-react: 1.40.0
+  lucide-react: 1.41.0
   oxfmt: 0.66.0
   react: 19.2.8
   react-dom: 19.2.8
