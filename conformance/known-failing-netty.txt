@@ -22,15 +22,9 @@ Errors/**/Compression:COMPRESSION_GZIP/**/server-stream/**
 # server-stream counterpart to pin here.
 TLS Client Certs/**/Compression:COMPRESSION_GZIP/**/client-stream
 
-# `connectBodyLimit` enforces a whole-body byte cap, which equals a single
-# message for unary RPCs. Streaming RPCs need a per-message receive limit (and a
-# streaming end-of-stream error frame): the whole-body cap also counts the 5 byte
-# envelope prefix, over-rejects when individual messages are within the limit but
-# their sum is not, and surfaces the overflow as a unary JSON error (HTTP 429,
-# read back as CODE_UNAVAILABLE) instead of RESOURCE_EXHAUSTED.
-# Per-message streaming receive limits are future work.
-Server Message Size/**/client-stream/*
-Server Message Size/**/server-stream/*
+# Streaming routes enforce per-message limits; compressed envelopes remain unsupported.
+Server Message Size/**/Compression:COMPRESSION_GZIP/**/client-stream/*
+Server Message Size/**/Compression:COMPRESSION_GZIP/**/server-stream/*
 
 # Bidi uses the same envelope codec as client/server streaming (#190).
 Basic/**/Compression:COMPRESSION_GZIP/**/bidi-stream/**

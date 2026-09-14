@@ -125,23 +125,23 @@ internal fun Application.conformanceModule(
             supportedEncodings = setOf("gzip", "identity")
         }
         // RequestBodyLimit buffers small chunks until EOF, which deadlocks full-duplex
-        // exchanges. Keep the existing bindings under the body cap and bind bidi separately
-        // with the requested per-message envelope limit.
+        // exchanges. Only unary routes use the whole-body cap; all streaming routes
+        // enforce the requested limit on each envelope payload.
         route("/") {
             if (messageReceiveLimit > 0L) connectBodyLimit(maxBytes = messageReceiveLimit)
             post<Procedures.Unary, UnaryRequest>(handle(handler::unary))
             post<Procedures.IdempotentUnary, IdempotentUnaryRequest>(handle(handler::idempotentUnary))
             get<Procedures.IdempotentUnary>(handleGet(handler::idempotentUnary))
             post<Procedures.Unimplemented, UnimplementedRequest>(handle(handler::unimplemented))
-            post<Procedures.ClientStream>(handleClientStream(handler::clientStream))
-            post<Procedures.ServerStream>(handleServerStream(handler::serverStream))
         }
-        val bidiLimit = if (messageReceiveLimit > 0L) {
+        val streamingLimit = if (messageReceiveLimit > 0L) {
             messageReceiveLimit.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         } else {
             DEFAULT_MAX_MESSAGE_SIZE
         }
-        post<Procedures.BidiStream>(handleBidiStream(handler::bidiStream, maxMessageSize = bidiLimit))
+        post<Procedures.ClientStream>(handleClientStream(handler::clientStream, maxMessageSize = streamingLimit))
+        post<Procedures.ServerStream>(handleServerStream(handler::serverStream, maxMessageSize = streamingLimit))
+        post<Procedures.BidiStream>(handleBidiStream(handler::bidiStream, maxMessageSize = streamingLimit))
     }
 }
 
