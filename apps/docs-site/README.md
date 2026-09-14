@@ -1,6 +1,6 @@
 # Connect-Ktor documentation site
 
-Fumapress (Fumadocs + Waku) site published to GitHub Pages at
+Fumapress (Fumadocs) site published to GitHub Pages at
 https://ichizero.github.io/connect-ktor/.
 
 ## Commands
