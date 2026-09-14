@@ -17,15 +17,15 @@ catalog:
   "@fumapress/tegami": 1.1.2
   "@tailwindcss/vite": 4.3.3
   "@types/mdx": 2.0.14
-  "@types/node": 26.4.1
+  "@types/node": 26.5.0
   "@types/react": 19.2.18
   "@types/react-dom": 19.2.7
-  fumadocs-core: 16.15.7
+  fumadocs-core: 16.15.8
   fumadocs-mdx: 15.4.0
-  fumadocs-ui: npm:@fumadocs/base-ui@16.15.7
+  fumadocs-ui: npm:@fumadocs/base-ui@16.15.8
   fumapress: 1.2.0
-  lucide-react: 1.41.0
-  oxfmt: 0.66.0
+  lucide-react: 1.42.0
+  oxfmt: 0.67.0
   react: 19.2.8
   react-dom: 19.2.8
   tailwindcss: 4.3.3
