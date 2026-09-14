@@ -86,6 +86,19 @@ This interleaves each request with a response and requires HTTP/2 (Netty).
 For half-duplex, collect `requests.toList()` before returning the response flow;
 this works over HTTP/1.1 on both CIO and Netty.
 
+To set a service-wide request payload limit for all streaming methods, pass it
+when registering the generated routes:
+
+```kotlin
+elizaService(handler, maxMessageSize = 8 * 1024 * 1024)
+```
+
+The limit must be positive and applies to each request message, excluding the
+5-byte envelope prefix. It does not limit unary requests, response messages, or
+the sum of messages in a stream. Omitting it keeps the 4 MiB default. Use manual
+route bindings when individual methods need different limits. Unary-only services
+do not expose this overload. Regenerate your service to use the new overload.
+
 The request flow consumes the channel. Sequential collections resume at the next
 unread message, so `requests.firstOrNull()` can read metadata from the first request
 before setting response headers, followed by collection of the remaining messages.
@@ -95,8 +108,7 @@ Headers, trailers, errors, and deadlines follow the server-streaming rules above
 
 Keep full-duplex routes outside `connectBodyLimit` / Ktor `RequestBodyLimit`, which
 buffers small chunks until request EOF. The framer enforces a 4 MiB limit per
-message by default; use a manual `handleBidiStream(handler::converse,
-maxMessageSize = ...)` route binding to customize that limit.
+message by default; the generated service overload above customizes that limit.
 
 Regenerating a service with bidi methods adds members to its handler interface.
 Existing implementations must implement these previously skipped methods.
