@@ -1,15 +1,27 @@
 import { changelogPlugin } from "@fumapress/tegami";
 import { defineConfig } from "fumapress";
 import { fumadocsMdx } from "fumapress/adapters/mdx";
-import { createDocsLayoutPage } from "fumapress/layouts/docs";
+import { createGlassLayoutPage } from "fumapress/layouts/glass";
 import { createHomeLayoutPage } from "fumapress/layouts/home";
-import { createLayoutSwitch } from "fumapress/layouts/switch";
 import { flexsearchPlugin } from "fumapress/plugins/flexsearch";
 import { llmsPlugin } from "fumapress/plugins/llms.txt";
 import { changelog, docs } from "./.source/server";
 import { LandingPage } from "./src/components/landing";
 
-export default defineConfig({
+const HomeLayout = createHomeLayoutPage<typeof config.$context>({
+    render() {
+        return {
+            body: (
+                <div data-landing="">
+                    <LandingPage />
+                </div>
+            ),
+        };
+    },
+});
+const GlassLayout = createGlassLayoutPage<typeof config.$context>();
+
+const config = defineConfig({
     mode: "static",
     content: {
         docs: docs.toFumadocsSource(),
@@ -40,44 +52,35 @@ export default defineConfig({
             );
         },
     },
-})
-    .layouts({
-        page: createLayoutSwitch((page) => (page.slugs.length === 0 ? "home" : "docs"), {
-            home: createHomeLayoutPage({
-                render() {
-                    return {
-                        body: (
-                            <div data-landing="">
-                                <LandingPage />
-                            </div>
-                        ),
-                    };
-                },
-            }),
-            docs: createDocsLayoutPage(),
-        }),
-        defaultProps() {
-            return {
-                nav: {
-                    title: "Connect-Ktor",
-                },
-                githubUrl: "https://github.com/ichizero/connect-ktor",
-                // Header-only: Docs/Changelog stay out of the left sidebar page tree.
-                // Sidebar Changelog order is controlled by content/meta.json.
-                links: [
-                    {
-                        text: "Docs",
-                        url: "/introduction",
-                        on: "nav",
-                    },
-                    {
-                        text: "Changelog",
-                        url: "/changelog",
-                        on: "nav",
-                    },
-                ],
-            };
+    defaultLayoutProps: {
+        nav: {
+            title: "Connect-Ktor",
         },
-    })
+        githubUrl: "https://github.com/ichizero/connect-ktor",
+        // Header-only: Docs/Changelog stay out of the left sidebar page tree.
+        // Sidebar Changelog order is controlled by content/meta.json.
+        links: [
+            {
+                text: "Docs",
+                url: "/introduction",
+                on: "nav",
+            },
+            {
+                text: "Changelog",
+                url: "/changelog",
+                on: "nav",
+            },
+        ],
+    },
+    renderPage: (props) => {
+        if (props.slugs.length === 0) {
+            return <HomeLayout {...props} />;
+        }
+
+        return <GlassLayout {...props} />;
+    },
+})
     .plugins(flexsearchPlugin(), llmsPlugin(), changelogPlugin())
     .adapters(fumadocsMdx());
+
+export default config;
