@@ -24,7 +24,7 @@ catalog:
   fumadocs-mdx: 15.4.0
   fumadocs-ui: npm:@fumadocs/base-ui@16.15.8
   fumapress: 1.2.0
-  lucide-react: 1.42.0
+  lucide-react: 1.43.0
   oxfmt: 0.67.0
   react: 19.2.8
   react-dom: 19.2.8
