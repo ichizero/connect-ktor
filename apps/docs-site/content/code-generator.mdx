@@ -86,6 +86,27 @@ This interleaves each request with a response and requires HTTP/2 (Netty).
 For half-duplex, collect `requests.toList()` before returning the response flow;
 this works over HTTP/1.1 on both CIO and Netty.
 
+Configure streaming request limits with the route-scoped plugin; generated code
+and service registration stay unchanged:
+
+```kotlin
+routing {
+    install(ConnectStreaming) {
+        maxMessageSize = 8 * 1024 * 1024
+    }
+    elizaService(handler)
+}
+```
+
+Import `io.github.ichizero.connect.ktor.streaming.ConnectStreaming`.
+The limit must be positive and applies to each request message, excluding the
+5-byte envelope prefix. It does not limit unary requests, response messages, or
+the sum of messages in a stream. Without the plugin, handlers use 4 MiB.
+Child routes can install their own configuration. An explicit `maxMessageSize`
+on a manual `handleClientStream`, `handleServerStream`, or `handleBidiStream`
+binding overrides the plugin. Existing generated source needs no regeneration;
+recompile it against the updated library because these handlers are inline.
+
 The request flow consumes the channel. Sequential collections resume at the next
 unread message, so `requests.firstOrNull()` can read metadata from the first request
 before setting response headers, followed by collection of the remaining messages.
@@ -95,8 +116,7 @@ Headers, trailers, errors, and deadlines follow the server-streaming rules above
 
 Keep full-duplex routes outside `connectBodyLimit` / Ktor `RequestBodyLimit`, which
 buffers small chunks until request EOF. The framer enforces a 4 MiB limit per
-message by default; use a manual `handleBidiStream(handler::converse,
-maxMessageSize = ...)` route binding to customize that limit.
+message by default; the route-scoped plugin above customizes that limit.
 
 Regenerating a service with bidi methods adds members to its handler interface.
 Existing implementations must implement these previously skipped methods.

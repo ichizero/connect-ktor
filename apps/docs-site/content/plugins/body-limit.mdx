@@ -5,7 +5,7 @@ description: Cap decoded Connect request sizes with connectBodyLimit.
 
 # Body limit
 
-`Route.connectBodyLimit(maxBytes)` is the connect-ktor counterpart of connect-go's `connect.WithReadMaxBytes(n)`.
+`Route.connectBodyLimit(maxBytes)` caps the entire decoded HTTP request body for unary RPCs.
 Oversized messages become a Connect `resource_exhausted` error (HTTP 429), not Ktor's default 413.
 
 ## Decoded size, not wire size alone
@@ -35,8 +35,29 @@ That is intentional: REST and Connect can disagree on overflow policy in the sam
 If you accept `Content-Encoding: gzip`, install `connectBodyLimit` as well.
 `UnaryCompressionGuard` does not bound expansion by itself.
 
-## Client-streaming caveat
+## Streaming receive limits
 
-The current cap applies to the whole HTTP request body.
-For unary RPCs that equals one message.
-Per-message limits for client-streaming are not implemented yet — see [Known limitations](/known-limitations).
+Use `ConnectStreaming` for client-, server-, and bidirectional-streaming RPCs:
+
+```kotlin
+import io.github.ichizero.connect.ktor.streaming.ConnectStreaming
+
+routing {
+    install(ConnectStreaming) {
+        maxMessageSize = 8 * 1024 * 1024
+    }
+    myService(MyServiceHandler)
+}
+```
+
+The plugin limits each request envelope payload, excluding its 5-byte prefix,
+without buffering the stream. The value must be positive; without configuration,
+handlers use 4 MiB. It does not affect unary requests or response sizes.
+A child route can install its own setting, and a manually bound handler's explicit
+`maxMessageSize` overrides the plugin. Generated source stays unchanged; recompile
+it against the updated library to pick up the inline handlers' configuration lookup.
+
+Keep full-duplex routes outside `connectBodyLimit` / Ktor `RequestBodyLimit`, which
+can buffer small chunks until EOF and prevent request/response interleaving.
+Whole-body limits also count envelope prefixes and all messages together, so they
+are not a substitute for streaming receive limits.
