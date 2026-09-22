@@ -146,8 +146,6 @@ func Test_template_unaryOnly(t *testing.T) {
 	mustContain(t, out, "suspend fun say(request: SayRequest, call: ApplicationCall): ResponseMessage<SayResponse>")
 	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Say, SayRequest>(handle(handler::say))")
 	mustNotContain(t, out, "kotlinx.coroutines.flow.Flow")
-	mustNotContain(t, out, "maxMessageSize")
-	mustNotContain(t, out, "DEFAULT_MAX_MESSAGE_SIZE")
 	mustNotContain(t, out, "handleClientStream")
 	mustNotContain(t, out, "handleServerStream")
 }
@@ -168,12 +166,9 @@ func Test_template_serverStream(t *testing.T) {
 	})
 
 	mustContain(t, out, "import kotlinx.coroutines.flow.Flow")
-	mustContain(t, out, "fun Route.example(handler: ExampleHandlerInterface) {")
-	mustContain(t, out, "example(handler, maxMessageSize = DEFAULT_MAX_MESSAGE_SIZE)")
-	mustContain(t, out, "fun Route.example(handler: ExampleHandlerInterface, maxMessageSize: Int)")
 	mustContain(t, out, "import io.github.ichizero.connect.ktor.streaming.handleServerStream")
 	mustContain(t, out, "suspend fun tail(request: TailRequest, call: ApplicationCall): Flow<TailResponse>")
-	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Tail>(handleServerStream(handler::tail, maxMessageSize = maxMessageSize))")
+	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Tail>(handleServerStream(handler::tail))")
 	mustNotContain(t, out, "handleClientStream")
 }
 
@@ -194,12 +189,9 @@ func Test_template_mixedKinds(t *testing.T) {
 	})
 
 	mustContain(t, out, "import kotlinx.coroutines.flow.Flow")
-	mustContain(t, out, "fun Route.example(handler: ExampleHandlerInterface) {")
-	mustContain(t, out, "example(handler, maxMessageSize = DEFAULT_MAX_MESSAGE_SIZE)")
-	mustContain(t, out, "fun Route.example(handler: ExampleHandlerInterface, maxMessageSize: Int)")
 	mustContain(t, out, "import io.github.ichizero.connect.ktor.streaming.handleClientStream")
 	mustContain(t, out, "suspend fun upload(requests: Flow<UploadRequest>, call: ApplicationCall): ResponseMessage<UploadResponse>")
-	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Upload>(handleClientStream(handler::upload, maxMessageSize = maxMessageSize))")
+	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Upload>(handleClientStream(handler::upload))")
 	// unary entry remains unchanged.
 	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Say, SayRequest>(handle(handler::say))")
 	mustNotContain(t, out, "handleServerStream")
@@ -243,12 +235,9 @@ func Test_template_bidiStream(t *testing.T) {
 		HasBidiStream: true,
 	})
 	mustContain(t, out, "import kotlinx.coroutines.flow.Flow")
-	mustContain(t, out, "fun Route.example(handler: ExampleHandlerInterface) {")
-	mustContain(t, out, "example(handler, maxMessageSize = DEFAULT_MAX_MESSAGE_SIZE)")
-	mustContain(t, out, "fun Route.example(handler: ExampleHandlerInterface, maxMessageSize: Int)")
 	mustContain(t, out, "import io.github.ichizero.connect.ktor.streaming.handleBidiStream")
 	mustContain(t, out, "suspend fun chat(requests: Flow<ChatRequest>, call: ApplicationCall): Flow<ChatResponse>")
-	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Chat>(handleBidiStream(handler::chat, maxMessageSize = maxMessageSize))")
+	mustContain(t, out, "post<ExampleHandlerInterface.Procedures.Chat>(handleBidiStream(handler::chat))")
 	mustNotContain(t, out, "handleClientStream")
 	mustNotContain(t, out, "handleServerStream")
 	mustNotContain(t, out, "get<")

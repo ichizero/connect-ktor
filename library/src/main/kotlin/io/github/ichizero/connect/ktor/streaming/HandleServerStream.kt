@@ -26,6 +26,19 @@ import kotlin.reflect.KClass
  * ```
  * post<Procedures.Tail>(handleServerStream(handler::tail))
  * ```
+ *
+ * Uses the route-scoped [ConnectStreaming] limit, or 4 MiB when not configured.
+ */
+inline fun <Resource : Any, reified Req : Any, reified Res : Any> handleServerStream(
+    noinline handlerFunc: suspend (request: Req, call: ApplicationCall) -> Flow<Res>,
+): suspend RoutingContext.(Resource) -> Unit = { _ ->
+    handleServerStreamCall(call, call.streamingMaxMessageSize(), Req::class, Res::class, handlerFunc)
+}
+
+/**
+ * Handle a streaming RPC with an explicit receive limit, overriding [ConnectStreaming].
+ * The default is retained for binary compatibility; calls omitting the limit select the
+ * single-argument overload and resolve route configuration instead.
  */
 inline fun <Resource : Any, reified Req : Any, reified Res : Any> handleServerStream(
     noinline handlerFunc: suspend (request: Req, call: ApplicationCall) -> Flow<Res>,

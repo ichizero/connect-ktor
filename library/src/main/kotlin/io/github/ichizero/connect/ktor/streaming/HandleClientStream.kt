@@ -41,6 +41,19 @@ import kotlin.reflect.KClass
  * ```
  * post<Procedures.UploadCsv>(handleClientStream(handler::uploadCsv))
  * ```
+ *
+ * Uses the route-scoped [ConnectStreaming] limit, or 4 MiB when not configured.
+ */
+inline fun <Resource : Any, reified Req : Any, reified Res : Any> handleClientStream(
+    noinline handlerFunc: suspend (requests: Flow<Req>, call: ApplicationCall) -> ResponseMessage<Res>,
+): suspend RoutingContext.(Resource) -> Unit = { _ ->
+    handleClientStreamCall(call, call.streamingMaxMessageSize(), Req::class, Res::class, handlerFunc)
+}
+
+/**
+ * Handle a streaming RPC with an explicit receive limit, overriding [ConnectStreaming].
+ * The default is retained for binary compatibility; calls omitting the limit select the
+ * single-argument overload and resolve route configuration instead.
  */
 inline fun <Resource : Any, reified Req : Any, reified Res : Any> handleClientStream(
     noinline handlerFunc: suspend (requests: Flow<Req>, call: ApplicationCall) -> ResponseMessage<Res>,

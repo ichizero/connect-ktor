@@ -24,9 +24,22 @@ import kotlin.reflect.KClass
  * [connectResponseTrailers]. The timeout budget covers handler setup and flow collection.
  * Cancellation and broken response channels propagate as for [handleServerStream].
  *
- * Use [maxMessageSize] to bound each incoming message. Keep full-duplex routes outside
+ * Use [ConnectStreaming] to bound each incoming message. Keep full-duplex routes outside
  * `connectBodyLimit` / Ktor `RequestBodyLimit`: that plugin buffers small request chunks
  * until EOF and prevents request/response interleaving.
+ *
+ * Uses the route-scoped [ConnectStreaming] limit, or 4 MiB when not configured.
+ */
+inline fun <Resource : Any, reified Req : Any, reified Res : Any> handleBidiStream(
+    noinline handlerFunc: suspend (requests: Flow<Req>, call: ApplicationCall) -> Flow<Res>,
+): suspend RoutingContext.(Resource) -> Unit = { _ ->
+    handleBidiStreamCall(call, call.streamingMaxMessageSize(), Req::class, Res::class, handlerFunc)
+}
+
+/**
+ * Handle a streaming RPC with an explicit receive limit, overriding [ConnectStreaming].
+ * The default is retained for binary compatibility; calls omitting the limit select the
+ * single-argument overload and resolve route configuration instead.
  */
 inline fun <Resource : Any, reified Req : Any, reified Res : Any> handleBidiStream(
     noinline handlerFunc: suspend (requests: Flow<Req>, call: ApplicationCall) -> Flow<Res>,

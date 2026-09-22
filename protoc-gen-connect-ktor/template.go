@@ -72,7 +72,6 @@ import io.ktor.server.resources.get
 import io.ktor.server.resources.post
 import io.ktor.server.routing.Route
 {{- if or .HasClientStream .HasServerStream .HasBidiStream }}
-import io.github.ichizero.connect.ktor.streaming.DEFAULT_MAX_MESSAGE_SIZE
 import kotlinx.coroutines.flow.Flow
 {{- end }}
 
@@ -99,17 +98,7 @@ interface {{ .Name }}HandlerInterface {
     }
 }
 
-{{- if or .HasClientStream .HasServerStream .HasBidiStream }}
 fun Route.{{ .Name | toLowerFirst }}(handler: {{ .Name }}HandlerInterface) {
-    {{ .Name | toLowerFirst }}(handler, maxMessageSize = DEFAULT_MAX_MESSAGE_SIZE)
-}
-
-/** Register this service with a per-message request payload limit for streaming RPCs. */
-fun Route.{{ .Name | toLowerFirst }}(handler: {{ .Name }}HandlerInterface, maxMessageSize: Int) {
-    require(maxMessageSize > 0) { "maxMessageSize must be positive" }
-{{- else }}
-fun Route.{{ .Name | toLowerFirst }}(handler: {{ .Name }}HandlerInterface) {
-{{- end }}
     {{- range .Methods }}
     {{- if eq .StreamType "Unary" }}
     post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}, {{ .InputTypeName }}>(handle(handler::{{ .Name | toLowerFirst }}))
@@ -117,11 +106,11 @@ fun Route.{{ .Name | toLowerFirst }}(handler: {{ .Name }}HandlerInterface) {
     get<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleGet<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}, {{ .InputTypeName }}, {{ .OutputTypeName }}>(handler::{{ .Name | toLowerFirst }}))
     {{- end }}
     {{- else if eq .StreamType "Client" }}
-    post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleClientStream(handler::{{ .Name | toLowerFirst }}, maxMessageSize = maxMessageSize))
+    post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleClientStream(handler::{{ .Name | toLowerFirst }}))
     {{- else if eq .StreamType "Bidi" }}
-    post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleBidiStream(handler::{{ .Name | toLowerFirst }}, maxMessageSize = maxMessageSize))
+    post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleBidiStream(handler::{{ .Name | toLowerFirst }}))
     {{- else if eq .StreamType "Server" }}
-    post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleServerStream(handler::{{ .Name | toLowerFirst }}, maxMessageSize = maxMessageSize))
+    post<{{ $.Name }}HandlerInterface.Procedures.{{ .Name }}>(handleServerStream(handler::{{ .Name | toLowerFirst }}))
     {{- end }}
     {{- end }}
 }
