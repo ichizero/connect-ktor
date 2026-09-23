@@ -51,7 +51,7 @@ Summary (details and footnotes:
 | TLS / mTLS            |                              |  ❌  |  ✅   |
 | Trailers              |                              |  ✅  |  ✅   |
 | Connect GET           |                              | ✅\* |  ✅   |
-| Message receive limit | unary                        |  ✅  |  ✅   |
+| Message receive limit | unary / streaming            |  ✅  |  ✅   |
 
 \* CIO Connect GET fails cases that rely on duplicate request headers (upstream
 CIO limitation). Both engines currently fail gzip streaming cases (per-message
