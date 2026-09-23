@@ -1,3 +1,81 @@
+## connect-ktor@0.4.0
+
+### Support Connect server-streaming RPCs
+
+Server-streaming RPCs (`rpc X(Req) returns (stream Res)`) are now served end to end.
+The code generator emits handlers that return a cold `Flow<Res>`, and
+`handleServerStream` writes each emitted message as an envelope frame followed by an
+end-of-stream frame. Response headers are flushed before the first message, a
+`ConnectException` thrown by the flow becomes the end-of-stream error, and trailers can
+be set through the new `call.connectResponseTrailers()`. When a client disconnects, the
+handler's flow collector is cancelled instead of the failure being swallowed.
+
+Services with server-streaming methods in their `.proto` will see a new member on the
+generated handler interface — those methods used to be skipped by the generator.
+
+[PR #278](https://github.com/ichizero/connect-ktor/pull/278)
+
+### Support Connect bidirectional-streaming RPCs
+
+Connect-Ktor now generates and serves bidirectional-streaming RPCs. Half-duplex calls
+work on CIO and Netty, while Netty over HTTP/2 supports full-duplex request and response
+interleaving.
+
+Generated handlers accept a `Flow<Req>` and return a `Flow<Res>`. The streaming path
+handles envelope framing, request validation, per-message size limits, headers, trailers,
+deadlines, and cancellation.
+
+[PR #348](https://github.com/ichizero/connect-ktor/pull/348)
+
+### Configure streaming receive limits with a route-scoped plugin
+
+Install `ConnectStreaming` on a Ktor route to configure `maxMessageSize` for
+client, server, and bidirectional streaming request messages. Child routes can
+override the setting; explicit handler limits take precedence. Without the plugin,
+the limit remains 4 MiB. Unary request limits and generated source are unchanged.
+Recompile existing generated source against the updated library to use the plugin.
+
+### Dependencies
+
+- chore(deps): update docs-site by @renovate[bot] in [PR #330](https://github.com/ichizero/connect-ktor/pull/330)
+- chore(deps): update jdx/mise-action action to v4.3.0 by @renovate[bot] in [PR #331](https://github.com/ichizero/connect-ktor/pull/331)
+- chore(deps): update anchore/sbom-action action to v0.24.1 by @renovate[bot] in [PR #332](https://github.com/ichizero/connect-ktor/pull/332)
+- chore(deps): update dependency golangci-lint to v2.13.2 by @renovate[bot] in [PR #333](https://github.com/ichizero/connect-ktor/pull/333)
+- chore(deps): update dependency lefthook to v2.1.12 by @renovate[bot] in [PR #334](https://github.com/ichizero/connect-ktor/pull/334)
+- chore(deps): update github/codeql-action action to v4.37.9 by @renovate[bot] in [PR #335](https://github.com/ichizero/connect-ktor/pull/335)
+- chore(deps): update anchore/sbom-action action to v0.24.2 by @renovate[bot] in [PR #336](https://github.com/ichizero/connect-ktor/pull/336)
+- chore(deps): update docs-site by @renovate[bot] in [PR #337](https://github.com/ichizero/connect-ktor/pull/337)
+- chore(deps): update pnpm/setup action to v2.1.0 by @renovate[bot] in [PR #339](https://github.com/ichizero/connect-ktor/pull/339)
+- fix(deps): update spotless to v8.10.1 by @renovate[bot] in [PR #340](https://github.com/ichizero/connect-ktor/pull/340)
+- chore(deps): update zizmorcore/zizmor-action action to v0.6.3 by @renovate[bot] in [PR #342](https://github.com/ichizero/connect-ktor/pull/342)
+- fix(deps): update dependency org.jetbrains.kotlin:kotlin-gradle-plugin to v2.4.20 [security] by @renovate[bot] in [PR #341](https://github.com/ichizero/connect-ktor/pull/341)
+- fix(deps): update protobuf monorepo to v4.36.1 by @renovate[bot] in [PR #343](https://github.com/ichizero/connect-ktor/pull/343)
+- chore(deps): update dependency go to v1.27.1 by @renovate[bot] in [PR #345](https://github.com/ichizero/connect-ktor/pull/345)
+- chore(deps): update actions/deploy-pages action to v5.0.1 by @renovate[bot] in [PR #344](https://github.com/ichizero/connect-ktor/pull/344)
+- chore(deps): update docs-site by @renovate[bot] in [PR #346](https://github.com/ichizero/connect-ktor/pull/346)
+- fix(deps): update dependency build.buf:protovalidate to v1.3.0 by @renovate[bot] in [PR #347](https://github.com/ichizero/connect-ktor/pull/347)
+- chore(deps): update github/codeql-action action to v4.38.0 by @renovate[bot] in [PR #349](https://github.com/ichizero/connect-ktor/pull/349)
+- fix(deps): update dependency com.squareup.okio:okio to v3.18.2 by @renovate[bot] in [PR #350](https://github.com/ichizero/connect-ktor/pull/350)
+- fix(deps): update dependency org.slf4j:slf4j-simple to v2.0.19 by @renovate[bot] in [PR #351](https://github.com/ichizero/connect-ktor/pull/351)
+- fix(deps): update spotless to v8.10.2 by @renovate[bot] in [PR #352](https://github.com/ichizero/connect-ktor/pull/352)
+- chore(deps): update docs-site by @renovate[bot] in [PR #353](https://github.com/ichizero/connect-ktor/pull/353)
+- chore(deps): update docs-site (major) by @renovate[bot] in [PR #355](https://github.com/ichizero/connect-ktor/pull/355)
+- chore(deps): update actions/setup-java action to v6 by @renovate[bot] in [PR #354](https://github.com/ichizero/connect-ktor/pull/354)
+- chore(deps): update docs-site by @renovate[bot] in [PR #360](https://github.com/ichizero/connect-ktor/pull/360)
+- chore(deps): update docs-site by @renovate[bot] in [PR #363](https://github.com/ichizero/connect-ktor/pull/363)
+- chore(deps): update docs-site by @renovate[bot] in [PR #365](https://github.com/ichizero/connect-ktor/pull/365)
+- chore(deps): update actions/setup-java action to v6.0.1 by @renovate[bot] in [PR #364](https://github.com/ichizero/connect-ktor/pull/364)
+- chore(deps): update docs-site to v16.15.10 by @renovate[bot] in [PR #366](https://github.com/ichizero/connect-ktor/pull/366)
+- chore(deps): update zizmorcore/zizmor-action action to v0.6.4 by @renovate[bot] in [PR #367](https://github.com/ichizero/connect-ktor/pull/367)
+- chore(deps): update dependency lefthook to v2.1.14 by @renovate[bot] in [PR #368](https://github.com/ichizero/connect-ktor/pull/368)
+- chore(deps): update docs-site by @renovate[bot] in [PR #371](https://github.com/ichizero/connect-ktor/pull/371)
+- chore(deps): update github/codeql-action action to v4.38.1 by @renovate[bot] in [PR #372](https://github.com/ichizero/connect-ktor/pull/372)
+- chore(deps): update dependency buf to v1.73.0 by @renovate[bot] in [PR #370](https://github.com/ichizero/connect-ktor/pull/370)
+- chore(deps): update docs-site by @renovate[bot] in [PR #376](https://github.com/ichizero/connect-ktor/pull/376)
+- fix(deps): update kotest to v6.2.5 by @renovate[bot] in [PR #369](https://github.com/ichizero/connect-ktor/pull/369)
+- fix(deps): update protobuf monorepo to v4.36.2 by @renovate[bot] in [PR #373](https://github.com/ichizero/connect-ktor/pull/373)
+- fix(deps): update ktor monorepo to v3.6.0 by @renovate[bot] in [PR #374](https://github.com/ichizero/connect-ktor/pull/374)
+
 ## connect-ktor@0.3.1
 
 ### Dependencies
