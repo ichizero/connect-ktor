@@ -13,6 +13,7 @@ import io.github.ichizero.ktor.serialization.connect.connectJson
 import io.github.ichizero.ktor.serialization.connect.connectProto
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.resources.Resource
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
@@ -33,7 +34,8 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-private const val CONNECT_PATH = "/example.users.v1.UserService/GetUser"
+private val connectPath = UserServiceHandlerInterface.Procedures.GetUser::class.java
+    .getAnnotation(Resource::class.java).path
 
 // The token stands in for the application's existing credential validator.
 private const val DEMO_TOKEN = "demo-token"
@@ -79,7 +81,7 @@ fun Application.userApi(users: UserService) {
     }
     install(StatusPages) {
         status(HttpStatusCode.Unauthorized) { call, _ ->
-            if (call.request.path() == CONNECT_PATH) {
+            if (call.request.path() == connectPath) {
                 call.respondBytes(
                     ConnectException(Code.UNAUTHENTICATED, "authentication required").toErrorJsonBytes(),
                     ContentType.Application.Json,
