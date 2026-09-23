@@ -1,6 +1,7 @@
 package io.github.ichizero.connect.ktor.example
 
 import io.github.ichizero.connect.ktor.example.proto.GetUserResponse
+import io.github.ichizero.connect.ktor.example.proto.UserServiceHandlerInterface
 import io.github.ichizero.connect.ktor.example.proto.getUserRequest
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -13,10 +14,12 @@ import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.resources.Resource
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.Json
 
-private const val CONNECT_PATH = "/example.users.v1.UserService/GetUser"
+private val connectPath = UserServiceHandlerInterface.Procedures.GetUser::class.java
+    .getAnnotation(Resource::class.java).path
 
 class UserApiTest : FunSpec({
     val requestedIds = mutableListOf<String>()
@@ -40,7 +43,7 @@ class UserApiTest : FunSpec({
     test("Connect returns its proto through the shared service") {
         testApplication {
             application { userApi(users) }
-            val response = client.post(CONNECT_PATH) {
+            val response = client.post(connectPath) {
                 header(HttpHeaders.Authorization, "Bearer demo-token")
                 header(HttpHeaders.ContentType, "application/proto")
                 header(HttpHeaders.Accept, "application/proto")
@@ -68,7 +71,7 @@ class UserApiTest : FunSpec({
     test("Connect returns not_found for a missing user") {
         testApplication {
             application { userApi(users) }
-            val response = client.post(CONNECT_PATH) {
+            val response = client.post(connectPath) {
                 header(HttpHeaders.Authorization, "Bearer demo-token")
                 header(HttpHeaders.ContentType, "application/proto")
                 setBody(getUserRequest { id = "missing" }.toByteArray())
@@ -92,7 +95,7 @@ class UserApiTest : FunSpec({
     test("Connect rejects a missing credential with unauthenticated") {
         testApplication {
             application { userApi(users) }
-            val response = client.post(CONNECT_PATH) {
+            val response = client.post(connectPath) {
                 header(HttpHeaders.ContentType, "application/proto")
                 setBody(getUserRequest { id = "42" }.toByteArray())
             }
