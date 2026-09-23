@@ -172,7 +172,6 @@ jobs:
           args: release --clean --release-notes=/tmp/tegami-release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ needs.prepare.outputs.tag }}
 
       - name: Generate SLSA build provenance for Go release archives
