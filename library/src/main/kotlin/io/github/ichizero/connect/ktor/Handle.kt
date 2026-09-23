@@ -13,7 +13,7 @@ import io.ktor.server.routing.*
 inline fun <reified Resource : Any, reified Req : Any, reified Res : Any> handle(
     noinline handlerFunc: suspend (request: Req, call: ApplicationCall) -> ResponseMessage<Res>,
 ): suspend RoutingContext.(Resource, Req) -> Unit = { _, request ->
-    handlerFunc(request, call)
+    call.invokeUnaryHandler { handlerFunc(request, call) }
         .also { response ->
             response.headers.map { (key, value) ->
                 value.map { call.response.headers.append(key, it) }

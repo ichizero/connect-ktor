@@ -42,16 +42,19 @@ class ConnectJsonConverter(
         )
     }
 
+    @Suppress("TooGenericExceptionCaught") // Custom codecs can fail with arbitrary ordinary exceptions.
     override suspend fun deserialize(
         charset: Charset,
         typeInfo: TypeInfo,
         content: ByteReadChannel,
     ): Any = withContext(Dispatchers.IO) {
-        return@withContext runCatching {
+        return@withContext try {
             serializationStrategy
                 .codec(typeInfo.type)
                 .deserialize(content.toInputStream().source().buffer())
-        }.getOrElse { cause ->
+        } catch (cause: kotlinx.coroutines.CancellationException) {
+            throw cause
+        } catch (cause: Exception) {
             throw JsonConvertException("Failed to deserialize JSON: ${cause.message}", cause)
         }
     }

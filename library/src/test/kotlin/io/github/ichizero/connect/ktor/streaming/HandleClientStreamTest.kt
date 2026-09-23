@@ -24,6 +24,7 @@ import io.ktor.server.resources.Resources
 import io.ktor.server.resources.post
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.toList
@@ -103,6 +104,25 @@ class HandleClientStreamTest : FunSpec({
         frames[0].isEndStream shouldBe true
         val json = String(frames[0].payload)
         json shouldBe """{"error":{"code":"unknown","message":"boom"}}"""
+    }
+
+    test("client streaming: cancellation is not reported as an RPC error") {
+        val outcome = runCatching {
+            postUpload(
+                contentType = ConnectStreamingContentType.Proto,
+                body = encodeFrames(listOf(uploadRequest { chunk = "x" })),
+            ) {
+                throw CancellationException("caller disconnected")
+            }
+        }
+
+        val error = outcome.exceptionOrNull()
+        if (error != null) {
+            (error is CancellationException) shouldBe true
+        } else {
+            // The in-memory host can turn a cancelled call into an HTTP response.
+            outcome.getOrThrow().status shouldBe HttpStatusCode.InternalServerError
+        }
     }
 
     test("client streaming: ConnectException from handler preserves its code") {
