@@ -99,15 +99,15 @@ private const val READ_CHUNK_BYTES = 64 * 1024
 /**
  * Reads up to [max] bytes from this channel, stopping early at end-of-stream.
  *
- * [io.ktor.utils.io.readBuffer] takes an `Int`, so the read is issued in [READ_CHUNK_BYTES]
- * chunks; a short chunk means the channel is exhausted.
+ * [readBuffer] is called in [READ_CHUNK_BYTES] chunks; a short chunk means the channel is
+ * exhausted.
  */
 private suspend fun ByteReadChannel.readAtMost(max: Long): Buffer {
     val result = Buffer()
     var remaining = max
     while (remaining > 0) {
         val requested = minOf(remaining, READ_CHUNK_BYTES.toLong()).toInt()
-        val chunk = readBuffer(requested)
+        val chunk = readBuffer(requested.toLong())
         val read = chunk.size
         result.transferFrom(chunk)
         if (read < requested) break
