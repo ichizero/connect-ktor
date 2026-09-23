@@ -9,6 +9,7 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.application
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.RoutingContext
+import kotlinx.coroutines.CancellationException
 import okio.Buffer
 import java.util.Base64
 import kotlin.reflect.KClass
@@ -151,12 +152,13 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
             "proto" -> strategies.proto.codec(reqClass).deserialize(Buffer().write(messageBytes))
             else -> strategies.json.codec(reqClass).deserialize(Buffer().write(messageBytes))
         }
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: ConnectException) {
         call.respondConnectError(e)
         return
     } catch (e: Exception) {
-        // Deliberately Exception, not Throwable: JVM Errors must escape, and this is a
-        // non-suspending call so CancellationException cannot originate here.
+        // JVM errors and cancellation must escape even from custom codecs.
         call.respondConnectError(Code.INVALID_ARGUMENT, "failed to deserialize request: ${e.message}")
         return
     }
@@ -171,7 +173,7 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     }
 
     // Invoke the handler and write the response.
-    handlerFunc(req, call)
+    call.invokeUnaryHandler { handlerFunc(req, call) }
         .also { response ->
             response.headers.forEach { (key, value) ->
                 value.forEach { call.response.headers.append(key, it) }

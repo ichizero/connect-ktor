@@ -6,6 +6,7 @@ import io.github.ichizero.ktor.protovalidate.validateStreamingRequest
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receiveChannel
 import io.ktor.server.routing.RoutingContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.take
@@ -104,6 +105,8 @@ private suspend fun ApplicationCall.receiveRequestFrame(maxMessageSize: Int): En
 
 internal fun <Req : Any> StreamingCodec.decodeRequest(frame: EnvelopeFrame, reqClass: KClass<Req>): Req = try {
     deserialize(frame.payload, reqClass)
+} catch (e: CancellationException) {
+    throw e
 } catch (e: ConnectException) {
     throw e
 } catch (e: Exception) {

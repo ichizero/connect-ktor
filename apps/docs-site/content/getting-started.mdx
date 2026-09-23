@@ -115,6 +115,20 @@ Buf Studio is fine for ad-hoc checks.
 Point the client at `http://localhost:8080` (or your deployed base URL) and invoke `Say` as usual.
 Client configuration details live in those official guides, not here.
 
+For a per-call deadline, send `Connect-Timeout-Ms` with a positive number of milliseconds.
+For example:
+
+```bash
+curl -i http://localhost:8080/connectrpc.eliza.v1.ElizaService/Say \
+  -H 'Content-Type: application/json' \
+  -H 'Connect-Timeout-Ms: 1000' \
+  -d '{"sentence":"Hello"}'
+```
+
+Generated unary POST/GET and streaming handlers return `deadline_exceeded` when their own budget expires.
+The budget starts when the handler begins; Ktor performs request decoding before it invokes unary handlers.
+Cancellation by the caller still cancels server work rather than becoming a deadline response.
+
 ## Where to go next
 
 - [Code generator](/code-generator) for `protoc-gen-connect-ktor` details

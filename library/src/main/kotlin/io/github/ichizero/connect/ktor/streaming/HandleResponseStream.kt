@@ -2,6 +2,7 @@ package io.github.ichizero.connect.ktor.streaming
 
 import com.connectrpc.Code
 import com.connectrpc.ConnectException
+import io.github.ichizero.connect.ktor.withConnectTimeout
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.application
 import io.ktor.server.http.content.suppressCompression
@@ -10,10 +11,8 @@ import io.ktor.server.request.contentType
 import io.ktor.server.response.respondBytesWriter
 import io.ktor.utils.io.ByteWriteChannel
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.withTimeout
 import kotlinx.io.IOException
 import kotlin.reflect.KClass
 import kotlin.time.Duration
@@ -80,8 +79,6 @@ private suspend fun <Res : Any> ApplicationCall.startStream(
             prepare(codec)
         },
     )
-} catch (e: TimeoutCancellationException) {
-    StartedStream.Failed(deadlineExceeded(e))
 } catch (e: CancellationException) {
     throw e
 } catch (e: ConnectException) {
@@ -112,8 +109,6 @@ private suspend fun <Res : Any> ByteWriteChannel.writeResponseMessages(
         }
     }
     producerError
-} catch (e: TimeoutCancellationException) {
-    deadlineExceeded(e)
 } catch (e: CancellationException) {
     throw e
 } catch (e: IOException) {
@@ -126,6 +121,8 @@ private suspend fun <Res : Any> ByteWriteChannel.writeResponseMessages(
 
 private fun <Res : Any> StreamingCodec.encodeResponse(message: Res, resClass: KClass<Res>): ByteArray = try {
     serialize(message, resClass)
+} catch (e: CancellationException) {
+    throw e
 } catch (e: Exception) {
     throw ConnectException(
         code = Code.INTERNAL_ERROR,
@@ -143,12 +140,6 @@ private suspend fun ApplicationCall.respondEndStream(codec: StreamingCodec, erro
     )
 }
 
-private fun deadlineExceeded(cause: Throwable): ConnectException = ConnectException(
-    code = Code.DEADLINE_EXCEEDED,
-    message = "deadline exceeded",
-    exception = cause,
-)
-
 /**
  * The `Connect-Timeout-Ms` budget, shared by the request-read and response-streaming phases so both
  * are bounded by the same deadline instead of each getting a fresh one.
@@ -161,4 +152,4 @@ private class StreamDeadline(timeoutMs: Long) {
 }
 
 private suspend fun <T> withDeadline(deadline: StreamDeadline?, block: suspend () -> T): T =
-    if (deadline == null) block() else withTimeout(deadline.remaining()) { block() }
+    withConnectTimeout(deadline?.remaining(), block)
