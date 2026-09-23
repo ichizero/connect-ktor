@@ -27,15 +27,6 @@ message SayRequest {
 ```kotlin
 embeddedServer(CIO, port = 8080) {
     install(Resources)
-    install(StatusPages) {
-        exception<ProtoRequestValidationException> { call, cause ->
-            call.respondBytes(
-                bytes = cause.toErrorJsonBytes(),
-                status = HttpStatusCode.BadRequest,
-                contentType = ContentType.Application.Json,
-            )
-        }
-    }
     routing {
         install(ContentNegotiation) {
             connectJson()
@@ -46,5 +37,7 @@ embeddedServer(CIO, port = 8080) {
 }.start(wait = true)
 ```
 
-Wire `StatusPages` (or an equivalent handler) so validation failures surface as Connect JSON errors instead of an uncaught exception page.
+`ProtoRequestValidation` returns Connect JSON errors for invalid unary POST requests without a `StatusPages` handler. It also checks Connect GET messages after decoding. An invalid request returns HTTP 400 with `invalid_argument` and violation details.
+
+Install the plugin only on routes that should validate protobuf requests. It handles its validation failure before an application-wide `StatusPages` handler. Existing `StatusPages` handlers can continue to handle errors from other routes; no validation-specific handler is required.
 Validation rules stay in the `.proto` file — the server only enforces them.

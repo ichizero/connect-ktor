@@ -4,11 +4,13 @@ import com.connectrpc.Code
 import com.connectrpc.ConnectException
 import com.connectrpc.ResponseMessage
 import com.connectrpc.fold
+import io.github.ichizero.ktor.protovalidate.validateConnectRequest
 import io.ktor.http.ContentType
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.application
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.RoutingContext
+import kotlinx.coroutines.CancellationException
 import okio.Buffer
 import java.util.Base64
 import kotlin.reflect.KClass
@@ -151,12 +153,13 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
             "proto" -> strategies.proto.codec(reqClass).deserialize(Buffer().write(messageBytes))
             else -> strategies.json.codec(reqClass).deserialize(Buffer().write(messageBytes))
         }
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: ConnectException) {
         call.respondConnectError(e)
         return
     } catch (e: Exception) {
-        // Deliberately Exception, not Throwable: JVM Errors must escape, and this is a
-        // non-suspending call so CancellationException cannot originate here.
+        // JVM errors must escape; custom codecs may also throw cancellation.
         call.respondConnectError(Code.INVALID_ARGUMENT, "failed to deserialize request: ${e.message}")
         return
     }
@@ -171,14 +174,12 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     }
 
     // Invoke the handler and write the response.
-    handlerFunc(req, call)
+    invokeUnaryHandler {
+        call.validateConnectRequest(req)
+        handlerFunc(req, call)
+    }
         .also { response ->
-            response.headers.forEach { (key, value) ->
-                value.forEach { call.response.headers.append(key, it) }
-            }
-            response.trailers.forEach { (key, value) ->
-                value.forEach { call.response.headers.append("Trailer-$key", it) }
-            }
+            call.appendUnaryMetadata(response)
         }.fold(
             onSuccess = { res ->
                 // Serialize the response manually because there is no request body from which

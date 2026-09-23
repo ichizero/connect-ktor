@@ -8,16 +8,22 @@ import com.connectrpc.Code
 import com.connectrpc.ConnectException
 import com.connectrpc.extensions.GoogleJavaJSONStrategy
 import com.google.protobuf.Message
+import io.github.ichizero.connect.ktor.asHTTPStatusCode
 import io.github.ichizero.connect.ktor.toConnectErrorDetails
 import io.github.ichizero.connect.ktor.toErrorJsonBytes
+import io.ktor.http.ContentType
 import io.ktor.server.application.*
+import io.ktor.server.application.hooks.CallFailed
 import io.ktor.server.request.*
+import io.ktor.server.response.respondBytes
 import io.ktor.util.AttributeKey
 
 /**
  * A plugin that checks a request body using [Validator].
  *
- * If validation fails, it will throw [ProtoRequestValidationException].
+ * Unary POST validation failures become Connect JSON errors with HTTP 400. Connect GET and
+ * streaming handlers validate their decoded messages through the same validator.
+ * Internally, POST validation throws [ProtoRequestValidationException] before the route handler.
  * If there are any validation exceptions, it will throw [ValidationException].
  * Server-streaming and bidirectional requests use the same validator after decoding; violations are returned as
  * INVALID_ARGUMENT end-stream errors with the validation details.
@@ -40,6 +46,16 @@ val ProtoRequestValidation: RouteScopedPlugin<ProtoRequestValidationConfig> = cr
 
     on(RequestBodyTransformed) { content ->
         validator.validationFailure(content)?.let { throw it }
+    }
+
+    on(CallFailed) { call, cause ->
+        val failure = cause as? ProtoRequestValidationException ?: return@on
+        val error = failure.toConnectException()
+        call.respondBytes(
+            bytes = error.toErrorJsonBytes(),
+            contentType = ContentType.Application.Json,
+            status = error.code.asHTTPStatusCode(),
+        )
     }
 }
 
@@ -74,10 +90,12 @@ private object RequestBodyTransformed : Hook<suspend (content: Any) -> Unit> {
 private val StreamingRequestValidatorKey = AttributeKey<Validator>("ConnectStreamingRequestValidator")
 
 /** Validate an already decoded streaming message using the validator installed on this call's route. */
-internal fun ApplicationCall.validateStreamingRequest(content: Any) {
+internal fun ApplicationCall.validateConnectRequest(content: Any) {
     val validator = attributes.getOrNull(StreamingRequestValidatorKey) ?: return
     validator.validationFailure(content)?.let { throw it.toConnectException() }
 }
+
+internal fun ApplicationCall.validateStreamingRequest(content: Any) = validateConnectRequest(content)
 
 private fun Validator.validationFailure(content: Any): ProtoRequestValidationException? {
     if (content !is Message) return null
