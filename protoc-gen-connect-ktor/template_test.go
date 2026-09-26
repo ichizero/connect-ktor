@@ -27,6 +27,7 @@ func Test_template_no_side_effects_method_emits_get_route(t *testing.T) {
 		JavaPackageName:  "com.example.v1",
 		SourceFileName:   "example/v1/service.proto",
 		Name:             "ExampleService",
+		HasUnaryRoute:    true,
 		HasGetRoute:      true,
 		Methods: []*methodData{
 			{
@@ -56,6 +57,9 @@ func Test_template_no_side_effects_method_emits_get_route(t *testing.T) {
 	// The NO_SIDE_EFFECTS method should get both a POST and a GET route.
 	if !strings.Contains(output, `post<ExampleServiceHandlerInterface.Procedures.GetThing, GetThingRequest>`) {
 		t.Error("expected POST route for no-side-effects method GetThing")
+	}
+	if !strings.Contains(output, `.apply { install(ConnectUnaryRoute) }`) {
+		t.Error("expected generated unary POST routes to mark Connect requests")
 	}
 	if !strings.Contains(output, `get<ExampleServiceHandlerInterface.Procedures.GetThing>`) {
 		t.Error("expected GET route for no-side-effects method GetThing")
@@ -94,6 +98,7 @@ func Test_template_no_get_routes_still_compiles(t *testing.T) {
 		JavaPackageName:  "com.example.v1",
 		SourceFileName:   "example/v1/service.proto",
 		Name:             "MutatingService",
+		HasUnaryRoute:    true,
 		Methods: []*methodData{
 			{
 				Name:           "Create",

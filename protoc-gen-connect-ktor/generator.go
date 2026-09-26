@@ -63,6 +63,7 @@ func run(plugin *protogen.Plugin, file *protogen.File) error {
 func serviceToData(service *protogen.Service, protoPackageName, javaPackageName, sourceFileName string) *serviceData {
 	methods := make([]*methodData, 0, len(service.Methods))
 	hasClientStream := false
+	hasUnaryRoute := false
 	hasServerStream := false
 	hasGetRoute := false
 	hasBidiStream := false
@@ -76,6 +77,7 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 		case streamTypeBidi:
 			hasBidiStream = true
 		case streamTypeUnary:
+			hasUnaryRoute = true
 		}
 		noSideEffects := isNoSideEffects(method)
 		// Connect GET is emitted only for unary RPCs annotated NO_SIDE_EFFECTS
@@ -100,6 +102,7 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 		Name:             string(service.Desc.Name()),
 		Comment:          toKDocComment(service.Comments.Leading),
 		Methods:          methods,
+		HasUnaryRoute:    hasUnaryRoute,
 		HasClientStream:  hasClientStream,
 		HasServerStream:  hasServerStream,
 		HasGetRoute:      hasGetRoute,

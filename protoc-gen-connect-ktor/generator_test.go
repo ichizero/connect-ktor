@@ -140,6 +140,7 @@ func Test_template_unaryOnly(t *testing.T) {
 			{Name: "Say", InputTypeName: "SayRequest", OutputTypeName: "SayResponse", StreamType: streamTypeUnary},
 		},
 		HasClientStream: false,
+		HasUnaryRoute:   true,
 	})
 
 	mustContain(t, out, "interface ExampleHandlerInterface")
@@ -186,6 +187,7 @@ func Test_template_mixedKinds(t *testing.T) {
 			{Name: "Upload", InputTypeName: "UploadRequest", OutputTypeName: "UploadResponse", StreamType: streamTypeClient},
 		},
 		HasClientStream: true,
+		HasUnaryRoute:   true,
 	})
 
 	mustContain(t, out, "import kotlinx.coroutines.flow.Flow")

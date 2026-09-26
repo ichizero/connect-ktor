@@ -4,6 +4,7 @@ import com.connectrpc.Code
 import com.connectrpc.ConnectException
 import com.connectrpc.ResponseMessage
 import com.connectrpc.fold
+import io.github.ichizero.ktor.protovalidate.validateConnectRequest
 import io.ktor.http.ContentType
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.application
@@ -173,14 +174,12 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     }
 
     // Invoke the handler and write the response.
-    call.invokeUnaryHandler { handlerFunc(req, call) }
+    call.invokeUnaryHandler {
+        call.validateConnectRequest(req)
+        handlerFunc(req, call)
+    }
         .also { response ->
-            response.headers.forEach { (key, value) ->
-                value.forEach { call.response.headers.append(key, it) }
-            }
-            response.trailers.forEach { (key, value) ->
-                value.forEach { call.response.headers.append("Trailer-$key", it) }
-            }
+            call.appendUnaryMetadata(response)
         }.fold(
             onSuccess = { res ->
                 // Serialize the response manually because there is no request body from which
