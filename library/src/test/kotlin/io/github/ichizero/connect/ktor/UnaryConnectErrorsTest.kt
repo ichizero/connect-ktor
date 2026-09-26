@@ -31,9 +31,11 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.receive
 import io.ktor.server.resources.Resources
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.CancellationException
@@ -148,9 +150,9 @@ class UnaryConnectErrorsTest : FunSpec({
 
     test("generated POST and GET convert unexpected handler exceptions") {
         checkUnaryRoutes(
-            ErrorHandler { throw IllegalStateException("broken") },
+            ErrorHandler { throw IllegalStateException("password=secret") },
             HttpStatusCode.InternalServerError,
-            """{"code":"unknown","message":"broken"}""",
+            """{"code":"unknown","message":"internal server error"}""",
         )
     }
 
@@ -212,6 +214,10 @@ class UnaryConnectErrorsTest : FunSpec({
                 }
                 routing {
                     get("/rest") { throw IllegalStateException("broken") }
+                    post("/rest-proto") {
+                        call.receive<SayRequest>()
+                        call.respondText("REST ok")
+                    }
                     install(ContentNegotiation) { connectJson() }
                     install(ProtoRequestValidation)
                     strictElizaService(ErrorHandler { throw IllegalStateException("broken") })
@@ -223,14 +229,20 @@ class UnaryConnectErrorsTest : FunSpec({
                 setBody("""{"sentence":"hello"}""")
             }
             response.status shouldBe HttpStatusCode.InternalServerError
-            response.bodyAsText() shouldEqualJson """{"code":"unknown","message":"broken"}"""
+            response.bodyAsText() shouldEqualJson """{"code":"unknown","message":"internal server error"}"""
             val invalid = client.post(path) {
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody("""{"sentence":"${"a".repeat(101)}"}""")
             }
             invalid.status shouldBe HttpStatusCode.BadRequest
             invalid.bodyAsText().contains("\"code\":\"invalid_argument\"") shouldBe true
-            statusPagesCalls shouldBe 1
+            val invalidRest = client.post("/rest-proto") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json)
+                setBody("""{"sentence":"${"a".repeat(101)}"}""")
+            }
+            invalidRest.status shouldBe HttpStatusCode.InternalServerError
+            invalidRest.bodyAsText() shouldBe "REST error"
+            statusPagesCalls shouldBe 2
         }
     }
 

@@ -19,7 +19,7 @@ internal suspend fun <Res : Any> invokeUnaryHandler(
     ResponseMessage.Failure(cause, emptyMap(), emptyMap())
 } catch (cause: Exception) {
     ResponseMessage.Failure(
-        ConnectException(code = Code.UNKNOWN, message = cause.message, exception = cause),
+        ConnectException(code = Code.UNKNOWN, message = "internal server error", exception = cause),
         emptyMap(),
         emptyMap(),
     )

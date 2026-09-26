@@ -8,6 +8,7 @@ import com.connectrpc.Code
 import com.connectrpc.ConnectException
 import com.connectrpc.extensions.GoogleJavaJSONStrategy
 import com.google.protobuf.Message
+import io.github.ichizero.connect.ktor.ConnectUnaryRouteKey
 import io.github.ichizero.connect.ktor.asHTTPStatusCode
 import io.github.ichizero.connect.ktor.toConnectErrorDetails
 import io.github.ichizero.connect.ktor.toErrorJsonBytes
@@ -50,6 +51,7 @@ val ProtoRequestValidation: RouteScopedPlugin<ProtoRequestValidationConfig> = cr
 
     on(CallFailed) { call, cause ->
         val failure = cause as? ProtoRequestValidationException ?: return@on
+        if (call.attributes.getOrNull(ConnectUnaryRouteKey) == null) return@on
         val error = failure.toConnectException()
         call.respondBytes(
             bytes = error.toErrorJsonBytes(),
