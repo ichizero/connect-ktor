@@ -321,13 +321,41 @@ jobs:
             exit 0
           fi
 
-          git -C homebrew-tap switch -c "$branch"
-          git -C homebrew-tap config user.name 'github-actions[bot]'
-          git -C homebrew-tap config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git -C homebrew-tap add Formula/protoc-gen-connect-ktor.rb
-          git -C homebrew-tap commit -m "chore(homebrew): update protoc-gen-connect-ktor to ${RELEASE_TAG}"
-          gh auth setup-git --hostname github.com
-          git -C homebrew-tap push --set-upstream origin "$branch"
+          closed_pr="$(gh pr list --repo ichizero/homebrew-tap --state closed \
+            --head "$branch" --json url --jq '.[0].url // empty')"
+          if [[ -n "$closed_pr" ]]; then
+            echo "Tap update PR was closed: $closed_pr; review it before retrying" >&2
+            exit 1
+          fi
+
+          set +e
+          git -C homebrew-tap ls-remote --exit-code --heads origin "$branch" >/dev/null
+          branch_status=$?
+          set -e
+          if [[ "$branch_status" -eq 0 ]]; then
+            git -C homebrew-tap fetch --no-tags origin "refs/heads/${branch}"
+            changed_paths="$(git -C homebrew-tap diff --name-only HEAD FETCH_HEAD)"
+            if [[ "$changed_paths" != 'Formula/protoc-gen-connect-ktor.rb' ]]; then
+              echo "Existing tap branch changes unexpected files: $branch" >&2
+              exit 1
+            fi
+            if ! cmp -s homebrew-tap/Formula/protoc-gen-connect-ktor.rb \
+              <(git -C homebrew-tap show FETCH_HEAD:Formula/protoc-gen-connect-ktor.rb); then
+              echo "Existing tap branch differs from the generated Formula: $branch" >&2
+              exit 1
+            fi
+          elif [[ "$branch_status" -eq 2 ]]; then
+            git -C homebrew-tap switch -c "$branch"
+            git -C homebrew-tap config user.name 'github-actions[bot]'
+            git -C homebrew-tap config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git -C homebrew-tap add Formula/protoc-gen-connect-ktor.rb
+            git -C homebrew-tap commit -m "chore(homebrew): update protoc-gen-connect-ktor to ${RELEASE_TAG}"
+            gh auth setup-git --hostname github.com
+            git -C homebrew-tap push --set-upstream origin "$branch"
+          else
+            echo "Could not check for existing tap branch: $branch" >&2
+            exit "$branch_status"
+          fi
 
           cat > "$RUNNER_TEMP/tap-pr.md" <<EOF
           Update the source Formula to [connect-ktor ${RELEASE_TAG}](https://github.com/ichizero/connect-ktor/releases/tag/${RELEASE_TAG}).
