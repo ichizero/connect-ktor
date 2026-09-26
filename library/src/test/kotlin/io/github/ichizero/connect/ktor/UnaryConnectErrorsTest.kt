@@ -249,12 +249,12 @@ class UnaryConnectErrorsTest : FunSpec({
     test("caller cancellation and JVM errors escape the unary handler boundary") {
         val cancellation = CancellationException("stopped")
         shouldThrow<CancellationException> {
-            invokeUnaryHandler<SayResponse> { throw cancellation }
+            captureUnaryFailure<SayResponse> { throw cancellation }
         } shouldBe cancellation
 
         val fatal = AssertionError("fatal")
         shouldThrow<AssertionError> {
-            invokeUnaryHandler<SayResponse> { throw fatal }
+            captureUnaryFailure<SayResponse> { throw fatal }
         } shouldBe fatal
     }
 })

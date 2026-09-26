@@ -72,18 +72,3 @@ report_sizes: true
 
 release:
   draft: true
-
-brews:
-  - name: protoc-gen-connect-ktor
-    ids:
-      - protoc-gen-connect-ktor
-    repository:
-      owner: ichizero
-      name: homebrew-tap
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
-    directory: Formula
-    commit_author:
-      name: github-actions[bot]
-      email: 41898282+github-actions[bot]@users.noreply.github.com
-    description: "Protoc plugin to generate Ktor server code"
-    homepage: "https://github.com/ichizero/connect-ktor"

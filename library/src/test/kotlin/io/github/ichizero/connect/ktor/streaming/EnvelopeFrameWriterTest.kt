@@ -3,7 +3,7 @@ package io.github.ichizero.connect.ktor.streaming
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.utils.io.ByteChannel
-import io.ktor.utils.io.readRemaining
+import io.ktor.utils.io.readBuffer
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.readByteArray
 
@@ -15,7 +15,7 @@ class EnvelopeFrameWriterTest : FunSpec({
             channel.writeEnvelopeFrame(EnvelopeFrame(flags = 0, payload = payload))
             channel.flushAndClose()
 
-            val bytes = channel.readRemaining().readByteArray()
+            val bytes = channel.readBuffer().readByteArray()
             // flags=0x00, length=BE(3)=00 00 00 03, payload=01 02 03
             bytes shouldBe byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x03, 0x01, 0x02, 0x03)
         }
@@ -29,7 +29,7 @@ class EnvelopeFrameWriterTest : FunSpec({
             channel.writeEnvelopeFrame(EnvelopeFrame(flags = 0, payload = payload))
             channel.flushAndClose()
 
-            val bytes = channel.readRemaining().readByteArray()
+            val bytes = channel.readBuffer().readByteArray()
             bytes[0] shouldBe 0x00.toByte()
             bytes[1] shouldBe 0x00.toByte()
             bytes[2] shouldBe 0x00.toByte()
@@ -48,7 +48,7 @@ class EnvelopeFrameWriterTest : FunSpec({
             )
             channel.flushAndClose()
 
-            val bytes = channel.readRemaining().readByteArray()
+            val bytes = channel.readBuffer().readByteArray()
             bytes[0] shouldBe 0x02.toByte()
             bytes[1] shouldBe 0x00.toByte()
             bytes[2] shouldBe 0x00.toByte()
@@ -64,7 +64,7 @@ class EnvelopeFrameWriterTest : FunSpec({
             channel.writeEnvelopeFrame(EnvelopeFrame(flags = 0, payload = ByteArray(0)))
             channel.flushAndClose()
 
-            val bytes = channel.readRemaining().readByteArray()
+            val bytes = channel.readBuffer().readByteArray()
             bytes shouldBe byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00)
         }
     }

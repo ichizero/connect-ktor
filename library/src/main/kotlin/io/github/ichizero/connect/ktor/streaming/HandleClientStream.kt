@@ -3,6 +3,7 @@ package io.github.ichizero.connect.ktor.streaming
 import com.connectrpc.Code
 import com.connectrpc.ConnectException
 import com.connectrpc.ResponseMessage
+import io.github.ichizero.connect.ktor.withConnectTimeout
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.application
 import io.ktor.server.http.content.suppressCompression
@@ -11,12 +12,12 @@ import io.ktor.server.request.contentType
 import io.ktor.server.request.receiveChannel
 import io.ktor.server.response.respondBytesWriter
 import io.ktor.server.routing.RoutingContext
-import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withTimeout
 import kotlin.reflect.KClass
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Handle a Connect protocol client-streaming RPC on a Ktor route.
@@ -73,6 +74,8 @@ inline fun <Resource : Any, reified Req : Any, reified Res : Any> handleClientSt
 }
 
 @PublishedApi
+// Map arbitrary codec and handler failures, excluding cancellation and JVM errors.
+@Suppress("TooGenericExceptionCaught")
 internal suspend fun <Req : Any, Res : Any> handleClientStreamCall(
     call: ApplicationCall,
     maxMessageSize: Int,
@@ -109,48 +112,19 @@ internal suspend fun <Req : Any, Res : Any> handleClientStreamCall(
     val requests: Flow<Req> = requestChannel
         .readEnvelopeFrames(maxMessageSize)
         .filter { !it.isEndStream }
-        .map { frame ->
-            if (frame.isCompressed) {
-                throw ConnectException(
-                    code = Code.UNIMPLEMENTED,
-                    message = "compressed envelope frames are not supported",
-                )
-            }
-            try {
-                codec.deserialize(frame.payload, reqClass)
-            } catch (e: ConnectException) {
-                throw e
-            } catch (e: Throwable) {
-                throw ConnectException(
-                    code = Code.INVALID_ARGUMENT,
-                    message = "failed to decode request frame: ${e.message}",
-                    exception = e,
-                )
-            }
-        }
+        .map { frame -> codec.decodeClientStreamRequest(frame, reqClass) }
 
     // Phase 2: run the handler. Catch failures so we can render them as end-stream frames.
     // ConnectException.metadata is propagated into the end-frame `metadata` (i.e. trailers),
-    // matching connect-go's MarshalEndStream behaviour. Unary errors don't have this throw
-    // path, so there's no precedent to align with there.
+    // matching connect-go's MarshalEndStream behaviour.
     val outcome: Outcome<Res> = try {
-        val response = if (timeoutMs != null) {
-            withTimeout(timeoutMs) { handlerFunc(requests, call) }
-        } else {
-            handlerFunc(requests, call)
-        }
+        val response = withConnectTimeout(timeoutMs?.milliseconds) { handlerFunc(requests, call) }
         Outcome.Success(response)
-    } catch (e: TimeoutCancellationException) {
-        Outcome.Failure(
-            error = ConnectException(
-                code = Code.DEADLINE_EXCEEDED,
-                message = "deadline exceeded",
-                exception = e,
-            ),
-        )
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: ConnectException) {
         Outcome.Failure(error = e, trailers = e.metadata)
-    } catch (e: Throwable) {
+    } catch (e: Exception) {
         Outcome.Failure(
             error = ConnectException(code = Code.UNKNOWN, message = e.message, exception = e),
         )
@@ -174,6 +148,27 @@ internal suspend fun <Req : Any, Res : Any> handleClientStreamCall(
             is SerializedOutcome.FailureBytes ->
                 writeEndStream(error = payloadBytes.error, trailers = payloadBytes.trailers)
         }
+    }
+}
+
+// Preserve protocol, cancellation, and arbitrary codec failures as distinct outcomes.
+@Suppress("TooGenericExceptionCaught", "ThrowsCount")
+private fun <Req : Any> StreamingCodec.decodeClientStreamRequest(frame: EnvelopeFrame, reqClass: KClass<Req>): Req {
+    if (frame.isCompressed) {
+        throw ConnectException(code = Code.UNIMPLEMENTED, message = "compressed envelope frames are not supported")
+    }
+    return try {
+        deserialize(frame.payload, reqClass)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: ConnectException) {
+        throw e
+    } catch (e: Exception) {
+        throw ConnectException(
+            code = Code.INVALID_ARGUMENT,
+            message = "failed to decode request frame: ${e.message}",
+            exception = e,
+        )
     }
 }
 
@@ -208,6 +203,8 @@ private sealed interface SerializedOutcome<out R : Any> {
     ) : SerializedOutcome<Nothing>
 }
 
+// A custom response codec may throw any ordinary exception.
+@Suppress("TooGenericExceptionCaught")
 private fun <Res : Any> serializeOutcome(
     codec: StreamingCodec,
     resClass: KClass<Res>,
@@ -227,7 +224,9 @@ private fun <Res : Any> serializeOutcome(
                     responseHeaders = response.headers,
                     trailers = response.trailers,
                 )
-            } catch (e: Throwable) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
                 SerializedOutcome.FailureBytes(
                     error = ConnectException(
                         code = Code.INTERNAL_ERROR,

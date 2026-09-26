@@ -9,7 +9,7 @@ import kotlinx.coroutines.CancellationException
 /** Convert handler failures before Ktor's application-wide StatusPages sees them. */
 @PublishedApi
 @Suppress("TooGenericExceptionCaught") // An RPC must turn unexpected handler exceptions into UNKNOWN.
-internal suspend fun <Res : Any> invokeUnaryHandler(
+internal suspend fun <Res : Any> captureUnaryFailure(
     handler: suspend () -> ResponseMessage<Res>,
 ): ResponseMessage<Res> = try {
     handler()

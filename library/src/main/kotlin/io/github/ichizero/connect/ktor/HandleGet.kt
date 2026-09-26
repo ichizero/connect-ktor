@@ -159,7 +159,7 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
         call.respondConnectError(e)
         return
     } catch (e: Exception) {
-        // JVM errors must escape; custom codecs may also throw cancellation.
+        // JVM errors and cancellation must escape even from custom codecs.
         call.respondConnectError(Code.INVALID_ARGUMENT, "failed to deserialize request: ${e.message}")
         return
     }
@@ -174,7 +174,7 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
     }
 
     // Invoke the handler and write the response.
-    invokeUnaryHandler {
+    call.invokeUnaryHandler {
         call.validateConnectRequest(req)
         handlerFunc(req, call)
     }
