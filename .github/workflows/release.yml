@@ -252,3 +252,116 @@ jobs:
           gh release upload "$RELEASE_TAG" \
             "library/build/reports/bom.json#library-${RELEASE_VERSION}-cyclonedx.json" \
             --clobber
+
+  update-homebrew-tap:
+    needs: [prepare, plugin, library]
+    if: needs.prepare.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
+          persist-credentials: false
+
+      - name: Calculate source archive checksum
+        id: source
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/connect-ktor-source.tar.gz" \
+            "https://github.com/ichizero/connect-ktor/archive/refs/tags/${RELEASE_TAG}.tar.gz"
+          echo "sha256=$(sha256sum "$RUNNER_TEMP/connect-ktor-source.tar.gz" | cut -d ' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ichizero/homebrew-tap
+          path: homebrew-tap
+          persist-credentials: false
+
+      - name: Prepare Formula update
+        id: formula
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          SOURCE_SHA256: ${{ steps.source.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          python3 scripts/update-homebrew-formula.py \
+            homebrew-tap/Formula/protoc-gen-connect-ktor.rb \
+            "$RELEASE_TAG" "$SOURCE_SHA256"
+          if git -C homebrew-tap diff --quiet -- Formula/protoc-gen-connect-ktor.rb; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git -C homebrew-tap diff --check
+            git -C homebrew-tap diff -- Formula/protoc-gen-connect-ktor.rb
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open tap update PR
+        if: steps.formula.outputs.changed == 'true'
+        # Scope this secret to homebrew-tap with Contents and Pull requests write.
+        env:
+          GH_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "TAP_GITHUB_TOKEN is required to create the tap PR" >&2
+            exit 1
+          fi
+          branch="automation/protoc-gen-connect-ktor-${RELEASE_TAG}"
+          existing_pr="$(gh pr list --repo ichizero/homebrew-tap --state open \
+            --head "$branch" --json url --jq '.[0].url // empty')"
+          if [[ -n "$existing_pr" ]]; then
+            echo "Tap update PR already exists: $existing_pr"
+            exit 0
+          fi
+
+          closed_pr="$(gh pr list --repo ichizero/homebrew-tap --state closed \
+            --head "$branch" --json url --jq '.[0].url // empty')"
+          if [[ -n "$closed_pr" ]]; then
+            echo "Tap update PR was closed: $closed_pr; review it before retrying" >&2
+            exit 1
+          fi
+
+          set +e
+          git -C homebrew-tap ls-remote --exit-code --heads origin "$branch" >/dev/null
+          branch_status=$?
+          set -e
+          if [[ "$branch_status" -eq 0 ]]; then
+            git -C homebrew-tap fetch --no-tags origin "refs/heads/${branch}"
+            changed_paths="$(git -C homebrew-tap diff --name-only HEAD FETCH_HEAD)"
+            if [[ "$changed_paths" != 'Formula/protoc-gen-connect-ktor.rb' ]]; then
+              echo "Existing tap branch changes unexpected files: $branch" >&2
+              exit 1
+            fi
+            if ! cmp -s homebrew-tap/Formula/protoc-gen-connect-ktor.rb \
+              <(git -C homebrew-tap show FETCH_HEAD:Formula/protoc-gen-connect-ktor.rb); then
+              echo "Existing tap branch differs from the generated Formula: $branch" >&2
+              exit 1
+            fi
+          elif [[ "$branch_status" -eq 2 ]]; then
+            git -C homebrew-tap switch -c "$branch"
+            git -C homebrew-tap config user.name 'github-actions[bot]'
+            git -C homebrew-tap config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git -C homebrew-tap add Formula/protoc-gen-connect-ktor.rb
+            git -C homebrew-tap commit -m "chore(homebrew): update protoc-gen-connect-ktor to ${RELEASE_TAG}"
+            gh auth setup-git --hostname github.com
+            git -C homebrew-tap push --set-upstream origin "$branch"
+          else
+            echo "Could not check for existing tap branch: $branch" >&2
+            exit "$branch_status"
+          fi
+
+          cat > "$RUNNER_TEMP/tap-pr.md" <<EOF
+          Update the source Formula to [connect-ktor ${RELEASE_TAG}](https://github.com/ichizero/connect-ktor/releases/tag/${RELEASE_TAG}).
+
+          The tap's pull request CI builds and audits the Formula and checks that bottles can be built on macOS 26, macOS 27, and Linux. After merge, the tap publishes bottles built on main.
+          EOF
+          gh pr create --repo ichizero/homebrew-tap --base main --head "$branch" \
+            --title "chore(homebrew): update protoc-gen-connect-ktor to ${RELEASE_TAG}" \
+            --body-file "$RUNNER_TEMP/tap-pr.md"
