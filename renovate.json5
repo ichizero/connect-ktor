@@ -5,6 +5,27 @@
     // Mirrors dependabot.yml's `cooldown.default-days: 7` for every ecosystem.
     minimumReleaseAge: "7 days",
     dependencyDashboard: true,
+    // Buf remote plugin versions follow their upstream project's version tags.
+    customManagers: [
+        {
+            customType: "regex",
+            managerFilePatterns: ["**/buf.gen.yaml"],
+            matchStrings: [
+                "remote:\\s*buf\\.build/(?<depName>protocolbuffers/(?:java|kotlin)):(?<currentValue>[^\\s]+)",
+            ],
+            datasourceTemplate: "github-tags",
+            packageNameTemplate: "protocolbuffers/protobuf",
+            versioningTemplate: "semver-coerced",
+        },
+        {
+            customType: "regex",
+            managerFilePatterns: ["**/buf.gen.yaml"],
+            matchStrings: ["remote:\\s*buf\\.build/(?<depName>connectrpc/kotlin):(?<currentValue>[^\\s]+)"],
+            datasourceTemplate: "github-tags",
+            packageNameTemplate: "connectrpc/connect-kotlin",
+            versioningTemplate: "semver-coerced",
+        },
+    ],
     packageRules: [
         {
             description: "Group github/codeql-action updates (mirrors dependabot.yml's `codeql-action` group).",
