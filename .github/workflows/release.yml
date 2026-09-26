@@ -281,6 +281,7 @@ jobs:
         with:
           repository: ichizero/homebrew-tap
           path: homebrew-tap
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Prepare Formula update
@@ -334,13 +335,14 @@ jobs:
           set -e
           if [[ "$branch_status" -eq 0 ]]; then
             git -C homebrew-tap fetch --no-tags origin "refs/heads/${branch}"
-            changed_paths="$(git -C homebrew-tap diff --name-only HEAD FETCH_HEAD)"
+            branch_ref="$(git -C homebrew-tap rev-parse FETCH_HEAD)"
+            changed_paths="$(git -C homebrew-tap diff --name-only "HEAD...${branch_ref}")"
             if [[ "$changed_paths" != 'Formula/protoc-gen-connect-ktor.rb' ]]; then
               echo "Existing tap branch changes unexpected files: $branch" >&2
               exit 1
             fi
             if ! cmp -s homebrew-tap/Formula/protoc-gen-connect-ktor.rb \
-              <(git -C homebrew-tap show FETCH_HEAD:Formula/protoc-gen-connect-ktor.rb); then
+              <(git -C homebrew-tap show "${branch_ref}:Formula/protoc-gen-connect-ktor.rb"); then
               echo "Existing tap branch differs from the generated Formula: $branch" >&2
               exit 1
             fi
