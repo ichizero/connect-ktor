@@ -4,7 +4,7 @@ import com.connectrpc.Code
 import com.connectrpc.ConnectException
 import com.connectrpc.ResponseMessage
 import com.connectrpc.fold
-import io.github.ichizero.ktor.protovalidate.validateConnectRequest
+import io.github.ichizero.ktor.protovalidate.validateUnaryRequest
 import io.ktor.http.ContentType
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.application
@@ -175,7 +175,7 @@ internal suspend fun <Req : Any, Res : Any> handleGetCall(
 
     // Invoke the handler and write the response.
     call.invokeUnaryHandler {
-        call.validateConnectRequest(req)
+        call.validateUnaryRequest(req)
         handlerFunc(req, call)
     }
         .also { response ->

@@ -13,6 +13,7 @@ import com.stricteliza.v1.UploadResponse
 import com.stricteliza.v1.sayResponse
 import com.stricteliza.v1.strictElizaService
 import io.github.ichizero.ktor.protovalidate.ProtoRequestValidation
+import io.github.ichizero.ktor.protovalidate.ProtoRequestValidationException
 import io.github.ichizero.ktor.serialization.connect.connectJson
 import io.github.ichizero.ktor.serialization.connect.connectProto
 import io.kotest.assertions.json.shouldEqualJson
@@ -32,8 +33,10 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.path
 import io.ktor.server.request.receive
 import io.ktor.server.resources.Resources
+import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -186,10 +189,21 @@ class UnaryConnectErrorsTest : FunSpec({
         }
     }
 
-    test("validation failure is a Connect error on generated POST and GET without StatusPages") {
+    test("StatusPages maps generated POST and GET validation failures to Connect errors") {
+        var validationCalls = 0
         testApplication {
             application {
                 install(Resources)
+                install(StatusPages) {
+                    exception<ProtoRequestValidationException> { call, cause ->
+                        validationCalls++
+                        call.respondBytes(
+                            bytes = cause.toErrorJsonBytes(),
+                            contentType = ContentType.Application.Json,
+                            status = HttpStatusCode.BadRequest,
+                        )
+                    }
+                }
                 routing {
                     install(ContentNegotiation) {
                         connectJson()
@@ -236,15 +250,29 @@ class UnaryConnectErrorsTest : FunSpec({
             bodies[0] shouldEqualJson bodies[1]
             bodies[0] shouldEqualJson bodies[2]
             bodies[0] shouldEqualJson bodies[3]
+            validationCalls shouldBe 4
         }
     }
 
-    test("existing StatusPages handles REST and unexpected Connect errors while validation stays scoped") {
+    test("existing StatusPages handles REST and Connect validation according to application policy") {
         var statusPagesCalls = 0
+        var validationCalls = 0
         testApplication {
             application {
                 install(Resources)
                 install(StatusPages) {
+                    exception<ProtoRequestValidationException> { call, cause ->
+                        validationCalls++
+                        if (call.request.path() == "/rest-proto") {
+                            call.respondText("REST validation", status = HttpStatusCode.UnprocessableEntity)
+                        } else {
+                            call.respondBytes(
+                                bytes = cause.toErrorJsonBytes(),
+                                contentType = ContentType.Application.Json,
+                                status = HttpStatusCode.BadRequest,
+                            )
+                        }
+                    }
                     exception<Throwable> { call, _ ->
                         statusPagesCalls++
                         call.respondText("REST error", status = HttpStatusCode.InternalServerError)
@@ -278,9 +306,10 @@ class UnaryConnectErrorsTest : FunSpec({
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody("""{"sentence":"${"a".repeat(101)}"}""")
             }
-            invalidRest.status shouldBe HttpStatusCode.InternalServerError
-            invalidRest.bodyAsText() shouldBe "REST error"
-            statusPagesCalls shouldBe 3
+            invalidRest.status shouldBe HttpStatusCode.UnprocessableEntity
+            invalidRest.bodyAsText() shouldBe "REST validation"
+            statusPagesCalls shouldBe 2
+            validationCalls shouldBe 2
         }
     }
 

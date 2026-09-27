@@ -6,7 +6,8 @@ description: Validate Connect request messages with Buf protovalidate rules.
 # Protovalidate
 
 `ProtoRequestValidation` runs [protovalidate](https://github.com/bufbuild/protovalidate) against inbound request messages.
-Invalid requests become HTTP 400 responses with Connect-shaped error details.
+Unary POST and Connect GET validation failures throw `ProtoRequestValidationException`.
+Configure Ktor `StatusPages` to choose their HTTP response.
 
 ## Annotate the schema
 
@@ -27,6 +28,15 @@ message SayRequest {
 ```kotlin
 embeddedServer(CIO, port = 8080) {
     install(Resources)
+    install(StatusPages) {
+        exception<ProtoRequestValidationException> { call, cause ->
+            call.respondBytes(
+                bytes = cause.toErrorJsonBytes(),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.BadRequest,
+            )
+        }
+    }
     routing {
         install(ContentNegotiation) {
             connectJson()
@@ -37,15 +47,11 @@ embeddedServer(CIO, port = 8080) {
 }.start(wait = true)
 ```
 
-`ProtoRequestValidation` returns Connect JSON errors for invalid unary POST requests without a `StatusPages` handler. It also checks Connect GET messages after decoding. An invalid request returns HTTP 400 with `invalid_argument` and violation details.
+The example maps invalid unary POST and Connect GET requests to HTTP 400 Connect JSON with
+`invalid_argument` and violation details. The same `StatusPages` handler also receives validation
+failures from REST protobuf routes that share the plugin. If REST routes need another response,
+choose that response in the application's `StatusPages` handler.
 
-Install the plugin only on routes that should validate protobuf requests. It handles its validation failure before an application-wide `StatusPages` handler. Existing `StatusPages` handlers can continue to handle errors from other routes; no validation-specific handler is required.
-Generated unary POST routes install `ConnectUnaryRoute` automatically. This public route marker is needed when REST protobuf routes share the validation plugin: only marked POST requests receive Connect JSON errors. Regenerate service routes after updating the generator. A manually registered Connect unary POST route can install the same marker:
-
-```kotlin
-post<Procedures.Say, SayRequest>(handle(handler::say))
-    .apply { install(ConnectUnaryRoute) }
-```
-
-An unmarked REST route keeps its existing `StatusPages` validation handling.
-Validation rules stay in the `.proto` file — the server only enforces them.
+Install `ProtoRequestValidation` only on routes that should validate protobuf requests.
+Server-streaming and bidirectional handlers report validation failures in Connect end-stream frames.
+Validation rules stay in the `.proto` file.

@@ -26,7 +26,9 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.resources.Resources
+import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
@@ -63,6 +65,15 @@ object Handler : StrictElizaServiceHandlerInterface {
 class ProtoRequestValidationTest : FunSpec({
     fun Application.startServer() {
         install(Resources)
+        install(StatusPages) {
+            exception<ProtoRequestValidationException> { call, cause ->
+                call.respondBytes(
+                    bytes = cause.toErrorJsonBytes(),
+                    contentType = ContentType.Application.Json,
+                    status = HttpStatusCode.BadRequest,
+                )
+            }
+        }
         routing {
             install(ContentNegotiation) {
                 connectJson()

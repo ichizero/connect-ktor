@@ -8,23 +8,17 @@ import com.connectrpc.Code
 import com.connectrpc.ConnectException
 import com.connectrpc.extensions.GoogleJavaJSONStrategy
 import com.google.protobuf.Message
-import io.github.ichizero.connect.ktor.ConnectUnaryRouteKey
-import io.github.ichizero.connect.ktor.asHTTPStatusCode
 import io.github.ichizero.connect.ktor.toConnectErrorDetails
 import io.github.ichizero.connect.ktor.toErrorJsonBytes
-import io.ktor.http.ContentType
 import io.ktor.server.application.*
-import io.ktor.server.application.hooks.CallFailed
 import io.ktor.server.request.*
-import io.ktor.server.response.respondBytes
 import io.ktor.util.AttributeKey
 
 /**
  * A plugin that checks a request body using [Validator].
  *
- * Unary POST validation failures become Connect JSON errors with HTTP 400. Connect GET and
- * streaming handlers validate their decoded messages through the same validator.
- * Internally, POST validation throws [ProtoRequestValidationException] before the route handler.
+ * Unary POST and Connect GET validation failures throw [ProtoRequestValidationException].
+ * Server-streaming and bidirectional handlers validate decoded messages through the same validator.
  * If there are any validation exceptions, it will throw [ValidationException].
  * Server-streaming and bidirectional requests use the same validator after decoding; violations are returned as
  * INVALID_ARGUMENT end-stream errors with the validation details.
@@ -42,22 +36,11 @@ val ProtoRequestValidation: RouteScopedPlugin<ProtoRequestValidationConfig> = cr
     }
 
     onCall { call ->
-        call.attributes.put(StreamingRequestValidatorKey, validator)
+        call.attributes.put(RequestValidatorKey, validator)
     }
 
     on(RequestBodyTransformed) { content ->
         validator.validationFailure(content)?.let { throw it }
-    }
-
-    on(CallFailed) { call, cause ->
-        val failure = cause as? ProtoRequestValidationException ?: return@on
-        if (call.attributes.getOrNull(ConnectUnaryRouteKey) == null) return@on
-        val error = failure.toConnectException()
-        call.respondBytes(
-            bytes = error.toErrorJsonBytes(),
-            contentType = ContentType.Application.Json,
-            status = error.code.asHTTPStatusCode(),
-        )
     }
 }
 
@@ -89,15 +72,19 @@ private object RequestBodyTransformed : Hook<suspend (content: Any) -> Unit> {
     }
 }
 
-private val StreamingRequestValidatorKey = AttributeKey<Validator>("ConnectStreamingRequestValidator")
+private val RequestValidatorKey = AttributeKey<Validator>("ConnectRequestValidator")
 
-/** Validate an already decoded streaming message using the validator installed on this call's route. */
-internal fun ApplicationCall.validateConnectRequest(content: Any) {
-    val validator = attributes.getOrNull(StreamingRequestValidatorKey) ?: return
-    validator.validationFailure(content)?.let { throw it.toConnectException() }
+/** Validate an already decoded unary GET message so StatusPages can apply the same policy as POST. */
+internal fun ApplicationCall.validateUnaryRequest(content: Any) {
+    val validator = attributes.getOrNull(RequestValidatorKey) ?: return
+    validator.validationFailure(content)?.let { throw it }
 }
 
-internal fun ApplicationCall.validateStreamingRequest(content: Any) = validateConnectRequest(content)
+/** Validate a streaming message, retaining Connect end-stream error semantics. */
+internal fun ApplicationCall.validateStreamingRequest(content: Any) {
+    val validator = attributes.getOrNull(RequestValidatorKey) ?: return
+    validator.validationFailure(content)?.let { throw it.toConnectException() }
+}
 
 private fun Validator.validationFailure(content: Any): ProtoRequestValidationException? {
     if (content !is Message) return null
