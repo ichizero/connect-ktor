@@ -114,5 +114,5 @@ fun Application.userApi(users: UserService) {
 
 fun main() {
     val users = UserService { id -> if (id == "42") User("42", "Ada") else null }
-    embeddedServer(CIO, port = 8080) { userApi(users) }.start(wait = true)
+    embeddedServer(CIO, host = "127.0.0.1", port = 8080) { userApi(users) }.start(wait = true)
 }

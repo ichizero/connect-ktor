@@ -13,19 +13,19 @@ mkdir -p protoc-gen-connect-ktor/out
 ./gradlew :examples:rest-connect:run
 ```
 
-The last command listens on port 8080. In another terminal:
+The last command listens on `127.0.0.1:8080` for local use. In another terminal:
 
 ```sh
-curl -i -H 'Authorization: Bearer demo-token' http://localhost:8080/users/42
-curl -i -H 'Authorization: Bearer demo-token' http://localhost:8080/users/missing
-curl -i http://localhost:8080/users/42
-curl -i -X POST http://localhost:8080/example.users.v1.UserService/GetUser \
+curl -i -H 'Authorization: Bearer demo-token' http://127.0.0.1:8080/users/42
+curl -i -H 'Authorization: Bearer demo-token' http://127.0.0.1:8080/users/missing
+curl -i http://127.0.0.1:8080/users/42
+curl -i -X POST http://127.0.0.1:8080/example.users.v1.UserService/GetUser \
   -H 'Authorization: Bearer demo-token' -H 'Content-Type: application/json' \
   -d '{"id":"42"}'
-curl -i -X POST http://localhost:8080/example.users.v1.UserService/GetUser \
+curl -i -X POST http://127.0.0.1:8080/example.users.v1.UserService/GetUser \
   -H 'Authorization: Bearer demo-token' -H 'Content-Type: application/json' \
   -d '{"id":"missing"}'
-curl -i -X POST http://localhost:8080/example.users.v1.UserService/GetUser \
+curl -i -X POST http://127.0.0.1:8080/example.users.v1.UserService/GetUser \
   -H 'Content-Type: application/json' -d '{"id":"42"}'
 ```
 
