@@ -148,12 +148,41 @@ class UnaryConnectErrorsTest : FunSpec({
         )
     }
 
-    test("generated POST and GET convert unexpected handler exceptions") {
-        checkUnaryRoutes(
-            ErrorHandler { throw IllegalStateException("password=secret") },
-            HttpStatusCode.InternalServerError,
-            """{"code":"unknown","message":"internal server error"}""",
-        )
+    test("generated POST and GET delegate unexpected handler exceptions to StatusPages") {
+        var statusPagesCalls = 0
+        testApplication {
+            application {
+                install(Resources)
+                install(StatusPages) {
+                    exception<IllegalStateException> { call, cause ->
+                        statusPagesCalls++
+                        call.respondText(cause.message ?: "missing message", status = HttpStatusCode.ServiceUnavailable)
+                    }
+                }
+                routing {
+                    install(ContentNegotiation) { connectJson() }
+                    strictElizaService(ErrorHandler { throw IllegalStateException("app-owned error") })
+                }
+            }
+            val responses = listOf(
+                client.post(path) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                    setBody("""{"sentence":"hello"}""")
+                },
+                client.get("$path?connect=v1&encoding=json&message=%7B%22sentence%22%3A%22hello%22%7D"),
+                client.get(
+                    "$path?connect=v1&encoding=proto&base64=1&message=" +
+                        Base64.getUrlEncoder().withoutPadding().encodeToString(
+                            SayRequest.newBuilder().setSentence("hello").build().toByteArray(),
+                        ),
+                ),
+            )
+            responses.forEach { response ->
+                response.status shouldBe HttpStatusCode.ServiceUnavailable
+                response.bodyAsText() shouldBe "app-owned error"
+            }
+            statusPagesCalls shouldBe 3
+        }
     }
 
     test("validation failure is a Connect error on generated POST and GET without StatusPages") {
@@ -201,7 +230,7 @@ class UnaryConnectErrorsTest : FunSpec({
         }
     }
 
-    test("existing StatusPages still handles REST errors while generated routes return Connect errors") {
+    test("existing StatusPages handles REST and unexpected Connect errors while validation stays scoped") {
         var statusPagesCalls = 0
         testApplication {
             application {
@@ -229,7 +258,7 @@ class UnaryConnectErrorsTest : FunSpec({
                 setBody("""{"sentence":"hello"}""")
             }
             response.status shouldBe HttpStatusCode.InternalServerError
-            response.bodyAsText() shouldEqualJson """{"code":"unknown","message":"internal server error"}"""
+            response.bodyAsText() shouldBe "REST error"
             val invalid = client.post(path) {
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody("""{"sentence":"${"a".repeat(101)}"}""")
@@ -242,11 +271,16 @@ class UnaryConnectErrorsTest : FunSpec({
             }
             invalidRest.status shouldBe HttpStatusCode.InternalServerError
             invalidRest.bodyAsText() shouldBe "REST error"
-            statusPagesCalls shouldBe 2
+            statusPagesCalls shouldBe 3
         }
     }
 
-    test("caller cancellation and JVM errors escape the unary handler boundary") {
+    test("unexpected exceptions, caller cancellation, and JVM errors escape the unary handler boundary") {
+        val unexpected = IllegalStateException("app-owned error")
+        shouldThrow<IllegalStateException> {
+            captureUnaryFailure<SayResponse> { throw unexpected }
+        } shouldBe unexpected
+
         val cancellation = CancellationException("stopped")
         shouldThrow<CancellationException> {
             captureUnaryFailure<SayResponse> { throw cancellation }
