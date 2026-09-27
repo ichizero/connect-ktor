@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package example.users.v1;
+
+option java_package = "io.github.ichizero.connect.ktor.example.proto";
+option java_multiple_files = true;
+
+service UserService {
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message GetUserResponse {
+  string id = 1;
+  string display_name = 2;
+}
