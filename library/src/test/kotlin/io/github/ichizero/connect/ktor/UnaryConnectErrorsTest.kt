@@ -14,6 +14,7 @@ import com.stricteliza.v1.sayResponse
 import com.stricteliza.v1.strictElizaService
 import io.github.ichizero.ktor.protovalidate.ProtoRequestValidation
 import io.github.ichizero.ktor.serialization.connect.connectJson
+import io.github.ichizero.ktor.serialization.connect.connectProto
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -190,7 +191,10 @@ class UnaryConnectErrorsTest : FunSpec({
             application {
                 install(Resources)
                 routing {
-                    install(ContentNegotiation) { connectJson() }
+                    install(ContentNegotiation) {
+                        connectJson()
+                        connectProto()
+                    }
                     install(ProtoRequestValidation)
                     strictElizaService(
                         ErrorHandler {
@@ -204,6 +208,10 @@ class UnaryConnectErrorsTest : FunSpec({
                 client.post(path) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json)
                     setBody("""{"sentence":"$sentence"}""")
+                },
+                client.post(path) {
+                    header(HttpHeaders.ContentType, "application/proto")
+                    setBody(SayRequest.newBuilder().setSentence(sentence).build().toByteArray())
                 },
                 client.get(
                     "$path?connect=v1&encoding=json&message=" +
@@ -227,6 +235,7 @@ class UnaryConnectErrorsTest : FunSpec({
             }
             bodies[0] shouldEqualJson bodies[1]
             bodies[0] shouldEqualJson bodies[2]
+            bodies[0] shouldEqualJson bodies[3]
         }
     }
 
