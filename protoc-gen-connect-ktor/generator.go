@@ -75,6 +75,7 @@ func serviceToData(service *protogen.Service, protoPackageName, javaPackageName,
 			hasServerStream = true
 		case streamTypeBidi:
 			hasBidiStream = true
+		case streamTypeUnary:
 		}
 		noSideEffects := isNoSideEffects(method)
 		// Connect GET is emitted only for unary RPCs annotated NO_SIDE_EFFECTS

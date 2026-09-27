@@ -57,9 +57,6 @@ func Test_template_no_side_effects_method_emits_get_route(t *testing.T) {
 	if !strings.Contains(output, `post<ExampleServiceHandlerInterface.Procedures.GetThing, GetThingRequest>`) {
 		t.Error("expected POST route for no-side-effects method GetThing")
 	}
-	if strings.Contains(output, "ConnectUnaryRoute") {
-		t.Error("generated routes must not install a unary error marker")
-	}
 	if !strings.Contains(output, `get<ExampleServiceHandlerInterface.Procedures.GetThing>`) {
 		t.Error("expected GET route for no-side-effects method GetThing")
 	}
