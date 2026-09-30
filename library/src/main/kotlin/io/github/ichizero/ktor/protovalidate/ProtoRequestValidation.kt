@@ -17,7 +17,8 @@ import io.ktor.util.AttributeKey
 /**
  * A plugin that checks a request body using [Validator].
  *
- * If validation fails, it will throw [ProtoRequestValidationException].
+ * Unary POST and Connect GET validation failures throw [ProtoRequestValidationException].
+ * Server-streaming and bidirectional handlers validate decoded messages through the same validator.
  * If there are any validation exceptions, it will throw [ValidationException].
  * Server-streaming and bidirectional requests use the same validator after decoding; violations are returned as
  * INVALID_ARGUMENT end-stream errors with the validation details.
@@ -35,7 +36,7 @@ val ProtoRequestValidation: RouteScopedPlugin<ProtoRequestValidationConfig> = cr
     }
 
     onCall { call ->
-        call.attributes.put(StreamingRequestValidatorKey, validator)
+        call.attributes.put(RequestValidatorKey, validator)
     }
 
     on(RequestBodyTransformed) { content ->
@@ -71,11 +72,17 @@ private object RequestBodyTransformed : Hook<suspend (content: Any) -> Unit> {
     }
 }
 
-private val StreamingRequestValidatorKey = AttributeKey<Validator>("ConnectStreamingRequestValidator")
+private val RequestValidatorKey = AttributeKey<Validator>("ConnectRequestValidator")
 
-/** Validate an already decoded streaming message using the validator installed on this call's route. */
+/** Validate an already decoded unary GET message so StatusPages can apply the same policy as POST. */
+internal fun ApplicationCall.validateUnaryRequest(content: Any) {
+    val validator = attributes.getOrNull(RequestValidatorKey) ?: return
+    validator.validationFailure(content)?.let { throw it }
+}
+
+/** Validate a streaming message, retaining Connect end-stream error semantics. */
 internal fun ApplicationCall.validateStreamingRequest(content: Any) {
-    val validator = attributes.getOrNull(StreamingRequestValidatorKey) ?: return
+    val validator = attributes.getOrNull(RequestValidatorKey) ?: return
     validator.validationFailure(content)?.let { throw it.toConnectException() }
 }
 
