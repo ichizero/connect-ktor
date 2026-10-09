@@ -12,9 +12,9 @@ managed:
     - file_option: java_package_prefix
       value: com
 plugins:
-  - remote: buf.build/protocolbuffers/java:v29.2
+  - remote: buf.build/protocolbuffers/java:v29.6
     out: build/generated/sources/bufgen
-  - remote: buf.build/protocolbuffers/kotlin:v29.2
+  - remote: buf.build/protocolbuffers/kotlin:v29.6
     out: build/generated/sources/bufgen
   - remote: buf.build/connectrpc/kotlin:v0.9.0
     out: build/generated/sources/bufgen
