@@ -252,3 +252,30 @@ jobs:
           gh release upload "$RELEASE_TAG" \
             "library/build/reports/bom.json#library-${RELEASE_VERSION}-cyclonedx.json" \
             --clobber
+
+  dispatch-homebrew-tap:
+    needs: [prepare, plugin, library]
+    if: needs.prepare.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Request tap Formula update
+        # Scope this secret to homebrew-tap with Actions write.
+        env:
+          GH_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "TAP_GITHUB_TOKEN is required to dispatch the tap workflow" >&2
+            exit 1
+          fi
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          jq -n --arg tag "$RELEASE_TAG" --arg sha "$RELEASE_SHA" \
+            '{ref: "main", inputs: {tag: $tag, sha: $sha}}' > "$RUNNER_TEMP/tap-dispatch.json"
+          gh api --method POST \
+            repos/ichizero/homebrew-tap/actions/workflows/update-formula.yml/dispatches \
+            --input "$RUNNER_TEMP/tap-dispatch.json"
