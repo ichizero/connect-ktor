@@ -2,8 +2,9 @@
 #
 # Official Tegami docs split generate vs comment across two workflows
 # (pull_request + workflow_run). This repo keeps both steps in one
-# pull_request job: workflow_run was removed to satisfy zizmor, while still
-# using the official CLI (`pr preview --artifact` then `pr comment`).
+# pull_request job: workflow_run was removed to satisfy zizmor.
+# `tegami pr comment` only posts from a workflow_run event, so this job
+# posts the preview artifact with the GitHub API.
 # See https://tegami.fuma-nama.dev/ci#pull-request-preview and CONTRIBUTING.md.
 name: tegami-pr
 
@@ -34,8 +35,36 @@ jobs:
 
       # Fork PRs get a read-only GITHUB_TOKEN on pull_request, so commenting
       # would fail. Preview generation above still runs for contributors.
+      # tegami pr comment no-ops unless GITHUB_EVENT_PATH is a workflow_run.
       - name: Post preview comment
         if: ${{ !github.event.pull_request.head.repo.fork }}
-        run: pnpm tegami pr comment tegami-pr-preview.md
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          marker='<!-- tegami -->'
+          {
+            printf '%s\n' "$marker"
+            cat tegami-pr-preview.md
+          } > "$RUNNER_TEMP/tegami-pr-comment.md"
+          jq -Rs '{body: .}' "$RUNNER_TEMP/tegami-pr-comment.md" > "$RUNNER_TEMP/tegami-pr-comment.json"
+          existing=""
+          page=1
+          while [[ -z "$existing" ]]; do
+            batch="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments?per_page=100&page=${page}")"
+            count="$(jq 'length' <<<"$batch")"
+            [[ "$count" -eq 0 ]] && break
+            existing="$(jq -r '[.[] | select(.body | startswith("<!-- tegami -->")) | .id] | first // empty' <<<"$batch")"
+            [[ "$count" -lt 100 ]] && break
+            page=$((page + 1))
+          done
+          if [[ -n "$existing" ]]; then
+            gh api --method PATCH \
+              "repos/${GITHUB_REPOSITORY}/issues/comments/${existing}" \
+              --input "$RUNNER_TEMP/tegami-pr-comment.json"
+          else
+            gh api --method POST \
+              "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+              --input "$RUNNER_TEMP/tegami-pr-comment.json"
+          fi

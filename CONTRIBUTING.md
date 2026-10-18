@@ -159,19 +159,19 @@ path (`pnpm tegami` / CI). Do not hand-edit published
 ### PR release preview
 
 On each `pull_request` (opened / synchronize / reopened), `.github/workflows/tegami-pr.yml`
-runs the official Tegami CLI commands:
+generates the preview, then posts it:
 
 1. `pnpm tegami pr preview --artifact tegami-pr-preview.md`
-2. `pnpm tegami pr comment tegami-pr-preview.md` (same-repo PRs only)
+2. Post that file as an issue comment marked `<!-- tegami -->` (same-repo PRs only)
 
-Official docs suggest splitting generate vs comment into two workflows via
-`workflow_run`. This repo posts the comment in the same `pull_request` job instead:
-`workflow_run` was removed after zizmor flagged it, while still using the same
-`--artifact` + `pr comment` CLI surface. The job stays on `pull_request` (not
-`pull_request_target`) with `contents: read` plus `pull-requests: write` only for
-commenting. Fork PRs still generate the preview artifact, but skip the comment
-step because GitHub keeps `GITHUB_TOKEN` read-only for `pull_request` workflows
-from forks. See [Tegami CI / PR preview](https://tegami.fuma-nama.dev/ci#pull-request-preview).
+`tegami pr comment` posts only when the event is `workflow_run`. Zizmor flagged
+that event, so this job stays on `pull_request` and posts the preview artifact
+through the GitHub API. Permissions are `contents: read`, plus
+`pull-requests: write` for the comment. The trigger is `pull_request`, not
+`pull_request_target`. Fork PRs still generate the preview artifact and skip
+the comment, because GitHub keeps `GITHUB_TOKEN` read-only for fork
+`pull_request` workflows. See
+[Tegami CI / PR preview](https://tegami.fuma-nama.dev/ci#pull-request-preview).
 
 ## Commit and PR titles
 
