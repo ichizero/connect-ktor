@@ -18,6 +18,11 @@
 #
 # Releases are immutable: there is no workflow_dispatch re-release path.
 #
+# After plugin and library succeed, dispatch ichizero/homebrew-tap's
+# update-formula.yml with the release tag and SHA. That job is skipped only
+# when this push is not a release. Missing App credentials, a bad tag or SHA,
+# or a rejected dispatch fail the job.
+#
 # Concurrency serializes overlapping main pushes so two runs cannot both see
 # check-publish as pending and invoke `pnpm tegami ci` publish at once.
 # queue: max keeps pending runs in FIFO order (default single pending would
@@ -257,19 +262,29 @@ jobs:
     needs: [prepare, plugin, library]
     if: needs.prepare.outputs.release == 'true'
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    timeout-minutes: 10
+    permissions: {}
     steps:
+      - name: Create tap dispatch token
+        id: tap-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          # v3.3.0 deprecates app-id; client-id accepts the numeric App ID.
+          client-id: ${{ vars.TAP_APP_ID }}
+          private-key: ${{ secrets.TAP_APP_PRIVATE_KEY }}
+          owner: ichizero
+          repositories: homebrew-tap
+          permission-actions: write
+
       - name: Request tap Formula update
-        # Scope this secret to homebrew-tap with Actions write.
         env:
-          GH_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.tap-token.outputs.token }}
           RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
           RELEASE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           if [[ -z "${GH_TOKEN:-}" ]]; then
-            echo "TAP_GITHUB_TOKEN is required to dispatch the tap workflow" >&2
+            echo "GitHub App token is required to dispatch the tap workflow" >&2
             exit 1
           fi
           [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
