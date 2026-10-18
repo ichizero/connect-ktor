@@ -1,3 +1,42 @@
+## connect-ktor@0.4.1
+
+### Align unary Connect errors and validate GET requests
+
+Unary POST and Connect GET now return consistent Connect errors and preserve error metadata. Connect GET also validates decoded requests. Validation failures and unexpected handler exceptions reach the application's Ktor `StatusPages` configuration so applications can choose their responses.
+
+[PR #380](https://github.com/ichizero/connect-ktor/pull/380)
+
+### Dependencies
+
+- chore(deps): update dependency @types/node to v26.6.1 by @renovate[bot] in [PR #382](https://github.com/ichizero/connect-ktor/pull/382)
+- chore(deps): update dependency lucide-react to v1.47.0 by @renovate[bot] in [PR #384](https://github.com/ichizero/connect-ktor/pull/384)
+- chore(deps): update docs-site by @renovate[bot] in [PR #386](https://github.com/ichizero/connect-ktor/pull/386)
+- chore(deps): update kotlin monorepo to v2.4.20 by @renovate[bot] in [PR #359](https://github.com/ichizero/connect-ktor/pull/359)
+- chore(deps): update docs-site by @renovate[bot] in [PR #388](https://github.com/ichizero/connect-ktor/pull/388)
+- chore(deps): update dependency connectrpc/kotlin to v0.9.0 by @renovate[bot] in [PR #389](https://github.com/ichizero/connect-ktor/pull/389)
+- chore(deps): update docs-site by @renovate[bot] in [PR #390](https://github.com/ichizero/connect-ktor/pull/390)
+- chore(deps): update pnpm/setup action to v3 by @renovate[bot] in [PR #375](https://github.com/ichizero/connect-ktor/pull/375)
+- chore(deps): update github/codeql-action action to v4.38.2 by @renovate[bot] in [PR #394](https://github.com/ichizero/connect-ktor/pull/394)
+- chore(deps): update dependency golangci-lint to v2.14.0 by @renovate[bot] in [PR #395](https://github.com/ichizero/connect-ktor/pull/395)
+- chore(deps): update gradle/actions action to v6.4.0 by @renovate[bot] in [PR #399](https://github.com/ichizero/connect-ktor/pull/399)
+- chore(deps): update dependency lefthook to v2.1.16 by @renovate[bot] in [PR #401](https://github.com/ichizero/connect-ktor/pull/401)
+- fix(deps): update dependency org.slf4j:slf4j-simple to v2.0.20 by @renovate[bot] in [PR #391](https://github.com/ichizero/connect-ktor/pull/391)
+- fix(deps): update spotless to v8.10.3 by @renovate[bot] in [PR #397](https://github.com/ichizero/connect-ktor/pull/397)
+- chore(deps): update anchore/sbom-action action to v0.24.3 by @renovate[bot] in [PR #403](https://github.com/ichizero/connect-ktor/pull/403)
+- chore(deps): update dependency lefthook to v2.1.17 by @renovate[bot] in [PR #404](https://github.com/ichizero/connect-ktor/pull/404)
+- chore(deps): update actions/upload-artifact action to v7.0.2 by @renovate[bot] in [PR #405](https://github.com/ichizero/connect-ktor/pull/405)
+- chore(deps): update dependency org.cyclonedx.bom to v3.5.0 by @renovate[bot] in [PR #406](https://github.com/ichizero/connect-ktor/pull/406)
+- chore(deps): update dependency go to v1.27.2 by @renovate[bot] in [PR #407](https://github.com/ichizero/connect-ktor/pull/407)
+- chore(deps): update github/codeql-action action to v4.38.3 by @renovate[bot] in [PR #410](https://github.com/ichizero/connect-ktor/pull/410)
+- chore(deps): update dependency org.cyclonedx.bom to v3.5.1 by @renovate[bot] in [PR #409](https://github.com/ichizero/connect-ktor/pull/409)
+- chore(deps): update dependency org.jetbrains.kotlin.jvm to v2.4.21 by @renovate[bot] in [PR #408](https://github.com/ichizero/connect-ktor/pull/408)
+- chore(deps): update gradle to v9.8.1 by @renovate[bot] in [PR #396](https://github.com/ichizero/connect-ktor/pull/396)
+- chore(deps): update dependency lefthook to v2.2.1 by @renovate[bot] in [PR #412](https://github.com/ichizero/connect-ktor/pull/412)
+- fix(deps): update spotless to v8.10.4 by @renovate[bot] in [PR #411](https://github.com/ichizero/connect-ktor/pull/411)
+- chore(deps): update docs-site by @renovate[bot] in [PR #393](https://github.com/ichizero/connect-ktor/pull/393)
+- chore(deps): update protobuf monorepo to v36 by @renovate[bot] in [PR #400](https://github.com/ichizero/connect-ktor/pull/400)
+- chore(deps): update jdx/mise-action action to v5 by @renovate[bot] in [PR #402](https://github.com/ichizero/connect-ktor/pull/402)
+
 ## connect-ktor@0.4.0
 
 ### Support Connect server-streaming RPCs
