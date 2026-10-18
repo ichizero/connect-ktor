@@ -24,8 +24,6 @@ private data class TimeoutResult<T>(val value: T)
 @PublishedApi
 internal suspend fun <Res : Any> ApplicationCall.invokeUnaryHandler(
     handler: suspend () -> ResponseMessage<Res>,
-): ResponseMessage<Res> = try {
+): ResponseMessage<Res> = captureUnaryFailure {
     withConnectTimeout(connectTimeoutMs()?.milliseconds, handler)
-} catch (cause: ConnectException) {
-    ResponseMessage.Failure(cause, emptyMap(), cause.metadata)
 }

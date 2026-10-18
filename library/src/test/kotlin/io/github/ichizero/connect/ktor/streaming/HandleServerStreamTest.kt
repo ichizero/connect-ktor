@@ -346,6 +346,7 @@ class HandleServerStreamTest : FunSpec({
         val frames = decodeTestFrames(response.bodyAsBytes())
         frames.size shouldBe 1
         String(frames[0].payload).contains(""""code":"resource_exhausted"""") shouldBe true
+        response.headers[HttpHeaders.ContentLength] shouldBe response.bodyAsBytes().size.toString()
     }
 
     test("server streaming: unsupported content-type produces end frame with UNIMPLEMENTED") {

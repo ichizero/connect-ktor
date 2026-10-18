@@ -67,11 +67,10 @@ class ProtoRequestValidationTest : FunSpec({
         install(Resources)
         install(StatusPages) {
             exception<ProtoRequestValidationException> { call, cause ->
-                println(cause)
                 call.respondBytes(
                     bytes = cause.toErrorJsonBytes(),
-                    status = HttpStatusCode.BadRequest,
                     contentType = ContentType.Application.Json,
+                    status = HttpStatusCode.BadRequest,
                 )
             }
         }

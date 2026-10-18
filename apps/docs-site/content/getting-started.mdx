@@ -129,6 +129,10 @@ Generated unary POST/GET and streaming handlers return `deadline_exceeded` when 
 The budget starts when the handler begins; Ktor performs request decoding before it invokes unary handlers.
 Cancellation by the caller still cancels server work rather than becoming a deadline response.
 
+Unary handlers can return `ResponseMessage.Failure` or throw `ConnectException` to send a Connect error.
+Other handler exceptions reach the application's `StatusPages` handlers, if installed.
+The application decides how to respond to those exceptions; without a handler, Ktor's default error handling applies.
+
 ## Where to go next
 
 - [Code generator](/code-generator) for `protoc-gen-connect-ktor` details

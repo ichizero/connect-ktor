@@ -3,8 +3,10 @@ package io.github.ichizero.connect.ktor.streaming
 import com.connectrpc.ConnectException
 import io.ktor.http.ContentType
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondBytesWriter
 import io.ktor.utils.io.ByteWriteChannel
+import java.nio.ByteBuffer
 
 /**
  * Write the terminating Connect end-stream frame (`flags = 2`) carrying the response trailers and,
@@ -28,9 +30,15 @@ internal suspend fun respondEndStreamOnly(
     error: ConnectException,
     trailers: Map<String, List<String>>,
 ) {
-    call.respondBytesWriter(contentType = contentType) {
-        writeEndStream(error = error, trailers = trailers)
-    }
+    val payload = buildEndStreamPayload(trailers = trailers, error = error)
+    // This response has one known frame. Fixed-length content lets Netty send it without a
+    // separate writer coroutine, even when the request body stops at its prefix.
+    val response = ByteBuffer.allocate(ENVELOPE_HEADER_SIZE + payload.size)
+        .put(EnvelopeFlags.END_STREAM)
+        .putInt(payload.size)
+        .put(payload)
+        .array()
+    call.respondBytes(response, contentType = contentType)
 }
 
 /**

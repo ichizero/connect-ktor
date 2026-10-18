@@ -12,23 +12,29 @@ minimumReleaseAgeStrict: false
 allowBuilds:
   esbuild: true
 
+# fumapress depends on vite@^8.3.0. pnpm's lowest-direct resolution keeps that
+# copy behind the catalog pin, and the two Plugin types then fail tsc with
+# TS2321 (excessive stack depth) in vite.config.ts.
+overrides:
+  vite: "catalog:"
+
 catalog:
-  "@base-ui/react": 1.8.0
-  "@fumapress/tegami": 1.1.3
+  "@base-ui/react": 1.9.0
+  "@fumapress/tegami": 1.1.4
   "@tailwindcss/vite": 4.3.3
   "@types/mdx": 2.0.14
-  "@types/node": 26.6.1
+  "@types/node": 26.6.5
   "@types/react": 19.3.0
   "@types/react-dom": 19.3.0
-  fumadocs-core: 16.15.11
-  fumadocs-mdx: 15.4.1
-  fumadocs-ui: npm:@fumadocs/base-ui@16.15.11
-  fumapress: 1.3.1
-  lucide-react: 1.46.0
-  oxfmt: 0.68.0
-  react: 19.3.0
-  react-dom: 19.3.0
+  fumadocs-core: 16.17.1
+  fumadocs-mdx: 15.4.7
+  fumadocs-ui: npm:@fumadocs/base-ui@16.17.1
+  fumapress: 1.6.1
+  lucide-react: 1.55.0
+  oxfmt: 0.72.0
+  react: 19.3.1
+  react-dom: 19.3.1
   tailwindcss: 4.3.3
   tegami: 1.5.0
   typescript: 7.0.2
-  vite: 8.3.0
+  vite: 8.3.4
