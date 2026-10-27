@@ -186,23 +186,23 @@ catalogs:
       specifier: 19.3.0
       version: 19.3.0
     fumadocs-core:
-      specifier: 16.17.5
-      version: 16.17.5
+      specifier: 16.17.7
+      version: 16.17.7
     fumadocs-mdx:
-      specifier: 15.4.7
-      version: 15.4.7
+      specifier: 15.4.9
+      version: 15.4.9
     fumadocs-ui:
-      specifier: npm:@fumadocs/base-ui@16.17.5
-      version: 16.17.5
+      specifier: npm:@fumadocs/base-ui@16.17.7
+      version: 16.17.7
     fumapress:
-      specifier: 1.6.1
-      version: 1.6.1
+      specifier: 1.6.2
+      version: 1.6.2
     lucide-react:
-      specifier: 1.59.0
-      version: 1.59.0
+      specifier: 1.60.0
+      version: 1.60.0
     oxfmt:
-      specifier: 0.73.0
-      version: 0.73.0
+      specifier: 0.74.0
+      version: 0.74.0
     react:
       specifier: 19.3.1
       version: 19.3.1
@@ -228,13 +228,13 @@ importers:
     devDependencies:
       '@fumapress/tegami':
         specifier: 'catalog:'
-        version: 1.1.4(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(fumadocs-ui@16.14.0(@types/mdx@2.0.14)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1)))(fumapress@1.6.1(6d8ccfb9f0380d51780129c82dd847fe))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tegami@1.5.0)
+        version: 1.1.4(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(fumadocs-ui@16.14.0(@types/mdx@2.0.14)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1)))(fumapress@1.6.2(e1cee878fb0fa511f8acabba1d682874))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tegami@1.5.0)
       node:
         specifier: runtime:24
         version: runtime:24.21.0
       oxfmt:
         specifier: 'catalog:'
-        version: 0.73.0
+        version: 0.74.0
       tegami:
         specifier: 'catalog:'
         version: 1.5.0
@@ -246,22 +246,22 @@ importers:
         version: 1.9.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@fumapress/tegami':
         specifier: 'catalog:'
-        version: 1.1.4(@fumadocs/base-ui@16.17.5(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1)))(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(fumapress@1.6.1(d932e492d5921bfd89196f6457d45c0b))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tegami@1.5.0)
+        version: 1.1.4(@fumadocs/base-ui@16.17.7(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1)))(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(fumapress@1.6.2(1d0ff5b8305cd3fda18aa5ab576e0950))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tegami@1.5.0)
       fumadocs-core:
         specifier: 'catalog:'
-        version: 16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
+        version: 16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
       fumadocs-mdx:
         specifier: 'catalog:'
-        version: 15.4.7(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react@19.3.1)(rolldown@1.2.14)(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0))
+        version: 15.4.9(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react@19.3.1)(rolldown@1.2.14)(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0))
       fumadocs-ui:
         specifier: 'catalog:'
-        version: '@fumadocs/base-ui@16.17.5(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))'
+        version: '@fumadocs/base-ui@16.17.7(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))'
       fumapress:
         specifier: 'catalog:'
-        version: 1.6.1(d932e492d5921bfd89196f6457d45c0b)
+        version: 1.6.2(1d0ff5b8305cd3fda18aa5ab576e0950)
       lucide-react:
         specifier: 'catalog:'
-        version: 1.59.0(@types/react@19.3.0)(react@19.3.1)
+        version: 1.60.0(@types/react@19.3.0)(react@19.3.1)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -546,12 +546,12 @@ packages:
       '@types/react':
         optional: true
 
-  '@fumadocs/base-ui@16.17.5':
-    resolution: {integrity: sha512-ZxHBah6jNFXJMUEsntQzREA2QPfu/XwY2mGl6vkPZuLIxR0v94MiXGp8ylMcbAHf+6uGulM9Sr6eE7uj4CnP7w==}
+  '@fumadocs/base-ui@16.17.7':
+    resolution: {integrity: sha512-t9Am0mxPrGuAG9BeC/ACLhNbBtxXbc+JIbTTzr7j5apnCFRQSDxGaZT9/+BRWG6DqltnsccGqGB1x3kPz7WaYw==}
     peerDependencies:
       '@types/mdx': '*'
       '@types/react': '*'
-      fumadocs-core: 16.17.5
+      fumadocs-core: 16.17.7
       next: 16.x.x
       react: ^19.2.0
       react-dom: ^19.2.0
@@ -633,124 +633,124 @@ packages:
   '@oxc-project/types@0.154.0':
     resolution: {integrity: sha512-KYOUGQFlLWR+s4QMV2Q9ko38TZm7EdO87Qm7rvZLqk/webse/cDjtyxKhg/47l0byCbs/k46LT8qc4PKjAikzA==}
 
-  '@oxfmt/binding-android-arm-eabi@0.73.0':
-    resolution: {integrity: sha512-dhunAdMbi/4o0Y66/+Wl6rpsNqpvE4i26Qw6bB77A97L2lJoktWg6m+X9QOon8iOEEqzD9rEZqFi5uZ4oIzhCA==}
+  '@oxfmt/binding-android-arm-eabi@0.74.0':
+    resolution: {integrity: sha512-xxQwrf5EPI5zxvuCTW8r6tzCTjPQ+h6+HqJ0iRKRy2zS1yBllt/xLVjoIyUc+FnR7g0a5g1SZv2yyDYhTItLbA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm]
     os: [android]
 
-  '@oxfmt/binding-android-arm64@0.73.0':
-    resolution: {integrity: sha512-dBoypjC2/xeyKyIhN2waX0/XeoccH9k0lVVe+sGRc4X8HSJVRtqyZDoXdr7bGY9A75c51dX0z0dLDpGQKwCdCg==}
+  '@oxfmt/binding-android-arm64@0.74.0':
+    resolution: {integrity: sha512-FJW3sATVvrWbV64al8xofCPZj4500Z/1W0ad7Tg1rcCUyh0EMbuSrsf3jsZS7CEbwQ5fQ0mRhmkc129GFgofSQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [android]
 
-  '@oxfmt/binding-darwin-arm64@0.73.0':
-    resolution: {integrity: sha512-Tn7Y+qWIpCQK+qdYwBcn6YvqeBuPiuG3tcNlYg16a5QL2o3rSmrgBB1nCyYqo0uvc1LNrfQW9/CK2tzFuID/Fg==}
+  '@oxfmt/binding-darwin-arm64@0.74.0':
+    resolution: {integrity: sha512-TfmNKBD30dGyMu9GCLiaw2rt/z7fms9LS+5cKcNOyWst0QgAs8oZs6wPxMbVaaDVE0/PCdCosgWM1vbu6f5NUg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [darwin]
 
-  '@oxfmt/binding-darwin-x64@0.73.0':
-    resolution: {integrity: sha512-yVb0E0tg/+9Xc9YJCBq66qF1DC/aN5mhb5nnHz0k4ikwkMANtSul2VPDSwjYdXR6/DFimc+pPUgLBqkIa5Ctuw==}
+  '@oxfmt/binding-darwin-x64@0.74.0':
+    resolution: {integrity: sha512-5Usf8+DfC4Q3o/MD8FkN47GrI6y0KbhQ4KhZ2HGzMZcXjcW1AeldwbUn51aKih+1TVuJFF9qkNm6X1nzm6NYng==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [darwin]
 
-  '@oxfmt/binding-freebsd-x64@0.73.0':
-    resolution: {integrity: sha512-IKR4lFnBkYNL9Uqdxa5GMTQLvnLj+3sDwTvh2atHCzah0xeo+1xR5bigRU8uyXlOsA4VpXUn0UAimq4E4RBGmQ==}
+  '@oxfmt/binding-freebsd-x64@0.74.0':
+    resolution: {integrity: sha512-eL+1O3gykw1XihbZh2MRAciQvU2988LByrnjhyo/dmNG74X4oZ7XzigRoWPRFLfJCp8hzRkp/LbEhwe7uuT2eA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [freebsd]
 
-  '@oxfmt/binding-linux-arm-gnueabihf@0.73.0':
-    resolution: {integrity: sha512-7qnZ4g0ZCO3aZevOOQpZIABYwwXJW1lLDo2elviGdPQ0i11255xKEMFsi97fC1/nauQFseCJfELUy/k2JoOP+g==}
+  '@oxfmt/binding-linux-arm-gnueabihf@0.74.0':
+    resolution: {integrity: sha512-Xt0QtO2hJ4stnul8IL4LJGVLyp0xnc6ccN9fZ30yuubv8FWSRYxWwd1Za62KsEqAfmPSazoS/cLSUUJpja6npA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm]
     os: [linux]
 
-  '@oxfmt/binding-linux-arm-musleabihf@0.73.0':
-    resolution: {integrity: sha512-36eBico2j/WPB84gb4FYd/jjqGCKOwU4M+TWLBUIqlnzTozQueLy0joA5BwsSp2OZFVkOlpCwvA3ndPamdiyLw==}
+  '@oxfmt/binding-linux-arm-musleabihf@0.74.0':
+    resolution: {integrity: sha512-/4wYQ0gZl4vUR0QoBTGaay73FmQ1GAjUa9z9101TR2xbGNrg4a+grazlR0yzEOe3/E+PJr5BGfj66MMzm/54vg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm]
     os: [linux]
 
-  '@oxfmt/binding-linux-arm64-gnu@0.73.0':
-    resolution: {integrity: sha512-VZ3cSgCAT18knKo52DcACmAuIoqG6qVEyeZRFbJd0xmYQ8GyYjuBc6IAh6MZHijT6q7p4/HPI+6ZWsCuhdV6iw==}
+  '@oxfmt/binding-linux-arm64-gnu@0.74.0':
+    resolution: {integrity: sha512-846bKzF+HJd+JkOFh3rxzmYvSq4Cm+GMT+p+mW7S13ZYo6GAAGv8bL8cAOi/XcdeMqxEJDCIMTVQLVBXHMCdig==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@oxfmt/binding-linux-arm64-musl@0.73.0':
-    resolution: {integrity: sha512-8YVzH59XSHcqwXNgc5qK851zCqwpmBgOifARXEPPe5/xTsIbHceYoPZAyqfpYV0CfKmzSaEDBgYHFza4rhx+Zw==}
+  '@oxfmt/binding-linux-arm64-musl@0.74.0':
+    resolution: {integrity: sha512-nI5FJwZ4Flo6CBdscpwxymZXxO3m3IErQJX55ZS6h+ObfGXu8FostL85L/RWPFaCLnIVE4/WfLw+2q8XvVEeUA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@oxfmt/binding-linux-ppc64-gnu@0.73.0':
-    resolution: {integrity: sha512-MqRJnmCys0rwOgpWyEidSA7v/bvOqfNDJhPkQoR9mPVYrvSmMaW2Xhdpl28cbTA+brOM1is62GjIvJplVlUVpw==}
+  '@oxfmt/binding-linux-ppc64-gnu@0.74.0':
+    resolution: {integrity: sha512-BoQYKuqUdsKAFAkK6DLBvkdv4+t0hppSm79sB0wIcE2o/eOwNj+6Z3OlKY4q3Eta/tlssP65FaS9vHn8TeF7vQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [ppc64]
     os: [linux]
     libc: [glibc]
 
-  '@oxfmt/binding-linux-riscv64-gnu@0.73.0':
-    resolution: {integrity: sha512-4t2F3SWJSK/O/kRRFnL0elJzn75fJGGu71gs1HtiWcS80SmJOpkHiwwLnTp9suGdns8VHEPxYS0GTcyVwHKWBA==}
+  '@oxfmt/binding-linux-riscv64-gnu@0.74.0':
+    resolution: {integrity: sha512-FSroRrM12+jCdSQklF9aOxsKpI6wFs4ZCo/1cSYG80RWZS6z4LV+l9tXRMT8lDGu+yohIZBwi9M76FzGPFDE2A==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [riscv64]
     os: [linux]
     libc: [glibc]
 
-  '@oxfmt/binding-linux-riscv64-musl@0.73.0':
-    resolution: {integrity: sha512-D8b4I8I1kLdJQFwdFXNV+cwh3xWSiNKofjdGUk0nDpc0AHOds8T+poGbP9RWQMvgsvMb9OMgp/aV7ahBR37TbQ==}
+  '@oxfmt/binding-linux-riscv64-musl@0.74.0':
+    resolution: {integrity: sha512-0VLQD0dhGBLY9Ik/w+otMvD81D0YXi4VDwql65macV+O9UzmSWmUr6CKf+dMtysDeC0PnG3y6kBkRO08BJx52g==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [riscv64]
     os: [linux]
     libc: [musl]
 
-  '@oxfmt/binding-linux-s390x-gnu@0.73.0':
-    resolution: {integrity: sha512-QrC1S5VL1+N5rvorB15jH7CPvjVHA7GyUI5oVEd8Bd9m5605RDBQYTxDQ920DuylRoZOh2V7/xXpfCtFUrojUQ==}
+  '@oxfmt/binding-linux-s390x-gnu@0.74.0':
+    resolution: {integrity: sha512-6X7BbZNz34+OHM6Oqjf6TRcUyRn6aRcB4VtIDZAF/uQRyeVhg+G2hv6MlMvmnRekVSyTJ/8rG/u8W2dRFW6glg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [s390x]
     os: [linux]
     libc: [glibc]
 
-  '@oxfmt/binding-linux-x64-gnu@0.73.0':
-    resolution: {integrity: sha512-dFcUKQPltCEPa+YlkF3zqufn6nJPZdG73LpnjBvZFFsU3laCMssDXSYB99mVaj43FqdEgjpz5TO6gbYXcczd9g==}
+  '@oxfmt/binding-linux-x64-gnu@0.74.0':
+    resolution: {integrity: sha512-4kYIQK53yJXrxwxSzx8H2bojlf6/KezLGYLRXzV9QCCkoiCsvBTCid9Bg83dUPTLPa3g9K0730f6MKDbck1+OA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@oxfmt/binding-linux-x64-musl@0.73.0':
-    resolution: {integrity: sha512-LmQe+nV8e+eUwfPNCxDF+owbsg88toBiR/8rZRgVOeKQP3MaGefXZRvBoc1UG37iWEQ/9JlCXG9Mc4nf4N3agw==}
+  '@oxfmt/binding-linux-x64-musl@0.74.0':
+    resolution: {integrity: sha512-MfWz4wDREjp/JQDmuxtKieix4FHGa1z5rBvB3betdcPwZvf5fqeQrlCm1mmoyuUVQOh9Pt3M61HwN94kJCxw7Q==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@oxfmt/binding-openharmony-arm64@0.73.0':
-    resolution: {integrity: sha512-8weOr1OKknE0G2DbR6ejJUT9AOsoBU6cXlsetmbihHv1K+bK7qP61T6lJxY0k/aAO7GyOJiRGNlL+04r4eH8Xg==}
+  '@oxfmt/binding-openharmony-arm64@0.74.0':
+    resolution: {integrity: sha512-6rmAApkq5s1kbDjvNI6Nl5A+JqQkLORb2sR941pf5HWsrd01WGKyagK/B4vX9+kh1FfvRkNgEu59FHvVk4H8cQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [openharmony]
 
-  '@oxfmt/binding-win32-arm64-msvc@0.73.0':
-    resolution: {integrity: sha512-mZV+QxXYgb8E18gzAFItb937VIsE4dqWdStrD3tRRC52UubOYEuU+e7NaIqUsGdB5YsJqNeuck3Ue/af2r9wyA==}
+  '@oxfmt/binding-win32-arm64-msvc@0.74.0':
+    resolution: {integrity: sha512-+5SpRUnZNGeXTyumHnpHa791tQtt04qZs076WT8eTcGF2OJ631VLnf7S0kQSPuDG+PtJM0phadEB2WAr5n1w9g==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [win32]
 
-  '@oxfmt/binding-win32-ia32-msvc@0.73.0':
-    resolution: {integrity: sha512-QJPUsbgUb97ZPPMkFUq6VQq0fLhC4Np19KL9aB/qKVwXnpKE6MIiILXqzhKnQ/UbnEDjKJ7Xv1d6zH4bYPCUdQ==}
+  '@oxfmt/binding-win32-ia32-msvc@0.74.0':
+    resolution: {integrity: sha512-1Fg+wYBO3Dsti1QX+/6EYHjeQzLC84tLOAqPu/r7ah3UJlUs9C/DB703Ay9Vcg+8VMzqZA2P5VGhzJraVUD4OQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [ia32]
     os: [win32]
 
-  '@oxfmt/binding-win32-x64-msvc@0.73.0':
-    resolution: {integrity: sha512-cGcze2fu+ykIaFtkEvZlkZ3HvnCLk+WISthtq99zWTWn0x13t5L9TxvGdLZMUMvtfYR+ICkiCwKnguVubdcw0w==}
+  '@oxfmt/binding-win32-x64-msvc@0.74.0':
+    resolution: {integrity: sha512-y9jXUgPBm2TZIWbQhMYRRYAQM57+r4fbykgc+j24ICIIZl+pcuoNhnq1CRGm3oFiHnEUnZO00qOtSPGQdJ2ziQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
@@ -1662,74 +1662,74 @@ packages:
   '@xtuc/long@4.2.2':
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
 
-  '@yuku-core/binding-android-arm64@0.17.0':
-    resolution: {integrity: sha512-Uge3U7s9vdCcYb9IiIWBIQmGEttlvWkvWYb9Qu6iUNS2IhAu4/D/g4ucbEmjemkflWYGpWsKZlX+JxcacIlR+g==}
+  '@yuku-core/binding-android-arm64@0.19.0':
+    resolution: {integrity: sha512-wdL2XmTiZixAOaHk9Z0JJZ8u9Qm8d333Zjpc6gaxXFX+UR5BlsfxZ7a2+2Rm71pamppsPYGUGFq2oVLbh6DISw==}
     cpu: [arm64]
     os: [android]
 
-  '@yuku-core/binding-darwin-arm64@0.17.0':
-    resolution: {integrity: sha512-jpWhRhfsAFUKXR/dUFoA9NgHeeIl5Yn0hmBEDt4QUEmnYuYZSDXeKQeSCazvIvfzbI0lyIkFSf5/TQeRPwiNuA==}
+  '@yuku-core/binding-darwin-arm64@0.19.0':
+    resolution: {integrity: sha512-7sNJa6XJhyetnTy64jw3NEi4YgUcezHk1G5GH9FSvXAuC8wIlbaOwT9lgq5qo5sspjrZJQlBR1TWflP49uRpMw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@yuku-core/binding-darwin-x64@0.17.0':
-    resolution: {integrity: sha512-AoWoVw8rktzCHXvpoygUu2QZ37LVlCp77p0oZ8EijCMUIaWzTMNUnkRGosEGvzXJOOpzB4wuXYVkphcV55Er+g==}
+  '@yuku-core/binding-darwin-x64@0.19.0':
+    resolution: {integrity: sha512-pTC7dYEc59isdyizc3nsuyFNBu2LU5wMYZ1be6UMr59PY/AJNtO1aBLWV0MgL/z7C1nv/2sX4TNjGgKLoeevJw==}
     cpu: [x64]
     os: [darwin]
 
-  '@yuku-core/binding-freebsd-x64@0.17.0':
-    resolution: {integrity: sha512-CpyBhwZSzkRX6ZPt3AYVlG0TYk11cTP6rZ7Rz0Ux1BLxHgy4TmEW4UGsiKnL5FMAY/nM3HudevWmvaUVV4Qgng==}
+  '@yuku-core/binding-freebsd-x64@0.19.0':
+    resolution: {integrity: sha512-xrZjF6XOEwyLOiDIfrwDdRCS6ghxcJeirNC1KivQhVcUwlRonaU79S3/Uiyx3lBylPnT8qKJ3/aMT+H52nGTJQ==}
     cpu: [x64]
     os: [freebsd]
 
-  '@yuku-core/binding-linux-arm-gnu@0.17.0':
-    resolution: {integrity: sha512-H6SQK917PjtWpbQmqUsRAqDDToutDqoXWzLKKAFY+6PSfNnzRPLrydm6SG/GkHT91L8Z2/yJPwXzzF98t1UlbQ==}
+  '@yuku-core/binding-linux-arm-gnu@0.19.0':
+    resolution: {integrity: sha512-0OyIH53C0I1CbADHn9FSdCfX5qbpeLwJhmOVhonFJNYheybOnkSJ50qGMfTJIb8y5zrwqvLs7FVBvz6Fk8maZg==}
     cpu: [arm]
     os: [linux]
     libc: [glibc]
 
-  '@yuku-core/binding-linux-arm-musl@0.17.0':
-    resolution: {integrity: sha512-sAxyv9p/3+fxJgXcUsaJ+8IRQWvZ4F264Gx7Kj/VBuIQX95Ih7jP/zUZPGr2UM/3NHFnXIb74Rhyuk6WLufIrQ==}
+  '@yuku-core/binding-linux-arm-musl@0.19.0':
+    resolution: {integrity: sha512-z/iPfkCOCSXE34VXNt0uP1ORSW+4mEa9b5CiJcWZeqZH08g49bFU/jRM2T04f+Wpw5mJ6HIzNBiojxeAbrHjeg==}
     cpu: [arm]
     os: [linux]
     libc: [musl]
 
-  '@yuku-core/binding-linux-arm64-gnu@0.17.0':
-    resolution: {integrity: sha512-hDcx5Nt04jMwkllwZVtxiWt1qQI5gCqaFcT1JLP6Lw9eOqx1Yt8p21NuqZuqknmnW5napB3dSwF7Op+eySHdrQ==}
+  '@yuku-core/binding-linux-arm64-gnu@0.19.0':
+    resolution: {integrity: sha512-jLNTi+gzaRwBJ+gwhCJ+rDb5dmx/8hEBx93UWd7hjMSqPTL1D1wvVSvXVAldV5kALvju7b0/m51EHEhs4+I1fA==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@yuku-core/binding-linux-arm64-musl@0.17.0':
-    resolution: {integrity: sha512-SGWvwtPe3uXVGjpKk6LTjO4ieGzad/a5h3cbSeduSIiNDfotM200kifB5cPUfg2LhfbM4uCImsApYZOqXW8lkw==}
+  '@yuku-core/binding-linux-arm64-musl@0.19.0':
+    resolution: {integrity: sha512-YwyPIdW/rN2Fmv0MTFWi47FaB3F9g+2b+sJISyAw83Yd60RWH4T3Nx6XkAHHVN+uKJNBAd6So7/BVihSiFYvuQ==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@yuku-core/binding-linux-x64-gnu@0.17.0':
-    resolution: {integrity: sha512-Vq258yq8+UZQwdD26b6lz9FtqwHwOVWyjy+lcbYKlAhFuN/0FNO2UzlkG5F/0pXR0iRK/Xyxkq5IZpLJHS+2HQ==}
+  '@yuku-core/binding-linux-x64-gnu@0.19.0':
+    resolution: {integrity: sha512-/vskaAXVX3ESR43FiTdfiYS7z1b9uoQJwVQ/0RgUHgN2sWoAyCZs+aX4CgU7eKGIHTVfp9VFwv+c+2XchYiEtQ==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@yuku-core/binding-linux-x64-musl@0.17.0':
-    resolution: {integrity: sha512-luEtfpzTP3Xph+HHz2rIVGH1VLbext5SFYrUyhKlbgoahkZ8MDzKI9TYsOVt0HukQkyEtW7+fG7yXJcdKqD4GA==}
+  '@yuku-core/binding-linux-x64-musl@0.19.0':
+    resolution: {integrity: sha512-FuXL5igeSKib9Rye02TdH+D6SQezTyGxIATMu1Qsn/QywrzwpGl35OLpS2C1x5vpGLeVE2XgiLd5mVPFHmIglQ==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@yuku-core/binding-win32-arm64@0.17.0':
-    resolution: {integrity: sha512-CaqorOjCPJgUoDwS5nztgeZW4ay21enm3A4A42EY/CotiyDbFO7lKfrqTftGb+ZXrwJ41gNtY1gQ0AaWm0Wvwg==}
+  '@yuku-core/binding-win32-arm64@0.19.0':
+    resolution: {integrity: sha512-YuJAe7zEKT1Xa7LuHlhGJpPnYQeVtvo0rZvNjJRqkH0hQGOw4C8QeP30Tg5VKGzZfo2x8CjhjEhKt4TmLwfmdg==}
     cpu: [arm64]
     os: [win32]
 
-  '@yuku-core/binding-win32-x64@0.17.0':
-    resolution: {integrity: sha512-gPDXHz0dPwvgj1GO7xzK8jPktrCh9xyMXZKmwqq+5bemxrSXSDUK/osSw93xmHha/PQP2WcJ1WiJ8+XEx+ciHg==}
+  '@yuku-core/binding-win32-x64@0.19.0':
+    resolution: {integrity: sha512-o8iY/mXwlRkedp0LNTr4+TEfXTPQwoNZmv6k+1WIAd1ZXEn8xJJTBCtB0osaVvdZo/x/cNmV16UrWrrGpM5Mvw==}
     cpu: [x64]
     os: [win32]
 
-  '@yuku-toolchain/types@0.17.0':
-    resolution: {integrity: sha512-3T4eKUuFAtuwbyRc2OIpanxPTl4CZdbmOvg1HB9UmRrPb3bsF3fFfbLSyIFYtZrE9/cNqLyEq/7g3Hm6nHIekA==}
+  '@yuku-toolchain/types@0.19.0':
+    resolution: {integrity: sha512-tFkNbsP4WXX9UMUC5syJGdK9dPMLK0PPaIuXCcCYH75sZ8MrebfBZ2XvCILRTw8AgLivSSCfDa4R67iYBDa4Kg==}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -2004,8 +2004,8 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
-  fumadocs-core@16.17.5:
-    resolution: {integrity: sha512-aCLv7ccoLt2/HCPdXc8llJmzxVwDTWcf26LhMuObMpYYsHL4f6BkKRB+6i8lmYFxjzPU7xEOT06/VNvgeRC3Mg==}
+  fumadocs-core@16.17.7:
+    resolution: {integrity: sha512-o8uR1JuFgAHrUSbX/hzThOsvW8tFXfV4vlrWf7VeFd+lbQsRqwr8R7gvs96Vwwzn5xSDfgg0boQalyv1llJAQQ==}
     peerDependencies:
       '@mdx-js/mdx': '*'
       '@mixedbread/sdk': 0.x.x
@@ -2069,8 +2069,8 @@ packages:
       zod:
         optional: true
 
-  fumadocs-mdx@15.4.7:
-    resolution: {integrity: sha512-54lE+dIlIkebSxcN1Lqe0yn5lkKI4zm/Fxl+Se+IqSGyANsBVoa7XaDFFUSLfklxfkSM1NKkrbw0yzvRWVb9rw==}
+  fumadocs-mdx@15.4.9:
+    resolution: {integrity: sha512-vsZGzpGsWptlBAX8sWb7R87KIt9+3GhJa5GpkwJqBv/OaN9QGul34hJikKdq6C8pT2XOwKMB499lvj31JaHbGg==}
     hasBin: true
     peerDependencies:
       '@fumadocs/satteri': 0.x.x
@@ -2126,8 +2126,8 @@ packages:
       takumi-js:
         optional: true
 
-  fumapress@1.6.1:
-    resolution: {integrity: sha512-K3PtnHA4wUEDhdHPuBRSDzTsRq3HvvT3+rjCjPtx5Sd5HoHknPxNsf+i0wjWQIfpTjgzQUNOWo5+9auTZEu9mQ==}
+  fumapress@1.6.2:
+    resolution: {integrity: sha512-QvY2c/oTE9/Bw/ovOPvzM9xS7aogMnvaXbAtuY0jzftuM4IIfMKU9s2GSTeDOPRNqsMszXHxJbIw0hejoi3Dkw==}
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
@@ -2398,8 +2398,8 @@ packages:
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  lucide-react@1.58.0:
-    resolution: {integrity: sha512-hXaFNm6mk6QVtBnDGBn1YAs8j2tGUk0A4s/CpclIcczfxeXiW1rdOLVo6zCsoIih9XXsGvDODQerl749a2n7bA==}
+  lucide-react@1.59.0:
+    resolution: {integrity: sha512-5qgMyyCPU6OvnKpLS2t693+ZtiqA8oaSweWoUows0BLFKFf6V75m4+CptpmohZHpD5IuOVIBXHBBiv2vpLJmtw==}
     peerDependencies:
       '@types/react': '*'
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -2407,8 +2407,8 @@ packages:
       '@types/react':
         optional: true
 
-  lucide-react@1.59.0:
-    resolution: {integrity: sha512-5qgMyyCPU6OvnKpLS2t693+ZtiqA8oaSweWoUows0BLFKFf6V75m4+CptpmohZHpD5IuOVIBXHBBiv2vpLJmtw==}
+  lucide-react@1.60.0:
+    resolution: {integrity: sha512-UqxOW0FgAfDyb9VmjKb6/BkOzW6yfhf/QNboKtS2NDsscnNRW2CDzlyhbMKBQ1ontmcxuIDqHJ2AVgFR3NI+GA==}
     peerDependencies:
       '@types/react': '*'
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -2421,6 +2421,9 @@ packages:
 
   magic-string@1.4.2:
     resolution: {integrity: sha512-vG+rjFRj1PqdIBozIxAGMjPlOhaVe+GXpbttY/iSK7rGcJRMlwNJO7dcUwmUqkymsFLJiNGI06t4D7Fr7yRC9g==}
+
+  magic-string@1.4.4:
+    resolution: {integrity: sha512-jQz9sVhrZuphH4NrAIHSgkDJCluQO7Ioi4KGRLa7aTUjAODQ13hENX0YIytqYE/rIkO485gQG2LeBxJaW53kkQ==}
 
   markdown-extensions@2.0.0:
     resolution: {integrity: sha512-o5vL7aDWatOTX8LzaS1WMoaoxIiLRQJuIKKe2wAw6IeULDHaqbiqiggmx+pKvZDb1Sj+pE46Sn1T7lCqfFtg1Q==}
@@ -2832,8 +2835,8 @@ packages:
   oniguruma-to-es@4.3.6:
     resolution: {integrity: sha512-csuQ9x3Yr0cEIs/Zgx/OEt9iBw9vqIunAPQkx19R/fiMq2oGVTgcMqO/V3Ybqefr1TBvosI6jU539ksaBULJyA==}
 
-  oxfmt@0.73.0:
-    resolution: {integrity: sha512-Ke4xbpuzqIBP4bkd48q815RhqWNJqOBzxVA9199M4qcF0y0LtpUv7UTg1dJ5ea6jw0RBUDZvX3qOUMNmmxfxbw==}
+  oxfmt@0.74.0:
+    resolution: {integrity: sha512-G4OP7FgwGYZR5ttRpCOOfJdyRsSyvtn34vSXnjDq6Oqed5Dufg5mB44mank+51nAdHOKuTJ0lj0mksY7L+N61A==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -3272,16 +3275,16 @@ packages:
     engines: {node: '>= 14.6'}
     hasBin: true
 
-  yuku-analyzer@0.17.0:
-    resolution: {integrity: sha512-MJWtt5HvXVR51mGOR2uMXQ45t1X1oMkmx4vaP/Li1HNC69OFG/qYmxf++aVazkXH5pdxTYTHYRUPl67b7NYxjA==}
+  yuku-analyzer@0.19.0:
+    resolution: {integrity: sha512-Iu7DV5cWOQ3ERSA7oBquz/RT5IEGsUyUeCivYs9lQaZ4nSjM31yD17mH616JKcTyVoVWYivsFZ+twT3UyBosTA==}
     engines: {node: '>=14.18.0'}
 
-  yuku-ast@0.17.0:
-    resolution: {integrity: sha512-htIzp3bLNdBtOSh8L8pJ7nkTft2kw/C3ghTToSg3FKtzi0YGkvAdEUUza9c744tnbeXtKUMEupFOYHuVNXn1yQ==}
+  yuku-ast@0.19.0:
+    resolution: {integrity: sha512-PyCsiScaelhxBGzL8dyeJkLqvRZycoh78R31Vrt/WqYrm0hMFoKwIw/X7Dx5mBKLWAMlV9I9HEyBOHnj2gZVyw==}
     engines: {node: '>=14.18.0'}
 
-  yuku-core@0.17.0:
-    resolution: {integrity: sha512-4BgHT4euQ62wr/9h5UWoMzt4QTrmT3WUo96aRiY2R6RRCyKjCveU23MNwNJISzYvNnbFGZ7O2E1SU5zgWqzS+Q==}
+  yuku-core@0.19.0:
+    resolution: {integrity: sha512-kYK9e1XdfirNhkipzW0wmMcSWcVF/CWnuugodfVYRCUwvoBefweL9HzB96OiKEhsx78V5WbUxbJqlizMX869Qg==}
     engines: {node: '>=14.18.0'}
 
   zbsearch@4.0.1:
@@ -3290,6 +3293,9 @@ packages:
 
   zod@4.6.5:
     resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -3458,16 +3464,16 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.3.0
 
-  '@fumadocs/base-ui@16.17.5(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))':
+  '@fumadocs/base-ui@16.17.7(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))':
     dependencies:
       '@base-ui/react': 1.9.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@fuma-translate/react': 1.0.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@fumadocs/tailwind': 0.1.4(tailwindcss@4.3.3)
       class-variance-authority: 0.7.1
       cn: 0.4.0
-      fumadocs-core: 16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
+      fumadocs-core: 16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
       hast-util-to-jsx-runtime: 2.3.6(supports-color@8.1.1)
-      lucide-react: 1.58.0(@types/react@19.3.0)(react@19.3.1)
+      lucide-react: 1.59.0(@types/react@19.3.0)(react@19.3.1)
       motion: 14.3.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       next-themes: 0.4.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react: 19.3.1
@@ -3493,13 +3499,13 @@ snapshots:
     optionalDependencies:
       tailwindcss: 4.3.3
 
-  '@fumapress/tegami@1.1.4(@fumadocs/base-ui@16.17.5(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1)))(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(fumapress@1.6.1(d932e492d5921bfd89196f6457d45c0b))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tegami@1.5.0)':
+  '@fumapress/tegami@1.1.4(@fumadocs/base-ui@16.17.7(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1)))(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(fumapress@1.6.2(1d0ff5b8305cd3fda18aa5ab576e0950))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tegami@1.5.0)':
     dependencies:
       '@base-ui/react': 1.8.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       cn: 0.4.0
-      fumadocs-core: 16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
-      fumadocs-ui: '@fumadocs/base-ui@16.17.5(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))'
-      fumapress: 1.6.1(d932e492d5921bfd89196f6457d45c0b)
+      fumadocs-core: 16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
+      fumadocs-ui: '@fumadocs/base-ui@16.17.7(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))'
+      fumapress: 1.6.2(1d0ff5b8305cd3fda18aa5ab576e0950)
       lucide-react: 1.47.0(react@19.3.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
@@ -3512,13 +3518,13 @@ snapshots:
       - '@date-fns/tz'
       - date-fns
 
-  '@fumapress/tegami@1.1.4(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(fumadocs-ui@16.14.0(@types/mdx@2.0.14)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1)))(fumapress@1.6.1(6d8ccfb9f0380d51780129c82dd847fe))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tegami@1.5.0)':
+  '@fumapress/tegami@1.1.4(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(fumadocs-ui@16.14.0(@types/mdx@2.0.14)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1)))(fumapress@1.6.2(e1cee878fb0fa511f8acabba1d682874))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tegami@1.5.0)':
     dependencies:
       '@base-ui/react': 1.8.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       cn: 0.4.0
-      fumadocs-core: 16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
-      fumadocs-ui: 16.14.0(@types/mdx@2.0.14)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))
-      fumapress: 1.6.1(6d8ccfb9f0380d51780129c82dd847fe)
+      fumadocs-core: 16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
+      fumadocs-ui: 16.14.0(@types/mdx@2.0.14)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))
+      fumapress: 1.6.2(e1cee878fb0fa511f8acabba1d682874)
       lucide-react: 1.47.0(react@19.3.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
@@ -3595,61 +3601,61 @@ snapshots:
 
   '@oxc-project/types@0.154.0': {}
 
-  '@oxfmt/binding-android-arm-eabi@0.73.0':
+  '@oxfmt/binding-android-arm-eabi@0.74.0':
     optional: true
 
-  '@oxfmt/binding-android-arm64@0.73.0':
+  '@oxfmt/binding-android-arm64@0.74.0':
     optional: true
 
-  '@oxfmt/binding-darwin-arm64@0.73.0':
+  '@oxfmt/binding-darwin-arm64@0.74.0':
     optional: true
 
-  '@oxfmt/binding-darwin-x64@0.73.0':
+  '@oxfmt/binding-darwin-x64@0.74.0':
     optional: true
 
-  '@oxfmt/binding-freebsd-x64@0.73.0':
+  '@oxfmt/binding-freebsd-x64@0.74.0':
     optional: true
 
-  '@oxfmt/binding-linux-arm-gnueabihf@0.73.0':
+  '@oxfmt/binding-linux-arm-gnueabihf@0.74.0':
     optional: true
 
-  '@oxfmt/binding-linux-arm-musleabihf@0.73.0':
+  '@oxfmt/binding-linux-arm-musleabihf@0.74.0':
     optional: true
 
-  '@oxfmt/binding-linux-arm64-gnu@0.73.0':
+  '@oxfmt/binding-linux-arm64-gnu@0.74.0':
     optional: true
 
-  '@oxfmt/binding-linux-arm64-musl@0.73.0':
+  '@oxfmt/binding-linux-arm64-musl@0.74.0':
     optional: true
 
-  '@oxfmt/binding-linux-ppc64-gnu@0.73.0':
+  '@oxfmt/binding-linux-ppc64-gnu@0.74.0':
     optional: true
 
-  '@oxfmt/binding-linux-riscv64-gnu@0.73.0':
+  '@oxfmt/binding-linux-riscv64-gnu@0.74.0':
     optional: true
 
-  '@oxfmt/binding-linux-riscv64-musl@0.73.0':
+  '@oxfmt/binding-linux-riscv64-musl@0.74.0':
     optional: true
 
-  '@oxfmt/binding-linux-s390x-gnu@0.73.0':
+  '@oxfmt/binding-linux-s390x-gnu@0.74.0':
     optional: true
 
-  '@oxfmt/binding-linux-x64-gnu@0.73.0':
+  '@oxfmt/binding-linux-x64-gnu@0.74.0':
     optional: true
 
-  '@oxfmt/binding-linux-x64-musl@0.73.0':
+  '@oxfmt/binding-linux-x64-musl@0.74.0':
     optional: true
 
-  '@oxfmt/binding-openharmony-arm64@0.73.0':
+  '@oxfmt/binding-openharmony-arm64@0.74.0':
     optional: true
 
-  '@oxfmt/binding-win32-arm64-msvc@0.73.0':
+  '@oxfmt/binding-win32-arm64-msvc@0.74.0':
     optional: true
 
-  '@oxfmt/binding-win32-ia32-msvc@0.73.0':
+  '@oxfmt/binding-win32-ia32-msvc@0.74.0':
     optional: true
 
-  '@oxfmt/binding-win32-x64-msvc@0.73.0':
+  '@oxfmt/binding-win32-x64-msvc@0.74.0':
     optional: true
 
   '@radix-ui/number@1.1.3': {}
@@ -4440,43 +4446,43 @@ snapshots:
 
   '@xtuc/long@4.2.2': {}
 
-  '@yuku-core/binding-android-arm64@0.17.0':
+  '@yuku-core/binding-android-arm64@0.19.0':
     optional: true
 
-  '@yuku-core/binding-darwin-arm64@0.17.0':
+  '@yuku-core/binding-darwin-arm64@0.19.0':
     optional: true
 
-  '@yuku-core/binding-darwin-x64@0.17.0':
+  '@yuku-core/binding-darwin-x64@0.19.0':
     optional: true
 
-  '@yuku-core/binding-freebsd-x64@0.17.0':
+  '@yuku-core/binding-freebsd-x64@0.19.0':
     optional: true
 
-  '@yuku-core/binding-linux-arm-gnu@0.17.0':
+  '@yuku-core/binding-linux-arm-gnu@0.19.0':
     optional: true
 
-  '@yuku-core/binding-linux-arm-musl@0.17.0':
+  '@yuku-core/binding-linux-arm-musl@0.19.0':
     optional: true
 
-  '@yuku-core/binding-linux-arm64-gnu@0.17.0':
+  '@yuku-core/binding-linux-arm64-gnu@0.19.0':
     optional: true
 
-  '@yuku-core/binding-linux-arm64-musl@0.17.0':
+  '@yuku-core/binding-linux-arm64-musl@0.19.0':
     optional: true
 
-  '@yuku-core/binding-linux-x64-gnu@0.17.0':
+  '@yuku-core/binding-linux-x64-gnu@0.19.0':
     optional: true
 
-  '@yuku-core/binding-linux-x64-musl@0.17.0':
+  '@yuku-core/binding-linux-x64-musl@0.19.0':
     optional: true
 
-  '@yuku-core/binding-win32-arm64@0.17.0':
+  '@yuku-core/binding-win32-arm64@0.19.0':
     optional: true
 
-  '@yuku-core/binding-win32-x64@0.17.0':
+  '@yuku-core/binding-win32-x64@0.19.0':
     optional: true
 
-  '@yuku-toolchain/types@0.17.0': {}
+  '@yuku-toolchain/types@0.19.0': {}
 
   acorn-jsx@5.3.2(acorn@8.18.0):
     dependencies:
@@ -4737,7 +4743,7 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5):
+  fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5):
     dependencies:
       '@fumari/image-size': 0.1.1
       estree-util-value-to-estree: 3.5.0
@@ -4766,59 +4772,23 @@ snapshots:
       '@types/mdast': 4.0.4
       '@types/react': 19.3.0
       flexsearch: 0.8.212
-      lucide-react: 1.58.0(@types/react@19.3.0)(react@19.3.1)
+      lucide-react: 1.60.0(@types/react@19.3.0)(react@19.3.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
       zod: 4.6.5
     transitivePeerDependencies:
       - supports-color
 
-  fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5):
-    dependencies:
-      '@fumari/image-size': 0.1.1
-      estree-util-value-to-estree: 3.5.0
-      github-slugger: 2.0.0
-      hast-util-from-dom: 5.0.1
-      hast-util-to-estree: 3.1.3(supports-color@8.1.1)
-      hast-util-to-jsx-runtime: 2.3.6(supports-color@8.1.1)
-      mdast-util-mdx: 3.0.0(supports-color@8.1.1)
-      micromark: 4.0.2(supports-color@8.1.1)
-      micromark-extension-gfm-table: 2.1.2
-      npm-to-yarn: 3.2.0
-      remark: 15.0.1(supports-color@8.1.1)
-      remark-gfm: 4.0.1(supports-color@8.1.1)
-      remark-rehype: 11.1.2
-      scroll-into-view-if-needed: 3.1.0
-      shiki: 4.5.0
-      tinyglobby: 0.2.17
-      unified: 11.0.5
-      vfile: 6.0.3
-      yaml: 2.9.1
-      zbsearch: 4.0.1
-    optionalDependencies:
-      '@mdx-js/mdx': 3.1.1(supports-color@8.1.1)
-      '@types/estree-jsx': 1.0.5
-      '@types/hast': 3.0.5
-      '@types/mdast': 4.0.4
-      '@types/react': 19.3.0
-      flexsearch: 0.8.212
-      lucide-react: 1.59.0(@types/react@19.3.0)(react@19.3.1)
-      react: 19.3.1
-      react-dom: 19.3.1(react@19.3.1)
-      zod: 4.6.5
-    transitivePeerDependencies:
-      - supports-color
-
-  fumadocs-mdx@15.4.7(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react@19.3.1)(rolldown@1.2.14)(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.1)):
+  fumadocs-mdx@15.4.9(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react@19.3.1)(rolldown@1.2.14)(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0)):
     dependencies:
       '@mdx-js/mdx': 3.1.1(supports-color@8.1.1)
       '@standard-schema/spec': 1.1.0
       chokidar: 5.0.0
       esbuild: 0.28.2
       estree-util-value-to-estree: 3.5.0
-      fumadocs-core: 16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
+      fumadocs-core: 16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
       github-slugger: 2.0.0
-      magic-string: 1.4.2
+      magic-string: 1.4.4
       mdast-util-mdx: 3.0.0(supports-color@8.1.1)
       picocolors: 1.1.1
       picomatch: 4.0.7
@@ -4828,8 +4798,39 @@ snapshots:
       unist-util-remove-position: 5.0.0
       vfile: 6.0.3
       yaml: 2.9.1
-      yuku-analyzer: 0.17.0
-      zod: 4.6.5
+      yuku-analyzer: 0.19.0
+      zod: 4.6.7
+    optionalDependencies:
+      '@types/mdast': 4.0.4
+      '@types/mdx': 2.0.14
+      '@types/react': 19.3.0
+      react: 19.3.1
+      rolldown: 1.2.14
+      vite: 8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0)
+    transitivePeerDependencies:
+      - supports-color
+
+  fumadocs-mdx@15.4.9(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react@19.3.1)(rolldown@1.2.14)(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.1)):
+    dependencies:
+      '@mdx-js/mdx': 3.1.1(supports-color@8.1.1)
+      '@standard-schema/spec': 1.1.0
+      chokidar: 5.0.0
+      esbuild: 0.28.2
+      estree-util-value-to-estree: 3.5.0
+      fumadocs-core: 16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
+      github-slugger: 2.0.0
+      magic-string: 1.4.4
+      mdast-util-mdx: 3.0.0(supports-color@8.1.1)
+      picocolors: 1.1.1
+      picomatch: 4.0.7
+      tinyexec: 1.3.1
+      tinyglobby: 0.2.17
+      unified: 11.0.5
+      unist-util-remove-position: 5.0.0
+      vfile: 6.0.3
+      yaml: 2.9.1
+      yuku-analyzer: 0.19.0
+      zod: 4.6.7
     optionalDependencies:
       '@types/mdast': 4.0.4
       '@types/mdx': 2.0.14
@@ -4841,38 +4842,7 @@ snapshots:
       - supports-color
     optional: true
 
-  fumadocs-mdx@15.4.7(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react@19.3.1)(rolldown@1.2.14)(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0)):
-    dependencies:
-      '@mdx-js/mdx': 3.1.1(supports-color@8.1.1)
-      '@standard-schema/spec': 1.1.0
-      chokidar: 5.0.0
-      esbuild: 0.28.2
-      estree-util-value-to-estree: 3.5.0
-      fumadocs-core: 16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
-      github-slugger: 2.0.0
-      magic-string: 1.4.2
-      mdast-util-mdx: 3.0.0(supports-color@8.1.1)
-      picocolors: 1.1.1
-      picomatch: 4.0.7
-      tinyexec: 1.3.1
-      tinyglobby: 0.2.17
-      unified: 11.0.5
-      unist-util-remove-position: 5.0.0
-      vfile: 6.0.3
-      yaml: 2.9.1
-      yuku-analyzer: 0.17.0
-      zod: 4.6.5
-    optionalDependencies:
-      '@types/mdast': 4.0.4
-      '@types/mdx': 2.0.14
-      '@types/react': 19.3.0
-      react: 19.3.1
-      rolldown: 1.2.14
-      vite: 8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0)
-    transitivePeerDependencies:
-      - supports-color
-
-  fumadocs-ui@16.14.0(@types/mdx@2.0.14)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1)):
+  fumadocs-ui@16.14.0(@types/mdx@2.0.14)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1)):
     dependencies:
       '@fuma-translate/react': 1.0.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@fumadocs/tailwind': 0.1.1(tailwindcss@4.3.3)
@@ -4888,8 +4858,8 @@ snapshots:
       '@radix-ui/react-tabs': 1.1.21(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       class-variance-authority: 0.7.1
       cnfast: 0.1.0
-      fumadocs-core: 16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
-      lucide-react: 1.58.0(@types/react@19.3.0)(react@19.3.1)
+      fumadocs-core: 16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
+      lucide-react: 1.59.0(@types/react@19.3.0)(react@19.3.1)
       motion: 12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       next-themes: 0.4.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react: 19.3.1
@@ -4908,26 +4878,26 @@ snapshots:
       - '@types/react-dom'
       - tailwindcss
 
-  fumapress@1.6.1(6d8ccfb9f0380d51780129c82dd847fe):
+  fumapress@1.6.2(1d0ff5b8305cd3fda18aa5ab576e0950):
     dependencies:
       '@fuma-translate/react': 1.0.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       class-variance-authority: 0.7.1
       cn: 0.4.0
       flexsearch: 0.8.212
-      fumadocs-core: 16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
-      fumadocs-ui: 16.14.0(@types/mdx@2.0.14)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))
+      fumadocs-core: 16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
+      fumadocs-ui: '@fumadocs/base-ui@16.17.7(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))'
       lucide-react: 1.59.0(@types/react@19.3.0)(react@19.3.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
       takumi-js: 2.16.2(csstype@3.2.3)(react@19.3.1)
-      vite: 8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.1)
-      waku: 1.0.0-rc.1(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(react-dom@19.3.1(react@19.3.1))(react-server-dom-webpack@19.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(webpack@5.109.2(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.30)))(react@19.3.1)(terser@5.49.0)(yaml@2.9.1)
+      vite: 8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0)
+      waku: 1.0.0-rc.1(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(react-dom@19.3.1(react@19.3.1))(react-server-dom-webpack@19.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(webpack@5.109.2(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.30)))(react@19.3.1)(terser@5.49.0)(yaml@2.9.0)
       xml-js: 1.6.11
       zod: 4.6.5
     optionalDependencies:
       '@types/mdx': 2.0.14
       '@types/react': 19.3.0
-      fumadocs-mdx: 15.4.7(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react@19.3.1)(rolldown@1.2.14)(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.1))
+      fumadocs-mdx: 15.4.9(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react@19.3.1)(rolldown@1.2.14)(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0))
       hono: 4.12.33
     transitivePeerDependencies:
       - '@rolldown/plugin-babel'
@@ -4948,26 +4918,26 @@ snapshots:
       - tsx
       - yaml
 
-  fumapress@1.6.1(d932e492d5921bfd89196f6457d45c0b):
+  fumapress@1.6.2(e1cee878fb0fa511f8acabba1d682874):
     dependencies:
       '@fuma-translate/react': 1.0.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       class-variance-authority: 0.7.1
       cn: 0.4.0
       flexsearch: 0.8.212
-      fumadocs-core: 16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
-      fumadocs-ui: '@fumadocs/base-ui@16.17.5(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))'
+      fumadocs-core: 16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5)
+      fumadocs-ui: 16.14.0(@types/mdx@2.0.14)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.3)(takumi-js@2.16.2(csstype@3.2.3)(react@19.3.1))
       lucide-react: 1.59.0(@types/react@19.3.0)(react@19.3.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
       takumi-js: 2.16.2(csstype@3.2.3)(react@19.3.1)
-      vite: 8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0)
-      waku: 1.0.0-rc.1(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(react-dom@19.3.1(react@19.3.1))(react-server-dom-webpack@19.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(webpack@5.109.2(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.30)))(react@19.3.1)(terser@5.49.0)(yaml@2.9.0)
+      vite: 8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.1)
+      waku: 1.0.0-rc.1(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(react-dom@19.3.1(react@19.3.1))(react-server-dom-webpack@19.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(webpack@5.109.2(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.30)))(react@19.3.1)(terser@5.49.0)(yaml@2.9.1)
       xml-js: 1.6.11
       zod: 4.6.5
     optionalDependencies:
       '@types/mdx': 2.0.14
       '@types/react': 19.3.0
-      fumadocs-mdx: 15.4.7(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.5(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react@19.3.1)(rolldown@1.2.14)(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0))
+      fumadocs-mdx: 15.4.9(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.17.7(@mdx-js/mdx@3.1.1(supports-color@8.1.1))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(flexsearch@0.8.212)(lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(zod@4.6.5))(react@19.3.1)(rolldown@1.2.14)(supports-color@8.1.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.1))
       hono: 4.12.33
     transitivePeerDependencies:
       - '@rolldown/plugin-babel'
@@ -5245,13 +5215,13 @@ snapshots:
     dependencies:
       react: 19.3.1
 
-  lucide-react@1.58.0(@types/react@19.3.0)(react@19.3.1):
+  lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1):
     dependencies:
       react: 19.3.1
     optionalDependencies:
       '@types/react': 19.3.0
 
-  lucide-react@1.59.0(@types/react@19.3.0)(react@19.3.1):
+  lucide-react@1.60.0(@types/react@19.3.0)(react@19.3.1):
     dependencies:
       react: 19.3.1
     optionalDependencies:
@@ -5262,6 +5232,10 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   magic-string@1.4.2:
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.6.0
+
+  magic-string@1.4.4:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
 
@@ -5765,29 +5739,29 @@ snapshots:
       regex: 6.1.0
       regex-recursion: 6.0.2
 
-  oxfmt@0.73.0:
+  oxfmt@0.74.0:
     dependencies:
       tinypool: 2.2.0
     optionalDependencies:
-      '@oxfmt/binding-android-arm-eabi': 0.73.0
-      '@oxfmt/binding-android-arm64': 0.73.0
-      '@oxfmt/binding-darwin-arm64': 0.73.0
-      '@oxfmt/binding-darwin-x64': 0.73.0
-      '@oxfmt/binding-freebsd-x64': 0.73.0
-      '@oxfmt/binding-linux-arm-gnueabihf': 0.73.0
-      '@oxfmt/binding-linux-arm-musleabihf': 0.73.0
-      '@oxfmt/binding-linux-arm64-gnu': 0.73.0
-      '@oxfmt/binding-linux-arm64-musl': 0.73.0
-      '@oxfmt/binding-linux-ppc64-gnu': 0.73.0
-      '@oxfmt/binding-linux-riscv64-gnu': 0.73.0
-      '@oxfmt/binding-linux-riscv64-musl': 0.73.0
-      '@oxfmt/binding-linux-s390x-gnu': 0.73.0
-      '@oxfmt/binding-linux-x64-gnu': 0.73.0
-      '@oxfmt/binding-linux-x64-musl': 0.73.0
-      '@oxfmt/binding-openharmony-arm64': 0.73.0
-      '@oxfmt/binding-win32-arm64-msvc': 0.73.0
-      '@oxfmt/binding-win32-ia32-msvc': 0.73.0
-      '@oxfmt/binding-win32-x64-msvc': 0.73.0
+      '@oxfmt/binding-android-arm-eabi': 0.74.0
+      '@oxfmt/binding-android-arm64': 0.74.0
+      '@oxfmt/binding-darwin-arm64': 0.74.0
+      '@oxfmt/binding-darwin-x64': 0.74.0
+      '@oxfmt/binding-freebsd-x64': 0.74.0
+      '@oxfmt/binding-linux-arm-gnueabihf': 0.74.0
+      '@oxfmt/binding-linux-arm-musleabihf': 0.74.0
+      '@oxfmt/binding-linux-arm64-gnu': 0.74.0
+      '@oxfmt/binding-linux-arm64-musl': 0.74.0
+      '@oxfmt/binding-linux-ppc64-gnu': 0.74.0
+      '@oxfmt/binding-linux-riscv64-gnu': 0.74.0
+      '@oxfmt/binding-linux-riscv64-musl': 0.74.0
+      '@oxfmt/binding-linux-s390x-gnu': 0.74.0
+      '@oxfmt/binding-linux-x64-gnu': 0.74.0
+      '@oxfmt/binding-linux-x64-musl': 0.74.0
+      '@oxfmt/binding-openharmony-arm64': 0.74.0
+      '@oxfmt/binding-win32-arm64-msvc': 0.74.0
+      '@oxfmt/binding-win32-ia32-msvc': 0.74.0
+      '@oxfmt/binding-win32-x64-msvc': 0.74.0
 
   parse-entities@4.0.2:
     dependencies:
@@ -6370,35 +6344,37 @@ snapshots:
 
   yaml@2.9.1: {}
 
-  yuku-analyzer@0.17.0:
+  yuku-analyzer@0.19.0:
     dependencies:
-      '@yuku-toolchain/types': 0.17.0
-      yuku-ast: 0.17.0
-      yuku-core: 0.17.0
+      '@yuku-toolchain/types': 0.19.0
+      yuku-ast: 0.19.0
+      yuku-core: 0.19.0
 
-  yuku-ast@0.17.0:
+  yuku-ast@0.19.0:
     dependencies:
-      '@yuku-toolchain/types': 0.17.0
+      '@yuku-toolchain/types': 0.19.0
 
-  yuku-core@0.17.0:
+  yuku-core@0.19.0:
     dependencies:
-      '@yuku-toolchain/types': 0.17.0
+      '@yuku-toolchain/types': 0.19.0
     optionalDependencies:
-      '@yuku-core/binding-android-arm64': 0.17.0
-      '@yuku-core/binding-darwin-arm64': 0.17.0
-      '@yuku-core/binding-darwin-x64': 0.17.0
-      '@yuku-core/binding-freebsd-x64': 0.17.0
-      '@yuku-core/binding-linux-arm-gnu': 0.17.0
-      '@yuku-core/binding-linux-arm-musl': 0.17.0
-      '@yuku-core/binding-linux-arm64-gnu': 0.17.0
-      '@yuku-core/binding-linux-arm64-musl': 0.17.0
-      '@yuku-core/binding-linux-x64-gnu': 0.17.0
-      '@yuku-core/binding-linux-x64-musl': 0.17.0
-      '@yuku-core/binding-win32-arm64': 0.17.0
-      '@yuku-core/binding-win32-x64': 0.17.0
+      '@yuku-core/binding-android-arm64': 0.19.0
+      '@yuku-core/binding-darwin-arm64': 0.19.0
+      '@yuku-core/binding-darwin-x64': 0.19.0
+      '@yuku-core/binding-freebsd-x64': 0.19.0
+      '@yuku-core/binding-linux-arm-gnu': 0.19.0
+      '@yuku-core/binding-linux-arm-musl': 0.19.0
+      '@yuku-core/binding-linux-arm64-gnu': 0.19.0
+      '@yuku-core/binding-linux-arm64-musl': 0.19.0
+      '@yuku-core/binding-linux-x64-gnu': 0.19.0
+      '@yuku-core/binding-linux-x64-musl': 0.19.0
+      '@yuku-core/binding-win32-arm64': 0.19.0
+      '@yuku-core/binding-win32-x64': 0.19.0
 
   zbsearch@4.0.1: {}
 
   zod@4.6.5: {}
+
+  zod@4.6.7: {}
 
   zwitch@2.0.4: {}
