@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.4.21"
-kotlinx-serialization = "1.11.0"
+kotlinx-serialization = "1.12.0"
 maven-publish = "0.37.0"
 spotless = "8.10.4"
 cyclonedx = "3.5.1"
