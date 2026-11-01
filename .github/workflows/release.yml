@@ -172,7 +172,7 @@ jobs:
             echo "----- end release notes -----"
           }
 
-      - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+      - uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
         with:
           args: release --clean --release-notes=/tmp/tegami-release-notes.md
         env:
@@ -205,7 +205,7 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: jdx/mise-action@08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8 # v5.1.2
+      - uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
         with:
           install_args: go
           cache: false
