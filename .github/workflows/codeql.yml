@@ -48,7 +48,7 @@ jobs:
           go-version-file: "./protoc-gen-connect-ktor/go.mod"
           cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
       - if: matrix.language == 'java-kotlin'
-        uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
+        uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
         with:
           install_args: go
       - if: matrix.language == 'java-kotlin'
