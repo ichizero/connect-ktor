@@ -1,3 +1,43 @@
+## connect-ktor@0.4.2
+
+### Dependencies
+
+- chore(deps): update pnpm to v12.12.1 by @renovate[bot] in [PR #414](https://github.com/ichizero/connect-ktor/pull/414)
+- chore(deps): update pnpm/setup action to v3.1.1 by @renovate[bot] in [PR #415](https://github.com/ichizero/connect-ktor/pull/415)
+- chore(deps): update dependency lefthook to v2.2.2 by @renovate[bot] in [PR #416](https://github.com/ichizero/connect-ktor/pull/416)
+- chore(deps): update docs-site by @renovate[bot] in [PR #417](https://github.com/ichizero/connect-ktor/pull/417)
+- chore(deps): update jdx/mise-action action to v5.1.2 by @renovate[bot] in [PR #418](https://github.com/ichizero/connect-ktor/pull/418)
+- fix(deps): update kotest to v6.2.6 by @renovate[bot] in [PR #419](https://github.com/ichizero/connect-ktor/pull/419)
+- chore(deps): update docs-site by @renovate[bot] in [PR #420](https://github.com/ichizero/connect-ktor/pull/420)
+- chore(deps): update actions/setup-java action to v6.1.0 by @renovate[bot] in [PR #421](https://github.com/ichizero/connect-ktor/pull/421)
+- chore(deps): update dependency buf to v1.74.0 by @renovate[bot] in [PR #422](https://github.com/ichizero/connect-ktor/pull/422)
+- chore(deps): update dependency golangci-lint to v2.15.0 by @renovate[bot] in [PR #423](https://github.com/ichizero/connect-ktor/pull/423)
+- chore(deps): update dependency lucide-react to v1.59.0 by @renovate[bot] in [PR #424](https://github.com/ichizero/connect-ktor/pull/424)
+- chore(deps): update github/codeql-action action to v4.39.0 by @renovate[bot] in [PR #425](https://github.com/ichizero/connect-ktor/pull/425)
+- chore(deps): update dependency go to v1.27.3 by @renovate[bot] in [PR #426](https://github.com/ichizero/connect-ktor/pull/426)
+- chore(deps): update docs-site by @renovate[bot] in [PR #427](https://github.com/ichizero/connect-ktor/pull/427)
+- chore(deps): update github/codeql-action action to v4.39.1 by @renovate[bot] in [PR #428](https://github.com/ichizero/connect-ktor/pull/428)
+- chore(deps): update gradle to v9.8.2 by @renovate[bot] in [PR #429](https://github.com/ichizero/connect-ktor/pull/429)
+- chore(deps): update docs-site by @renovate[bot] in [PR #430](https://github.com/ichizero/connect-ktor/pull/430)
+- fix(deps): update dependency com.squareup.okhttp3:okhttp to v5.5.1 by @renovate[bot] in [PR #431](https://github.com/ichizero/connect-ktor/pull/431)
+- chore(deps): update dependency buf to v1.75.0 by @renovate[bot] in [PR #432](https://github.com/ichizero/connect-ktor/pull/432)
+- chore(deps): update dependency connectrpc/kotlin to v0.10.0 by @renovate[bot] in [PR #433](https://github.com/ichizero/connect-ktor/pull/433)
+- chore(deps): update goreleaser/goreleaser-action action to v7.3.0 by @renovate[bot] in [PR #434](https://github.com/ichizero/connect-ktor/pull/434)
+- chore(deps): update jdx/mise-action action to v5.2.3 by @renovate[bot] in [PR #435](https://github.com/ichizero/connect-ktor/pull/435)
+- chore(deps): update ossf/scorecard-action action to v2.5.0 by @renovate[bot] in [PR #436](https://github.com/ichizero/connect-ktor/pull/436)
+- chore(deps): update zizmorcore/zizmor-action action to v0.8.0 by @renovate[bot] in [PR #437](https://github.com/ichizero/connect-ktor/pull/437)
+- fix(deps): update connect to v0.10.0 by @renovate[bot] in [PR #438](https://github.com/ichizero/connect-ktor/pull/438)
+- fix(deps): update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.12.0 by @renovate[bot] in [PR #439](https://github.com/ichizero/connect-ktor/pull/439)
+- chore(deps): update pnpm/setup action to v3.1.2 by @renovate[bot] in [PR #440](https://github.com/ichizero/connect-ktor/pull/440)
+- chore(deps): update docs-site by @renovate[bot] in [PR #441](https://github.com/ichizero/connect-ktor/pull/441)
+- chore(deps): update gradle/actions action to v6.4.1 by @renovate[bot] in [PR #442](https://github.com/ichizero/connect-ktor/pull/442)
+- chore(deps): update jdx/mise-action action to v5.2.5 by @renovate[bot] in [PR #443](https://github.com/ichizero/connect-ktor/pull/443)
+- fix(deps): update ktor monorepo to v3.6.1 by @renovate[bot] in [PR #444](https://github.com/ichizero/connect-ktor/pull/444)
+- chore(deps): update docs-site by @renovate[bot] in [PR #445](https://github.com/ichizero/connect-ktor/pull/445)
+- chore(deps): update github/codeql-action action to v4.39.3 by @renovate[bot] in [PR #446](https://github.com/ichizero/connect-ktor/pull/446)
+- chore(deps): update jdx/mise-action action to v5.2.7 by @renovate[bot] in [PR #447](https://github.com/ichizero/connect-ktor/pull/447)
+- chore(deps): update sigstore/cosign-installer action to v4.1.3 by @renovate[bot] in [PR #448](https://github.com/ichizero/connect-ktor/pull/448)
+
 ## connect-ktor@0.4.1
 
 ### Align unary Connect errors and validate GET requests
