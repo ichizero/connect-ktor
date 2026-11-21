@@ -3,7 +3,7 @@ kotlin = "2.4.21"
 kotlinx-serialization = "1.12.0"
 maven-publish = "0.37.0"
 spotless = "8.10.4"
-cyclonedx = "3.5.1"
+cyclonedx = "3.6.1"
 detekt = "1.23.8"
 
 connect = "0.10.0"
