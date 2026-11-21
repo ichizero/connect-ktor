@@ -20,7 +20,7 @@ overrides:
 
 catalog:
   "@base-ui/react": 1.9.0
-  "@fumapress/tegami": 1.1.4
+  "@fumapress/tegami": 2.0.0
   "@tailwindcss/vite": 4.3.5
   "@types/mdx": 2.0.14
   "@types/node": 26.6.6
@@ -29,7 +29,7 @@ catalog:
   fumadocs-core: 16.19.2
   fumadocs-mdx: 15.6.2
   fumadocs-ui: npm:@fumadocs/base-ui@16.19.2
-  fumapress: 1.6.2
+  fumapress: 2.0.2
   lucide-react: 1.73.0
   oxfmt: 0.78.0
   react: 19.3.1
