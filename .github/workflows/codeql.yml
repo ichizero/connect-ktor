@@ -43,12 +43,12 @@ jobs:
           java-version: 21
           cache: gradle
       - if: matrix.language == 'go'
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: "./protoc-gen-connect-ktor/go.mod"
           cache-dependency-path: "./protoc-gen-connect-ktor/go.sum"
       - if: matrix.language == 'java-kotlin'
-        uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
         with:
           install_args: go
       - if: matrix.language == 'java-kotlin'
@@ -57,7 +57,7 @@ jobs:
           github_token: ${{ github.token }}
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        uses: github/codeql-action/init@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
@@ -69,6 +69,6 @@ jobs:
           ./gradlew --no-daemon classes testClasses
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        uses: github/codeql-action/analyze@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           category: "/language:${{ matrix.language }}"
