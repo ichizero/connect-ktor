@@ -4,7 +4,9 @@
     timezone: "Asia/Tokyo",
     // Mirrors dependabot.yml's `cooldown.default-days: 7` for every ecosystem.
     minimumReleaseAge: "7 days",
-    dependencyDashboard: true,
+    dependencyDashboard: {
+        enabled: true,
+    },
     // Buf remote plugin versions follow their upstream project's version tags.
     customManagers: [
         {
