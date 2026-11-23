@@ -1,6 +1,6 @@
 import { changelogMetaSchema, changelogPageSchema } from "@fumapress/tegami/schema";
 import { defineDocs } from "fumadocs-mdx/config";
-import { metaSchema, pageSchema } from "fumapress/adapters/mdx/schema";
+import { metaSchema, pageSchema } from "fumapress/schema";
 
 export const docs = defineDocs({
     dir: "content",
